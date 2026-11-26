@@ -121,7 +121,7 @@ export const CHATGPT_BATTLE_TOOLS = {
   equip_or_unequip_weapon: {
     family: "battleActions",
     description:
-      "Use after an Attack action attack made without a weapon change, to draw, stow, or drop one selected weapon before the action's next attack. A change before an attack rides on the attack act itself.",
+      "Use after an Attack action attack made without a weapon change, to draw one owned weapon into a hand slot, or stow or drop a held one, before the action's next attack. A change before an attack rides on the attack act itself.",
   },
   interact_with_object: {
     family: "battleActions",

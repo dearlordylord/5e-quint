@@ -893,17 +893,18 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     );
 
     const cast = castFlameBlade(state);
-
-    expect(discoverBattleActCandidates(cast.state)).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: expect.objectContaining({
-            tag: "action",
-            action: "grapple",
-          }),
-        }),
-      ]),
+    const grapples = discoverBattleActCandidates(cast.state).flatMap((act) =>
+      act.subject.tag === "action" && act.subject.action === "grapple"
+        ? [act.subject]
+        : [],
     );
+
+    // Only a Grapple that unequips the weapon in the other hand first, as an
+    // Attack action attack may, finds a free hand.
+    expect(grapples.length).toBeGreaterThan(0);
+    for (const grapple of grapples) {
+      expect(grapple.weaponChange?.kind).toMatch(/^(stow|drop)$/);
+    }
   });
 
   test("flame_blade support admission rejects extra executable Surface facts", () => {

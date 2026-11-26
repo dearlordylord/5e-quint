@@ -303,6 +303,7 @@ import {
   type BonusActionStandardActionSubject,
   type SpellInvocationRef,
   type MonkFocusFlurryOfBlowsStrikeSubject,
+  type ReadiedAttackWeaponChange,
 } from "./battle-subjects.ts";
 import {
   type CharacterBattleMetamagicOptionFact,
@@ -419,7 +420,7 @@ import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts
 import type { BattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import type {
   WildShapeEquipmentDispositionFillValue,
-  WildShapeLoadoutObjectRef,
+  WildShapeEquipmentObjectRef,
 } from "./battle-reducer/wild-shape-equipment.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
@@ -1250,11 +1251,13 @@ export type BattleInterruptProcedureSelection = {
     }
   | {
       readonly kind: "releaseReadiedAction";
+      readonly weaponChange?: ReadiedAttackWeaponChange;
     }
   | {
       readonly kind: "releaseReadiedAttack";
       readonly procedureRef: BattleInterruptAttackExecutionSelection["procedureRef"];
       readonly targetId: CombatantId;
+      readonly weaponChange?: ReadiedAttackWeaponChange;
     }
   | {
       readonly kind: "castTriggeredReactionSpell";
@@ -4491,6 +4494,12 @@ type BattleCreatureStateCommon = {
         readonly attack: BoundCharacterWeaponAttackActionOption | null;
         readonly unarmedStrike: BoundCharacterUnarmedStrikeActionOption;
         readonly offHandAttack?: BoundCharacterWeaponAttackActionOption;
+        /**
+         * The bindings of the owned weapons outside the selected loadout.
+         * Equipping one into a hand slot moves its binding to `attack` or
+         * `offHandAttack`, and the slot's previous weapon here.
+         */
+        readonly otherOwnedWeaponAttacks: readonly BoundCharacterWeaponAttackActionOption[];
         readonly resources: readonly CharacterBattleResourceState[];
         readonly heroicInspiration: HeroicInspiration;
         readonly metamagic?: CharacterBattleMetamagicState;
@@ -7239,7 +7248,7 @@ export type BattleWildShapeEquipmentDispositionHole = {
   readonly label: string;
   readonly actorId: CombatantId;
   readonly formExecutionRef: BattleStatBlockExecutionScopeRef;
-  readonly candidates: readonly WildShapeLoadoutObjectRef[];
+  readonly candidates: readonly WildShapeEquipmentObjectRef[];
 };
 export type BattleReadyDeclarationHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -8556,6 +8565,7 @@ export type BattleCreatureOriginSnapshot =
         readonly attackProcedureRef: BattleAttackProcedureExecutionRef | null;
         readonly unarmedStrikeProcedureRef: BattleAttackProcedureExecutionRef;
         readonly offHandAttackProcedureRef: BattleAttackProcedureExecutionRef | null;
+        readonly otherOwnedWeaponAttackProcedureRefs: readonly BattleAttackProcedureExecutionRef[];
       };
       readonly resources: readonly BattleCharacterResourceSnapshot[];
       readonly heroicInspiration: HeroicInspiration;

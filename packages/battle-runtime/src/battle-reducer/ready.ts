@@ -1,3 +1,4 @@
+import { isReadiedWeaponChangeActionSubject } from "../battle-subjects.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME
 
 import {
@@ -133,14 +134,22 @@ export function readyActionSubject(
   subject: import("../battle-subjects.ts").BattleSubject,
 ): BattleReadyActionSubject | null {
   if (isObjectInteractionSubject(subject)) return subject;
-  return subject.tag === "action" &&
-    subject.action !== "attack" &&
+  if (subject.tag !== "action") return null;
+  if (isReadiedWeaponChangeActionSubject(subject)) {
+    return { tag: "action", actorId: subject.actorId, action: subject.action };
+  }
+  return subject.action !== "attack" &&
     subject.action !== "multiattack" &&
     subject.action !== "ready"
     ? subject
     : null;
 }
 
+/**
+ * The readied attack against this target, if the reactor can make it: among
+ * the attacks it can make now, or among `attacks`, the ones it could make
+ * after a weapon change.
+ */
 export function readiedAttackOption(
   state: BattleState,
   actorId: CombatantId,
@@ -149,6 +158,7 @@ export function readiedAttackOption(
     BattleReadyResponse,
     { readonly kind: "attack" }
   >["selection"]["procedureRef"],
+  attacks?: readonly BoundSupportedAttackActionOption[],
 ): BoundSupportedAttackActionOption | undefined {
   const readied = state.readiedResponses.get(actorId);
   if (
@@ -158,7 +168,7 @@ export function readiedAttackOption(
     return undefined;
   }
   const selection = readied.response.selection;
-  return attackActionOptionsForActor(state, actorId).find(
+  return (attacks ?? attackActionOptionsForActor(state, actorId)).find(
     (attack) =>
       boundAttackExecutionSelectionMatchesOption(selection, attack) &&
       attackTargetChoices(state, actorId, attack).includes(targetId),

@@ -6,6 +6,7 @@ import { Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   battleId,
+  battleObjectId,
   battleProcedureExecutionRefForTest,
   characterSeed,
   statBlockCreatureInit,
@@ -27,7 +28,7 @@ import {
   requireJsonSchema,
 } from "../../test-support/json-schema.ts";
 
-function readiedDodgeState() {
+function readiedActionState(action: "dodge" | "grapple" = "dodge") {
   const session = startBattleSessionRight({
     battleId: battleId("synthetic-reaction-projection"),
     combatants: [
@@ -48,7 +49,7 @@ function readiedDodgeState() {
     (choice) =>
       choice.kind === "action" &&
       choice.subject.tag === "action" &&
-      choice.subject.action === "dodge",
+      choice.subject.action === action,
   );
   if (response === undefined) throw new Error("Expected Dodge response.");
   const readied = resolveBattleSubject({
@@ -65,7 +66,7 @@ function readiedDodgeState() {
 
 describe("Interrupt-decision call projection input contracts", () => {
   it("projects every nested command to arguments accepted by its advertised tool and canonical decoder", () => {
-    const state = readiedDodgeState();
+    const state = readiedActionState();
     const procedureRef = battleProcedureExecutionRefForTest("synthetic-spell");
     const attack = fighterAttackSubject(state);
     const characterSelection =
@@ -107,6 +108,20 @@ describe("Interrupt-decision call projection input contracts", () => {
           reactorId: fighterId,
           targetId: goblinId,
           procedureRef: characterSelection.procedureRef,
+        },
+        tool: "attack",
+      },
+      {
+        subject: {
+          ...common,
+          command: "releaseReadiedAttack",
+          reactorId: fighterId,
+          targetId: goblinId,
+          procedureRef: characterSelection.procedureRef,
+          weaponChange: {
+            timing: "afterAttack",
+            change: { kind: "stow", objectId: "main:weapon_longsword" },
+          },
         },
         tool: "attack",
       },
@@ -226,11 +241,85 @@ describe("Interrupt-decision call projection input contracts", () => {
         ),
         fixture.subject.command,
       ).toBe(true);
+      if ("weaponChange" in fixture.subject) {
+        expect(call.arguments.fill.value).toMatchObject({
+          choice: { weaponChange: fixture.subject.weaponChange },
+        });
+      }
+    }
+  });
+
+  it("preserves a readied Grapple release's weapon change and leaves the bare release bare", () => {
+    const state = readiedActionState("grapple");
+    const change = {
+      timing: "beforeAttack",
+      change: {
+        kind: "stow",
+        objectId: battleObjectId("main:weapon_longsword"),
+      },
+    } as const;
+    for (const weaponChange of [undefined, change]) {
+      const frontier = Schema.decodeUnknownSync(
+        BattleInterruptDecisionFrontierSchema,
+      )({
+        kind: "interruptDecision",
+        trigger: "reportedReadyTrigger",
+        stackDepth: 1,
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "reportedReadyTrigger",
+          holeId: "synthetic-readied-grapple-decision",
+          holeInstanceKey: "synthetic-readied-grapple-instance",
+          label: "Readied Grapple release",
+          eligibleResponders: [fighterId],
+        },
+        choices: [
+          {
+            kind: "nestedProcedure",
+            initialHoles: [],
+            subject: {
+              tag: "runtimeCommand",
+              actorId: fighterId,
+              command: "releaseReadiedAction",
+              reactorId: fighterId,
+              ...(weaponChange === undefined ? {} : { weaponChange }),
+            },
+          },
+        ],
+      });
+      const call = readyBattleInterruptCalls(state, frontier).find(
+        (entry) => entry.tool !== "decline_reaction",
+      );
+      if (call === undefined) throw new Error("Expected readied Grapple call.");
+      expect(call.tool).toBe("grapple");
+      expect(call.arguments.fill.value).toEqual({
+        kind: "resolve",
+        responderId: fighterId,
+        choice: {
+          kind: "releaseReadiedAction",
+          ...(weaponChange === undefined ? {} : { weaponChange }),
+          fills: [],
+        },
+      });
+      expect(
+        Result.isSuccess(
+          Schema.decodeUnknownResult(ChatGptBattleExecutionArgsSchema)(
+            call.arguments,
+          ),
+        ),
+      ).toBe(true);
+      const validate = createDraft2020JsonSchemaValidator().getValidator(
+        requireJsonSchema(
+          CHATGPT_EXECUTION_TOOLS[call.tool].definition.inputSchema,
+          "readied Grapple tool",
+        ),
+      );
+      expect(validate(call.arguments).valid).toBe(true);
     }
   });
 
   it("does not invent a route for a readied action without its retained response", () => {
-    const state = readiedDodgeState();
+    const state = readiedActionState();
     const frontier = Schema.decodeUnknownSync(
       BattleInterruptDecisionFrontierSchema,
     )({

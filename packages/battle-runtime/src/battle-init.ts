@@ -39,7 +39,12 @@ import type {
   CharacterBattleSpellcastingInit,
 } from "./character-battle-resources.ts";
 import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
-import type { CharacterId, CombatantId, InitiativeScore } from "./identity.ts";
+import type {
+  BattleObjectId,
+  CharacterId,
+  CombatantId,
+  InitiativeScore,
+} from "./identity.ts";
 import type {
   BattleDruidWildShapeKnownFormSupportProfile,
   BattleUnitSupportSource,
@@ -108,6 +113,17 @@ export type CharacterBattleCreatureInitWeaponAttack = {
   readonly damageBonus?: number;
   readonly damageTypeChoices?: CharacterWeaponAttackDamageTypeChoices;
   readonly alternateAbilityChoices?: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>;
+};
+
+/**
+ * A weapon the character owns outside its selected loadout, carried (sheathed
+ * or stowed) when the battle starts. Battle binds its attack at the start, so
+ * the character can equip it during the battle.
+ */
+export type CharacterBattleOtherOwnedWeaponInit = {
+  /** The battle object for this one weapon; each copy has its own. */
+  readonly itemId: BattleObjectId;
+  readonly attack: CharacterBattleCreatureInitWeaponAttack;
 };
 
 export function characterBattleCreatureInitWeaponAttack(
@@ -587,6 +603,8 @@ export type CharacterBattleCreatureInit = {
   readonly attack: CharacterBattleCreatureInitWeaponAttack | null;
   readonly unarmedStrike: CharacterUnarmedStrikeActionOption;
   readonly offHandAttack?: CharacterBattleCreatureInitWeaponAttack | undefined;
+  /** Omission means the character owns no weapon outside its selected loadout. */
+  readonly otherOwnedWeapons?: ReadonlyNonEmptyArray<CharacterBattleOtherOwnedWeaponInit>;
   readonly unitFeatures?: readonly CharacterBattleFeatureInit[];
   readonly invocationFeatures?: readonly CharacterBattleInvocationFeature[];
   readonly resources?: readonly CharacterBattleResourceInit[];

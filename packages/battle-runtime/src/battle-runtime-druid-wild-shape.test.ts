@@ -2,7 +2,7 @@ import {
   retainBattleRuntimeContinuation,
   restoreBattleRuntimeContinuation,
 } from "./battle-runtime-transaction.ts";
-import { heldWeaponPickupTransition } from "./battle-reducer/battle-object-lifecycle.ts";
+import { pickUpLoadoutWeapon } from "./loadout-weapon-pickup.test-support.ts";
 import {
   battleGroundObjectState,
   battleObjectIsOnGround,
@@ -150,6 +150,7 @@ import {
   validateWildShapeEquipmentDispositionFill,
   wildShapeFormActionSurfaceInventory,
   wildShapeLoadoutObjectRefs,
+  wildShapeEquipmentObjectRefs,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -160,6 +161,7 @@ import {
   type CharacterWeaponAttackActionOption,
   type WildShapeEquipmentDispositionChoice,
   type WildShapeLoadoutObjectRef,
+  type WildShapeEquipmentObjectRef,
 } from "./index.ts";
 import { canonicalHeldObjectIdsForActor } from "./battle-reducer/compelled-behavior-discovery.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
@@ -882,6 +884,157 @@ test("derives Wild Shape equipment disposition candidates from selected loadout 
     },
   ]);
   expect(wildShapeLoadoutObjectRefs({})).toEqual([]);
+});
+
+test.each(["falls", "merges", "worn"] as const)(
+  "Wild Shape gives a carried spare weapon its own %s choice without equipping it",
+  (disposition) => {
+    const spareId = battleObjectId("main:weapon_dagger");
+    const initial = druidWildShapeBattle({
+      otherOwnedWeapons: [
+        {
+          itemId: spareId,
+          attack: testCharacterWeaponAttackForUnit(
+            parseSharedUnitId("weapon_dagger"),
+          ),
+        },
+      ],
+    });
+    const subject = wildShapeSubject(initial, {
+      action: "assumeForm",
+      formStatBlockId: ridingHorseId,
+    });
+    if (subject.action !== "assumeForm")
+      throw new Error("Expected Wild Shape assume-form subject.");
+    const requested = resolveDruidWildShape(initial, subject);
+    if (requested.tag !== "needsHoles")
+      throw new Error("Expected Wild Shape equipment choice.");
+    const hole = requireWildShapeEquipmentDispositionHole(
+      battleResolutionHolesForTest(requested),
+    );
+    const item = hole.candidates.find(
+      (candidate) => candidate.kind === "carriedWeapon",
+    );
+    if (item === undefined)
+      throw new Error("Expected carried Dagger candidate.");
+    expect(hole.candidates).toEqual([
+      { kind: "carriedWeapon", objectId: spareId },
+    ]);
+    const advertised = discoverBattleActCandidates(initial).find(
+      (act) =>
+        act.subject.tag === "druidWildShape" &&
+        act.subject.action === "assumeForm" &&
+        act.subject.formExecutionRef === subject.formExecutionRef,
+    );
+    expect(advertised?.initialHoles).toEqual([hole]);
+    expect(
+      validateWildShapeEquipmentDispositionFill({
+        candidates: hole.candidates,
+        value: { formLimbs: { kind: "canHandleObjects" }, choices: [] },
+      }),
+    ).toMatchObject({ tag: "invalid" });
+    const choice: WildShapeEquipmentDispositionChoice =
+      disposition === "falls"
+        ? {
+            item,
+            disposition,
+            fallInActorSpace: {
+              kind: "actorSpace",
+              positionId: druidGroundPositionId,
+            },
+          }
+        : disposition === "worn"
+          ? { item, disposition, practicality: { kind: "practicalToWear" } }
+          : { item, disposition };
+    const fill = wildShapeDispositionFill(hole, [choice]);
+    expect(
+      Result.isSuccess(Schema.decodeUnknownResult(BattleFillSchema)(fill)),
+    ).toBe(true);
+    const assumed = requireResolved(
+      resolveDruidWildShape(initial, subject, [fill]),
+    );
+    const active = requireCharacter(assumed.state, druidId);
+    expect(active.origin.selectedLoadout).toEqual({});
+    expect(
+      attackActionOptionsForActor(assumed.state, druidId).some(
+        (attack) =>
+          attack.kind === "weapon" && attack.weaponObjectId === spareId,
+      ),
+    ).toBe(false);
+    expect(battleObjectIsOnGround(assumed.state, druidId, spareId)).toBe(
+      disposition === "falls",
+    );
+    expect(activeDruidWildShapeEffect(active)?.equipmentDisposition).toEqual(
+      disposition === "falls" ? [] : [{ item, disposition }],
+    );
+    expect(assumed.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: assumed.state, actorId: druidId }),
+    ).state;
+    const dismissible = requireResolved(
+      endTurn({ state: goblinTurn, actorId: goblinId }),
+    ).state;
+    expect(dismissible.currentTurnResources.currentHasBonusAction).toBe(true);
+    const reverted = requireResolved(
+      resolveDruidWildShape(
+        dismissible,
+        wildShapeSubject(dismissible, { action: "dismiss" }),
+      ),
+    );
+    expect(
+      activeDruidWildShapeEffect(requireCharacter(reverted.state, druidId)),
+    ).toBeNull();
+    expect(battleObjectIsOnGround(reverted.state, druidId, spareId)).toBe(
+      disposition === "falls",
+    );
+    expect(
+      requireCharacter(
+        reverted.state,
+        druidId,
+      ).origin.otherOwnedWeaponAttacks.map(
+        ({ weaponObjectId }) => weaponObjectId,
+      ),
+    ).toContain(spareId);
+  },
+);
+
+test("Wild Shape leaves a spare weapon already on the ground out of its equipment choice", () => {
+  const spareId = battleObjectId("main:weapon_dagger");
+  const initial = druidWildShapeBattle({
+    otherOwnedWeapons: [
+      {
+        itemId: spareId,
+        attack: testCharacterWeaponAttackForUnit(
+          parseSharedUnitId("weapon_dagger"),
+        ),
+      },
+    ],
+  });
+  const placement = battleStateWithGroundObjects(initial, [
+    {
+      actorId: druidId,
+      objectId: spareId,
+      positionId: druidGroundPositionId,
+      source: { kind: "attackWeaponChange" },
+    },
+  ]);
+  if (placement.tag !== "applied") throw new Error(placement.message);
+  const actor = requireCharacter(placement.state, druidId);
+  expect(wildShapeEquipmentObjectRefs(placement.state, actor)).toEqual([]);
+  const subject = wildShapeSubject(placement.state, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const requested = resolveDruidWildShape(placement.state, subject);
+  if (requested.tag !== "needsHoles")
+    throw new Error("Expected Wild Shape equipment choice.");
+  const hole = requireWildShapeEquipmentDispositionHole(
+    battleResolutionHolesForTest(requested),
+  );
+  expect(hole.candidates).toEqual([]);
+  expect(battleObjectIsOnGround(placement.state, druidId, spareId)).toBe(true);
 });
 
 test("decodes Wild Shape worn equipment disposition fills for selected loadout objects", () => {
@@ -1951,14 +2104,15 @@ test("does not turn fallen Heavy armor into worn armor through weapon pickup", (
     ),
   );
 
-  const invalidWeaponPickup = heldWeaponPickupTransition(reverted.state, {
-    actorId: druidId,
-    objectId: armorObjectId,
-  });
+  const invalidWeaponPickup = pickUpLoadoutWeapon(
+    reverted.state,
+    druidId,
+    armorObjectId,
+  );
 
   expect(invalidWeaponPickup).toMatchObject({
     tag: "invalid",
-    reason: "notSelectedLoadoutWeapon",
+    reason: "notOwnedWeapon",
   });
   expect(battleObjectIsOnGround(reverted.state, druidId, armorObjectId)).toBe(
     true,
@@ -2016,13 +2170,10 @@ test("does not turn a fallen Shield into a wielded Shield through weapon pickup"
   );
 
   expect(
-    heldWeaponPickupTransition(reverted.state, {
-      actorId: druidId,
-      objectId: shieldObjectId,
-    }),
+    pickUpLoadoutWeapon(reverted.state, druidId, shieldObjectId),
   ).toMatchObject({
     tag: "invalid",
-    reason: "notSelectedLoadoutWeapon",
+    reason: "notOwnedWeapon",
   });
   expect(battleObjectIsOnGround(reverted.state, druidId, shieldObjectId)).toBe(
     true,
@@ -2077,7 +2228,7 @@ test("held-weapon pickup reports boundary failures and preserves other fallen ob
   const placedDruid = requireCharacter(placed.state, druidId);
   expect(characterEffectiveLoadout(placed.state, placedDruid)).toEqual({});
   const pickup = (actorId: typeof druidId, objectId: typeof mainWeaponItemId) =>
-    heldWeaponPickupTransition(placed.state, { actorId, objectId });
+    pickUpLoadoutWeapon(placed.state, actorId, objectId);
 
   expect(
     pickup(combatantId("missing-pickup-actor"), mainWeaponItemId),
@@ -2088,7 +2239,7 @@ test("held-weapon pickup reports boundary failures and preserves other fallen ob
   });
   expect(
     pickup(druidId, battleObjectId("missing-ground-object")),
-  ).toMatchObject({ tag: "invalid", reason: "objectNotOnGround" });
+  ).toMatchObject({ tag: "invalid", reason: "notOwnedWeapon" });
 
   const pickedUp = pickup(druidId, mainWeaponItemId);
   if (pickedUp.tag !== "applied") {
@@ -4200,13 +4351,10 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
     ]),
   );
   expect(
-    heldWeaponPickupTransition(fallen.state, {
-      actorId: druidId,
-      objectId: quarterstaff.objectId,
-    }),
+    pickUpLoadoutWeapon(fallen.state, druidId, quarterstaff.objectId),
   ).toMatchObject({
     tag: "invalid",
-    reason: "activeFormPickupUnsupported",
+    reason: "activeFormWeaponChangeUnsupported",
   });
   // Discovery uses the same admission, so it doesn't offer the pickup.
   expect(
@@ -4243,7 +4391,9 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
     revertedMainAttacks.map((act) =>
       "weaponChange" in act.subject ? act.subject.weaponChange : undefined,
     ),
-  ).toEqual([{ kind: "equip", objectId: quarterstaff.objectId }]);
+  ).toEqual([
+    { kind: "equip", objectId: quarterstaff.objectId, slot: "mainWeapon" },
+  ]);
   expect(
     resolveBattleSubject({
       state: revertedSession.state,
@@ -4255,10 +4405,11 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
     reason: "unsupportedSubject",
   });
 
-  const pickedUp = heldWeaponPickupTransition(revertedSession.state, {
-    actorId: druidId,
-    objectId: quarterstaff.objectId,
-  });
+  const pickedUp = pickUpLoadoutWeapon(
+    revertedSession.state,
+    druidId,
+    quarterstaff.objectId,
+  );
   if (pickedUp.tag !== "applied") {
     throw new Error(pickedUp.message);
   }
@@ -4358,6 +4509,7 @@ type DruidWildShapeCreatureInput = {
   readonly unarmoredArmorClassBases?: CharacterSeedInput["unarmoredArmorClassBases"];
   readonly attack?: CharacterSeedInput["attack"];
   readonly offHandAttack?: CharacterSeedInput["offHandAttack"];
+  readonly otherOwnedWeapons?: CharacterSeedInput["otherOwnedWeapons"];
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
@@ -4437,6 +4589,9 @@ function druidWildShapeCreatureInit(input?: DruidWildShapeCreatureInput) {
     ...(input?.offHandAttack === undefined
       ? {}
       : { offHandAttack: input.offHandAttack }),
+    ...(input?.otherOwnedWeapons === undefined
+      ? {}
+      : { otherOwnedWeapons: input.otherOwnedWeapons }),
     druidWildShapeAvailableForms:
       input?.knownForms ?? druidWildShapeKnownFormsWith(catId),
     selectedLoadout: input?.selectedLoadout ?? {},
@@ -4808,13 +4963,13 @@ function heavyArmorClassState(): ArmorClassState {
 }
 
 function isWildShapeArmorLoadoutObjectRef(
-  item: WildShapeLoadoutObjectRef,
+  item: WildShapeEquipmentObjectRef,
 ): item is Extract<WildShapeLoadoutObjectRef, { readonly kind: "armor" }> {
   return item.kind === "armor";
 }
 
 function isWildShapeShieldLoadoutObjectRef(
-  item: WildShapeLoadoutObjectRef,
+  item: WildShapeEquipmentObjectRef,
 ): item is Extract<WildShapeLoadoutObjectRef, { readonly kind: "shield" }> {
   return item.kind === "shield";
 }

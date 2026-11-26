@@ -20,6 +20,8 @@ import {
   type CharacterBattleLoadoutRef,
   type CharacterBattleCreatureInitWeaponAttack,
   type CharacterBattleCreatureInit,
+  type CharacterBattleOtherOwnedWeaponInit,
+  type BattleObjectId,
   type BattleStateInitIssue,
   martialArtsAttackProjectionProfileForUnit,
   passiveArmorClassBonusProfileForUnit,
@@ -554,6 +556,7 @@ function armorDefenseBonus(
 export type CharacterBattleWeaponAttackInitProjection = {
   readonly attack: CharacterBattleCreatureInitWeaponAttack | null;
   readonly offHandAttack: CharacterBattleCreatureInitWeaponAttack | undefined;
+  readonly otherOwnedWeapons: readonly CharacterBattleOtherOwnedWeaponInit[];
 };
 
 export const CHARACTER_WEAPON_ATTACK_SLOTS = ["main", "offHand"] as const;
@@ -678,10 +681,168 @@ export function characterBattleWeaponAttackInitProjectionFromWeaponProficiencies
       { readonly slot: "offHand" }
     > => projection.slot === "offHand",
   )?.attack;
-  return Result.succeed({
-    attack: attack ?? null,
-    offHandAttack,
-  });
+  return Result.map(
+    characterOtherOwnedWeapons({ ...input, weaponProficiencies }),
+    (otherOwnedWeapons) => ({
+      attack: attack ?? null,
+      offHandAttack,
+      otherOwnedWeapons,
+    }),
+  );
+}
+
+type CharacterWeaponAttackProjectionInput =
+  CharacterBattleWeaponAttackInitProjectionInput & {
+    readonly weaponProficiencies: readonly WeaponProficiency[];
+  };
+
+/**
+ * One battle object for each copy of an owned weapon the selected loadout
+ * doesn't hold, with the attack Battle binds for it. The loadout holds the
+ * first copy of an item it names, whose battle object is the item itself;
+ * the other copies are `<item>#2`, `<item>#3` and so on. A weapon Battle
+ * can't execute stays out of the battle, as it would anywhere but a hand;
+ * any other projection failure is the character's, and is kept.
+ */
+function characterOtherOwnedWeapons(
+  input: CharacterWeaponAttackProjectionInput,
+): Result.Result<
+  readonly CharacterBattleOtherOwnedWeaponInit[],
+  BattleCreatureInitIssue
+> {
+  const { weapon, offHandWeapon } = input.build.equipment.loadout;
+  const loadoutItemIds = [weapon?.itemId, offHandWeapon?.itemId];
+  const copies = traverseValidation(ownedWeaponStock(input.build), (stock) =>
+    ownedWeaponSpareCopies(
+      input,
+      stock,
+      loadoutItemIds.filter((itemId) => itemId === stock.itemId).length,
+    ),
+  );
+  if (Result.isFailure(copies)) {
+    const [firstFailure, ...remainingFailures] = copies.failure;
+    return battleCreatureInitIssueFromLeaves([
+      ...battleCreatureInitIssueLeaves(firstFailure),
+      ...remainingFailures.flatMap(battleCreatureInitIssueLeaves),
+    ]);
+  }
+  return Result.succeed(copies.success.flat());
+}
+
+type OwnedWeaponStock = {
+  readonly itemId: CharacterEquipmentItemId;
+  readonly quantity: number;
+};
+
+/**
+ * The owned weapon items with their quantities summed by item id, since
+ * separate owned entries (a catalog item and an authored catalog item, say)
+ * can name the same item.
+ */
+function ownedWeaponStock(build: CharacterBuild): readonly OwnedWeaponStock[] {
+  const quantities = new Map<CharacterEquipmentItemId, number>();
+  for (const item of build.equipment.owned) {
+    if (!isOwnedWeaponItem(item)) continue;
+    quantities.set(
+      item.itemId,
+      (quantities.get(item.itemId) ?? 0) + Number(item.quantity),
+    );
+  }
+  return [...quantities].map(([itemId, quantity]) => ({ itemId, quantity }));
+}
+
+function isOwnedWeaponItem(
+  item: CharacterBuild["equipment"]["owned"][number],
+): item is Extract<
+  CharacterBuild["equipment"]["owned"][number],
+  { readonly kind: "catalogItem" | "authoredCatalogItem" }
+> {
+  if (item.kind !== "catalogItem" && item.kind !== "authoredCatalogItem")
+    return false;
+  const { slot } = characterEquipmentItemSourceFromId(item.itemId);
+  return slot === "main" || slot === "off";
+}
+
+function ownedWeaponSpareCopies(
+  input: CharacterWeaponAttackProjectionInput,
+  stock: OwnedWeaponStock,
+  heldCopies: number,
+): Result.Result<
+  readonly CharacterBattleOtherOwnedWeaponInit[],
+  BattleCreatureInitIssue
+> {
+  const spareCopies = Math.max(stock.quantity - heldCopies, 0);
+  if (spareCopies === 0) return Result.succeed([]);
+  const request = {
+    slot: "main",
+    itemId: stock.itemId,
+    grip: "one_handed",
+  } as const satisfies CharacterWeaponLoadoutRequest;
+  const unit = getRequiredUnit(
+    input.unitLibrary,
+    characterEquipmentItemSourceFromId(stock.itemId).unitId,
+  );
+  if (Result.isFailure(unit))
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(unit.failure),
+    );
+  if (Result.isFailure(characterWeaponBattleUse({ ...input, request })))
+    return Result.succeed([]);
+  return Result.map(
+    ownedWeaponCopyAttacks(input, request, heldCopies === 0),
+    (attacks) =>
+      attacks === null
+        ? []
+        : Array.from({ length: spareCopies }, (_, index) => ({
+            itemId: ownedWeaponCopyObjectId(
+              stock.itemId,
+              heldCopies + index + 1,
+            ),
+            attack: index === 0 ? attacks.firstCopy : attacks.otherCopies,
+          })),
+  );
+}
+
+/**
+ * The attacks for an item's spare copies. A Pact of the Blade bond names an
+ * item, and the bonded weapon is that item's first copy: held by the loadout
+ * when it names the item, otherwise the first spare. No other copy is bonded.
+ */
+function ownedWeaponCopyAttacks(
+  input: CharacterWeaponAttackProjectionInput,
+  request: CharacterWeaponLoadoutRequest,
+  firstCopyIsSpare: boolean,
+): Result.Result<
+  {
+    readonly firstCopy: CharacterBattleCreatureInitWeaponAttack;
+    readonly otherCopies: CharacterBattleCreatureInitWeaponAttack;
+  } | null,
+  BattleCreatureInitIssue
+> {
+  const { pactBladeBondedWeaponItemId: _bond, ...unbondedInput } = input;
+  const otherCopies = projectCharacterWeaponLoadoutRequest(
+    unbondedInput,
+    request,
+  );
+  if (Result.isFailure(otherCopies)) return Result.fail(otherCopies.failure);
+  const firstCopy = firstCopyIsSpare
+    ? projectCharacterWeaponLoadoutRequest(input, request)
+    : otherCopies;
+  if (Result.isFailure(firstCopy)) return Result.fail(firstCopy.failure);
+  const first = firstCopy.success.attack;
+  const other = otherCopies.success.attack;
+  return Result.succeed(
+    first === null || other === null
+      ? null
+      : { firstCopy: first, otherCopies: other },
+  );
+}
+
+function ownedWeaponCopyObjectId(
+  itemId: CharacterEquipmentItemId,
+  copy: number,
+): BattleObjectId {
+  return battleObjectId(copy === 1 ? itemId : `${itemId}#${copy}`);
 }
 
 export function characterBattleLoadoutFromBuild(

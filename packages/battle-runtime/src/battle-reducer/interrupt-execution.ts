@@ -1,3 +1,4 @@
+import { isReadiedWeaponChangeActionSubject } from "../battle-subjects.ts";
 import {
   checkpointWithAcceptedSubjectReplayEvidence,
   interruptedProcedureSubject,
@@ -16,7 +17,10 @@ import { creatureSpellProcedure } from "../creature-spell-procedure.ts";
 import { longCastingCompletionResource } from "./long-casting-readiness.ts";
 import * as Result from "effect/Result";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
-import { type BattleSubject } from "../battle-subjects.ts";
+import {
+  type BattleSubject,
+  type ReadiedAttackWeaponChange,
+} from "../battle-subjects.ts";
 import {
   characterSpellProcedure,
   type BattleSpellProcedureExecution,
@@ -55,6 +59,13 @@ import {
   readiedSpellInitialHoles,
 } from "./readied-initial-holes.ts";
 import { readiedAttackOption } from "./ready.ts";
+import {
+  readiedAttackWeaponChanges,
+  readiedUnarmedStrikeIsAvailable,
+  readiedUnarmedStrikeWeaponChanges,
+  type ReadiedAttackRelease,
+} from "./readied-attack-weapon-change.ts";
+import { weaponChangeInitialHoles } from "./attack-weapon-change.ts";
 import { interruptDecisionHole, snapshotBattle } from "./battle-snapshot.ts";
 import { interruptChoiceResponderId } from "../battle-state-execution.ts";
 export {
@@ -716,22 +727,40 @@ export function readiedActionReactionChoices(
   const reactorId = frame.readiedActorId;
   const readied = state.readiedResponses.get(reactorId);
   const reactor = state.combatants.get(reactorId);
-  return readied?.response.kind === "action" &&
-    reactor !== undefined &&
-    combatantCanTakeReactions(reactor)
-    ? [
-        {
-          kind: "nestedProcedure",
-          initialHoles: [],
-          subject: {
-            tag: "runtimeCommand",
-            actorId: currentActorId(state),
-            command: "releaseReadiedAction",
-            reactorId,
+  if (
+    readied?.response.kind !== "action" ||
+    reactor === undefined ||
+    !combatantCanTakeReactions(reactor)
+  )
+    return [];
+  const release = {
+    tag: "runtimeCommand",
+    actorId: currentActorId(state),
+    command: "releaseReadiedAction",
+    reactorId,
+  } as const;
+  const held = readied.response.subject;
+  if (!isReadiedWeaponChangeActionSubject(held)) {
+    return [{ kind: "nestedProcedure", initialHoles: [], subject: release }];
+  }
+  return [
+    ...(readiedUnarmedStrikeIsAvailable(state, held)
+      ? [
+          {
+            kind: "nestedProcedure" as const,
+            initialHoles: [],
+            subject: release,
           },
-        },
-      ]
-    : [];
+        ]
+      : []),
+    ...readiedUnarmedStrikeWeaponChanges(state, held).map(
+      (weaponChange): BattleInterruptProcedureChoice => ({
+        kind: "nestedProcedure",
+        initialHoles: weaponChangeInitialHoles(reactorId, weaponChange.change),
+        subject: { ...release, weaponChange },
+      }),
+    ),
+  ];
 }
 
 export function readiedAttackReactionChoices(
@@ -749,30 +778,54 @@ export function readiedAttackReactionChoices(
   ) {
     return [];
   }
-  const response = readied.response;
+  const procedureRef = readied.response.selection.procedureRef;
   return [...state.combatants.keys()].flatMap((targetId) =>
+    readiedAttackReleaseChoices(state, { reactorId, targetId, procedureRef }),
+  );
+}
+
+/**
+ * The releases of a readied attack against one target: the attack itself
+ * when it's there now, and each with the one weapon change it can carry.
+ */
+function readiedAttackReleaseChoices(
+  state: BattleState,
+  release: ReadiedAttackRelease,
+): readonly BattleInterruptProcedureChoice[] {
+  const attackIsThere =
     readiedAttackOption(
       state,
-      reactorId,
-      targetId,
-      response.selection.procedureRef,
-    ) === undefined
-      ? []
-      : [
-          {
-            kind: "nestedProcedure" as const,
-            initialHoles: [],
-            subject: {
-              tag: "runtimeCommand" as const,
-              actorId: currentActorId(state),
-              command: "releaseReadiedAttack" as const,
-              reactorId,
-              targetId,
-              procedureRef: response.selection.procedureRef,
-            },
-          },
-        ],
-  );
+      release.reactorId,
+      release.targetId,
+      release.procedureRef,
+    ) !== undefined;
+  return [
+    ...(attackIsThere ? [readiedAttackReleaseChoice(state, release)] : []),
+    ...readiedAttackWeaponChanges(state, release).map((weaponChange) =>
+      readiedAttackReleaseChoice(state, release, weaponChange),
+    ),
+  ];
+}
+
+function readiedAttackReleaseChoice(
+  state: BattleState,
+  release: ReadiedAttackRelease,
+  weaponChange?: ReadiedAttackWeaponChange,
+): BattleInterruptProcedureChoice {
+  return {
+    kind: "nestedProcedure",
+    initialHoles:
+      weaponChange === undefined
+        ? []
+        : weaponChangeInitialHoles(release.reactorId, weaponChange.change),
+    subject: {
+      tag: "runtimeCommand",
+      actorId: currentActorId(state),
+      command: "releaseReadiedAttack",
+      ...release,
+      ...(weaponChange === undefined ? {} : { weaponChange }),
+    },
+  };
 }
 
 export function interruptChoices(

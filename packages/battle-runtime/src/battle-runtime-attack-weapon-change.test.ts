@@ -19,6 +19,7 @@ import {
   fighterVsGoblinBattle,
   findHole,
   goblinId,
+  grappleOutcomeFill,
   interruptDecisionFill,
   movementFeet,
   movementFill,
@@ -32,6 +33,7 @@ import {
   statBlockCreatureInit,
   targetFill,
   testDaggerAttack,
+  testLongswordAttack,
   testShortswordAttack,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
@@ -45,7 +47,7 @@ import {
   battleGroundObjectState,
   battleObjectIsOnGround,
 } from "./battle-reducer/object-custody-queries.ts";
-import { stateWithLoadoutWeaponChange } from "./battle-reducer/loadout-weapon-custody.ts";
+import { stateWithOwnedWeaponChange } from "./battle-reducer/owned-weapon-custody.ts";
 import { loadoutWeaponIsStowed } from "./battle-reducer/character-effective-loadout.ts";
 
 // RAW trace: .references/srd-5.2.1/rules-glossary.md#Attack [Action],
@@ -155,7 +157,7 @@ function dropFill(): BattleFill {
 
 /** The Fighter on its turn, with its Longsword stowed and its action left. */
 function fighterWithStowedLongsword(): BattleState {
-  const stowed = stateWithLoadoutWeaponChange(
+  const stowed = stateWithOwnedWeaponChange(
     fighterVsGoblinBattle(),
     fighterId,
     { kind: "stow", objectId: longswordId },
@@ -186,7 +188,11 @@ describe("weapon change before an attack", () => {
 
   it("offers attacks that draw a stowed weapon, and draws it before the roll", () => {
     const stowed = fighterWithStowedLongsword();
-    const draw = { kind: "equip", objectId: longswordId } as const;
+    const draw = {
+      kind: "equip",
+      objectId: longswordId,
+      slot: "mainWeapon",
+    } as const;
     const drawingAttacks = attackActs(stowed).filter(
       (subject) => "weaponChange" in subject,
     );
@@ -210,7 +216,11 @@ describe("weapon change before an attack", () => {
     const fighter = stowed.combatants.get(fighterId);
     if (fighter === undefined) throw new Error("Expected the Fighter.");
     const alone = { ...stowed, combatants: new Map([[fighterId, fighter]]) };
-    const draw = { kind: "equip", objectId: longswordId } as const;
+    const draw = {
+      kind: "equip",
+      objectId: longswordId,
+      slot: "mainWeapon",
+    } as const;
 
     expect(attackActs(alone)).toEqual([
       withChange(fighterAttackSubject(fighterVsGoblinBattle()), draw),
@@ -267,8 +277,8 @@ describe("weapon change before an attack", () => {
     const cases = [
       {
         before: stowed,
-        change: { kind: "equip", objectId: longswordId },
-        applied: { kind: "equip", objectId: longswordId },
+        change: { kind: "equip", objectId: longswordId, slot: "mainWeapon" },
+        applied: { kind: "equip", objectId: longswordId, slot: "mainWeapon" },
       },
       {
         before: ready,
@@ -287,7 +297,7 @@ describe("weapon change before an attack", () => {
     ] as const;
     for (const { before, change, applied } of cases) {
       const subject = withChange(unarmedStrike(before), change);
-      const changed = stateWithLoadoutWeaponChange(before, fighterId, applied);
+      const changed = stateWithOwnedWeaponChange(before, fighterId, applied);
       if (changed.tag !== "applied") throw new Error(changed.message);
       const resuming: BattleState = {
         ...changed.state,
@@ -320,6 +330,7 @@ describe("weapon change before an attack", () => {
         subject: withChange(fighterAttackSubject(state), {
           kind: "equip",
           objectId: longswordId,
+          slot: "mainWeapon",
         }),
         fills: [],
       }),
@@ -357,9 +368,10 @@ describe("weapon change before an attack", () => {
         armorClass: { ...fighter.armorClass, [gripHand]: "free" },
       }),
     };
-    const drawn = stateWithLoadoutWeaponChange(handLeftFree, fighterId, {
+    const drawn = stateWithOwnedWeaponChange(handLeftFree, fighterId, {
       kind: "equip",
       objectId: longswordId,
+      slot: "mainWeapon",
     });
     if (drawn.tag !== "applied") throw new Error(drawn.message);
     expect(drawn.state.combatants.get(fighterId)?.armorClass[gripHand]).toBe(
@@ -377,9 +389,10 @@ describe("weapon change before an attack", () => {
       }),
     };
     expect(
-      stateWithLoadoutWeaponChange(handHoldingObject, fighterId, {
+      stateWithOwnedWeaponChange(handHoldingObject, fighterId, {
         kind: "equip",
         objectId: longswordId,
+        slot: "mainWeapon",
       }),
     ).toMatchObject({ tag: "invalid", reason: "handsOccupied" });
   });
@@ -408,6 +421,181 @@ describe("weapon change before an attack", () => {
   });
 });
 
+// RAW trace: .references/srd-5.2.1/rules-glossary.md#Unarmed Strike: a
+// Grapple or Shove can take the place of an attack of the Attack action, and
+// a Grapple needs "a hand free to grab it", so that attack's weapon change can
+// free one first.
+describe("weapon change before a Grapple or Shove", () => {
+  const shortswordId = testShortswordAttack().weaponObjectId;
+  const daggerId = battleObjectId("off:weapon_dagger");
+
+  it("offers a Grapple only with a change that frees a hand, when both hands hold weapons", () => {
+    const state = dualWieldingFighterBattle();
+    const options = unarmedStrikeOptionActs(state);
+    const grapples = options.filter((act) => act.subject.action === "grapple");
+    const unequips = [shortswordId, daggerId].flatMap((objectId) => [
+      { kind: "stow", objectId } as const,
+      { kind: "drop", objectId } as const,
+    ]);
+
+    expect(grapples.map((act) => act.subject)).toEqual(
+      unequips.map((weaponChange) => grappleSubject(weaponChange)),
+    );
+    // A Shove needs no free hand, so it is offered without a change too.
+    expect(
+      options
+        .filter((act) => act.subject.action === "shove")
+        .map((act) => act.subject),
+    ).toEqual([
+      shoveSubject(),
+      ...unequips.map((weaponChange) => shoveSubject(weaponChange)),
+    ]);
+    const droppingGrapple = grapples.find(
+      (act) =>
+        "weaponChange" in act.subject &&
+        act.subject.weaponChange?.kind === "drop" &&
+        act.subject.weaponChange.objectId === daggerId,
+    );
+    expect(droppingGrapple?.initialHoles.map((hole) => hole.kind)).toEqual([
+      "weaponDropPosition",
+      "targetChoice",
+    ]);
+  });
+
+  it("stows a weapon first and grabs with the hand it frees, leaving no change after it", () => {
+    const state = dualWieldingFighterBattle();
+    const fighter = state.combatants.get(fighterId);
+    if (fighter === undefined) throw new Error("Expected the Fighter.");
+    const daggerHand =
+      fighter.armorClass.leftHandUse === "offWeapon" ? "left" : "right";
+
+    const grappled = grappledGoblin(
+      state,
+      grappleSubject({ kind: "stow", objectId: daggerId }),
+    );
+
+    expect(loadoutWeaponIsStowed(grappled, fighterId, daggerId)).toBe(true);
+    expect(grappled.grapples).toEqual([
+      expect.objectContaining({
+        grapplerId: fighterId,
+        targetId: goblinId,
+        hand: daggerHand,
+      }),
+    ]);
+    expect(grappled.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "unavailable",
+    );
+    expect(afterAttackChanges(grappled)).toEqual([]);
+  });
+
+  it("drops a weapon before a Shove where the table places it", () => {
+    const state = dualWieldingFighterBattle();
+    const subject = shoveSubject({ kind: "drop", objectId: shortswordId });
+    const dropHole = weaponDropPositionHole(fighterId, shortswordId);
+    expect(
+      requireHole(
+        resolveBattleSubject({ state, subject, fills: [] }),
+        "weaponDropPosition",
+      ),
+    ).toEqual(dropHole);
+
+    const shoved = shoveResult(state, subject, [
+      {
+        kind: "weaponDropPosition",
+        holeId: dropHole.holeId,
+        value: { positionId: dropPositionId },
+      },
+    ]);
+
+    expect(shoved.droppedObjects).toEqual([
+      {
+        kind: "objectDropped",
+        actorId: fighterId,
+        objectId: shortswordId,
+        source: { kind: "attackWeaponChange" },
+      },
+    ]);
+    expect(
+      battleGroundObjectState(shoved.state, fighterId, shortswordId),
+    ).toEqual({
+      positionId: dropPositionId,
+      source: { kind: "attackWeaponChange" },
+    });
+    expect(shoved.state.currentTurnResources.weaponChangeAfterAttack).toBe(
+      "unavailable",
+    );
+  });
+
+  it("offers no Grapple whose change takes the free hand, and refuses one", () => {
+    const state = stowedTwoHandedLongswordBattle();
+    const draw = {
+      kind: "equip",
+      objectId: longswordId,
+      slot: "mainWeapon",
+    } as const;
+    const subjects = unarmedStrikeOptionActs(state).map((act) => act.subject);
+
+    // Drawn, the Longsword takes both hands in its two-handed grip.
+    expect(subjects).toEqual([
+      grappleSubject(),
+      shoveSubject(),
+      shoveSubject(draw),
+    ]);
+    const target = requireHole(
+      resolveBattleSubject({ state, subject: grappleSubject(draw), fills: [] }),
+      "targetChoice",
+    );
+    expect(target.choices).toEqual([]);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: grappleSubject(draw),
+        fills: [targetFill(target, goblinId)],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+  });
+
+  it("refuses a change the character can't make before a Grapple", () => {
+    const state = dualWieldingFighterBattle();
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: grappleSubject({
+          kind: "equip",
+          objectId: daggerId,
+          slot: "offWeapon",
+        }),
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
+  it("prepares no weapon change with a readied Grapple or Shove", () => {
+    const state = dualWieldingFighterBattle();
+    const ready = discoverBattleActCandidates(state).find(
+      (act) => act.subject.tag === "action" && act.subject.action === "ready",
+    );
+    const declaration = ready?.initialHoles.find(
+      (hole) => hole.kind === "readyDeclaration",
+    );
+    if (declaration?.kind !== "readyDeclaration") {
+      throw new Error("Expected the Ready declaration.");
+    }
+    const readiedOptions = declaration.responseChoices.flatMap((response) =>
+      response.kind === "action" &&
+      response.subject.tag === "action" &&
+      (response.subject.action === "grapple" ||
+        response.subject.action === "shove")
+        ? [response.subject]
+        : [],
+    );
+    expect(readiedOptions).toHaveLength(2);
+    expect(readiedOptions).toEqual(
+      expect.arrayContaining([grappleSubject(), shoveSubject()]),
+    );
+  });
+});
+
 describe("weapon change after an attack", () => {
   it("offers one change after an attack without one, and spends it", () => {
     const state = fighterVsGoblinBattle();
@@ -429,7 +617,11 @@ describe("weapon change after an attack", () => {
     );
     expect(afterAttackChanges(stowed)).toEqual([]);
     expect(
-      changeAfterAttack(stowed, { kind: "equip", objectId: longswordId }),
+      changeAfterAttack(stowed, {
+        kind: "equip",
+        objectId: longswordId,
+        slot: "mainWeapon",
+      }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
@@ -517,6 +709,161 @@ describe("weapon change after an attack", () => {
     );
   });
 });
+
+type UnarmedStrikeOptionSubject = Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "grapple" | "shove" }
+>;
+
+function grappleSubject(
+  weaponChange?: AttackWeaponChange,
+): UnarmedStrikeOptionSubject {
+  return weaponChange === undefined
+    ? { tag: "action", actorId: fighterId, action: "grapple" }
+    : { tag: "action", actorId: fighterId, action: "grapple", weaponChange };
+}
+
+function shoveSubject(
+  weaponChange?: AttackWeaponChange,
+): UnarmedStrikeOptionSubject {
+  return weaponChange === undefined
+    ? { tag: "action", actorId: fighterId, action: "shove" }
+    : { tag: "action", actorId: fighterId, action: "shove", weaponChange };
+}
+
+function unarmedStrikeOptionActs(state: BattleState) {
+  return discoverBattleActCandidates(state).flatMap((act) =>
+    act.subject.tag === "action" &&
+    (act.subject.action === "grapple" || act.subject.action === "shove")
+      ? [{ subject: act.subject, initialHoles: act.initialHoles }]
+      : [],
+  );
+}
+
+/** Resolves a Grapple of the Goblin that the Goblin fails to resist. */
+function grappledGoblin(
+  state: BattleState,
+  subject: UnarmedStrikeOptionSubject,
+): BattleState {
+  const target = requireHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "targetChoice",
+  );
+  const outcome = requireHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill(target, goblinId)],
+    }),
+    "grappleOutcome",
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill(target, goblinId), grappleOutcomeFill(outcome, false)],
+    }),
+  ).state;
+}
+
+/** Resolves a Shove that knocks the Goblin Prone. */
+function shoveResult(
+  state: BattleState,
+  subject: UnarmedStrikeOptionSubject,
+  changeFills: readonly BattleFill[] = [],
+) {
+  const reach = [
+    {
+      kind: "shoveTargetWithinReach" as const,
+      shoverId: fighterId,
+      targetId: goblinId,
+    },
+  ];
+  const target = requireHole(
+    resolveBattleSubject({ state, subject, fills: [...changeFills] }),
+    "targetChoice",
+  );
+  const outcome = requireHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [...changeFills, targetFill(target, goblinId, reach)],
+    }),
+    "shoveOutcome",
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        ...changeFills,
+        targetFill(target, goblinId, reach),
+        shoveOutcomeFill(outcome, {
+          succeeded: false,
+          failedEffect: { kind: "prone" },
+        }),
+      ],
+    }),
+  );
+}
+
+/** A Fighter with a Shortsword in one hand and a Dagger in the other. */
+function dualWieldingFighterBattle(): BattleState {
+  const mainAttack = testShortswordAttack();
+  const offHandAttack = {
+    ...testDaggerAttack(),
+    weaponObjectId: battleObjectId("off:weapon_dagger"),
+  };
+  return startBattleRight({
+    battleId: battleId("battle-weapon-change-off-hand"),
+    combatants: [
+      characterSeed({
+        initiative: 20,
+        attack: mainAttack,
+        offHandAttack,
+        selectedLoadout: {
+          weapon: {
+            itemId: mainAttack.weaponObjectId,
+            unitId: parseUnitId("weapon_shortsword"),
+            grip: "one_handed",
+          },
+          offHandWeapon: {
+            itemId: offHandAttack.weaponObjectId,
+            unitId: parseUnitId("weapon_dagger"),
+          },
+        },
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+/** A Fighter whose Longsword, held two-handed, is stowed, leaving both hands free. */
+function stowedTwoHandedLongswordBattle(): BattleState {
+  const state = startBattleRight({
+    battleId: battleId("battle-weapon-change-two-handed"),
+    combatants: [
+      characterSeed({
+        initiative: 20,
+        attack: testLongswordAttack(),
+        selectedLoadout: {
+          weapon: {
+            itemId: longswordId,
+            unitId: parseUnitId("weapon_longsword"),
+            grip: "two_handed",
+          },
+        },
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+  const stowed = stateWithOwnedWeaponChange(state, fighterId, {
+    kind: "stow",
+    objectId: longswordId,
+  });
+  if (stowed.tag !== "applied") throw new Error(stowed.message);
+  return stowed.state;
+}
 
 /** A level 5 Fighter with Extra Attack, two attacks with each Attack action. */
 function extraAttackFighterBattle(): BattleState {
@@ -634,32 +981,7 @@ describe("the window each attack of the Attack action opens", () => {
 
   it("leaves the window as it was after an off-hand attack with a Bonus Action", () => {
     const mainAttack = testShortswordAttack();
-    const offHandAttack = {
-      ...testDaggerAttack(),
-      weaponObjectId: battleObjectId("off:weapon_dagger"),
-    };
-    const state = startBattleRight({
-      battleId: battleId("battle-weapon-change-off-hand"),
-      combatants: [
-        characterSeed({
-          initiative: 20,
-          attack: mainAttack,
-          offHandAttack,
-          selectedLoadout: {
-            weapon: {
-              itemId: mainAttack.weaponObjectId,
-              unitId: parseUnitId("weapon_shortsword"),
-              grip: "one_handed",
-            },
-            offHandWeapon: {
-              itemId: offHandAttack.weaponObjectId,
-              unitId: parseUnitId("weapon_dagger"),
-            },
-          },
-        }),
-        statBlockCreatureInit({ initiative: 10 }),
-      ],
-    });
+    const state = dualWieldingFighterBattle();
     const offHandSubject = (current: BattleState) => {
       const subject = discoverBattleActCandidates(current).find(
         (act) =>

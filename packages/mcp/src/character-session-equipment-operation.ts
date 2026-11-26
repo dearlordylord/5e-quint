@@ -257,7 +257,7 @@ function equipmentLoadoutIssueMessage(
     Match.when({ tag: "shieldTrainingRequired" }, (matched) =>
       characterSheetEquipmentLoadoutIssueMessage(matched),
     ),
-    Match.when({ tag: "weaponCannotBeHeldOneHanded" }, (matched) =>
+    Match.when({ tag: "twoHandedWeaponInOffHand" }, (matched) =>
       characterSheetEquipmentLoadoutIssueMessage(matched),
     ),
     Match.when({ tag: "twoHandedGripHandConflict" }, (matched) =>

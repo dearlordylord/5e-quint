@@ -100,7 +100,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/battle-discovery.ts": {
       "module/binding:companionAttackActs": 9,
-      "module/binding:discoverBattleActsWithoutRouteEvents": 68
+      "module/binding:discoverBattleActsWithoutRouteEvents": 58
     },
     "packages/battle-runtime/src/battle-reducer/battle-movement.ts": {
       "module/binding:applyBattleMovement": 11
@@ -134,7 +134,7 @@
       "module/binding:combatantCanStillHoldBoundWeaponItem": 11
     },
     "packages/battle-runtime/src/battle-reducer/creature-state.ts": {
-      "module/binding:battleCreatureStateAdmissionFromInit": 30
+      "module/binding:battleCreatureStateAdmissionFromInit": 25
     },
     "packages/battle-runtime/src/battle-reducer/cunning-strike.ts": {
       "module/binding:eligibleCunningStrikeContexts/call:execution.procedureBindings.flatMap:argument-0": 10,

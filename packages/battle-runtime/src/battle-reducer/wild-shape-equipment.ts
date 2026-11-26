@@ -1,8 +1,18 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 import {
   HELD_WEAPON_LOADOUT_SLOTS,
   type CharacterBattleLoadoutRef,
   type HeldWeaponLoadoutSlot,
 } from "../character-creature-execution-facts.ts";
+import type {
+  BattleState,
+  CharacterBattleCreatureState,
+} from "../battle-state-execution.ts";
+import { characterEffectiveLoadout } from "./character-effective-loadout.ts";
+import {
+  battleObjectIsOnGround,
+  ownedWeaponObjectIds,
+} from "./object-custody-queries.ts";
 import type { BattleObjectId } from "../identity.ts";
 import {
   type ActiveWildShapeEquipmentDisposition,
@@ -11,6 +21,7 @@ import {
   type WildShapeEquipmentDispositionChoice,
   type WildShapeFormLimbObjectHandlingWitness,
   type WildShapeLoadoutObjectRef,
+  type WildShapeEquipmentObjectRef,
   type WildShapeWornLoadoutObjectRef,
 } from "../procedure-execution/wild-shape-equipment.ts";
 export {
@@ -26,6 +37,7 @@ export {
   type WildShapeEquipmentDispositionChoice,
   type WildShapeFormLimbObjectHandlingWitness,
   type WildShapeLoadoutObjectRef,
+  type WildShapeEquipmentObjectRef,
   type WildShapeWearPracticalityWitness,
   type WildShapeWornLoadoutObjectRef,
 } from "../procedure-execution/wild-shape-equipment.ts";
@@ -74,6 +86,23 @@ export function wildShapeLoadoutObjectRefs(
   ];
 }
 
+/** The loadout and carried spare weapons that still accompany this character. */
+export function wildShapeEquipmentObjectRefs(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+): readonly WildShapeEquipmentObjectRef[] {
+  const selected = wildShapeLoadoutObjectRefs(actor.origin.selectedLoadout);
+  return [
+    ...wildShapeLoadoutObjectRefs(characterEffectiveLoadout(state, actor)),
+    ...ownedWeaponObjectIds(actor).flatMap((objectId) =>
+      selected.some((item) => item.objectId === objectId) ||
+      battleObjectIsOnGround(state, actor.combatantId, objectId)
+        ? []
+        : [{ kind: "carriedWeapon" as const, objectId }],
+    ),
+  ];
+}
+
 export type WildShapeEquipmentDispositionValidation =
   | {
       readonly tag: "valid";
@@ -82,23 +111,23 @@ export type WildShapeEquipmentDispositionValidation =
   | { readonly tag: "invalid"; readonly message: string };
 
 export function validateWildShapeEquipmentDispositionFill(input: {
-  readonly candidates: readonly WildShapeLoadoutObjectRef[];
+  readonly candidates: readonly WildShapeEquipmentObjectRef[];
   readonly value: WildShapeEquipmentDispositionFillValue;
 }): WildShapeEquipmentDispositionValidation {
   const choicesByKey = new Map<string, WildShapeEquipmentDispositionChoice>();
 
   for (const choice of input.value.choices) {
-    const key = wildShapeLoadoutObjectKey(choice.item);
+    const key = wildShapeEquipmentObjectKey(choice.item);
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       !input.candidates.some((candidate) =>
-        sameLoadoutObject(candidate, choice.item),
+        sameEquipmentObject(candidate, choice.item),
       )
     ) {
       return {
         tag: "invalid",
         message:
-          "Druid Wild Shape equipment disposition includes an item outside the selected loadout.",
+          "Druid Wild Shape equipment disposition includes an item outside the character's carried equipment.",
       };
     }
     /* v8 ignore stop -- @preserve */
@@ -119,20 +148,20 @@ export function validateWildShapeEquipmentDispositionFill(input: {
     return {
       tag: "invalid",
       message:
-        "Druid Wild Shape equipment disposition must choose a disposition for every selected loadout item.",
+        "Druid Wild Shape equipment disposition must choose a disposition for every carried equipment item.",
     };
   }
   /* v8 ignore stop -- @preserve */
 
   const dispositions: ResolvedWildShapeEquipmentDisposition[] = [];
   for (const candidate of input.candidates) {
-    const choice = choicesByKey.get(wildShapeLoadoutObjectKey(candidate));
+    const choice = choicesByKey.get(wildShapeEquipmentObjectKey(candidate));
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (choice === undefined) {
       return {
         tag: "invalid",
         message:
-          "Druid Wild Shape equipment disposition must choose a disposition for every selected loadout item.",
+          "Druid Wild Shape equipment disposition must choose a disposition for every carried equipment item.",
       };
     }
     /* v8 ignore stop -- @preserve */
@@ -171,7 +200,7 @@ function resolvedDispositionForChoice(
 }
 
 function resolvedEquipmentDisposition(
-  item: WildShapeLoadoutObjectRef,
+  item: WildShapeEquipmentObjectRef,
   disposition: Exclude<
     ResolvedWildShapeEquipmentDisposition["disposition"],
     "falls"
@@ -184,7 +213,7 @@ function resolvedEquipmentDisposition(
 }
 
 function resolvedFallenEquipmentDisposition(
-  item: WildShapeLoadoutObjectRef,
+  item: WildShapeEquipmentObjectRef,
   fallInActorSpace: Extract<
     ResolvedWildShapeEquipmentDisposition,
     { readonly disposition: "falls" }
@@ -218,12 +247,12 @@ export function wildShapeEquipmentDispositionWearsKind(
 
 export function wildShapeEquipmentDispositionWearsObject(
   dispositions: readonly ActiveWildShapeEquipmentDisposition[],
-  item: WildShapeLoadoutObjectRef,
+  item: WildShapeEquipmentObjectRef,
 ): boolean {
   return dispositions.some(
     (disposition) =>
       disposition.disposition === "worn" &&
-      sameLoadoutObject(disposition.item, item),
+      sameEquipmentObject(disposition.item, item),
   );
 }
 
@@ -307,13 +336,15 @@ export function wildShapeFormLimbsCanHandleObjects(
   return witness.kind === "canHandleObjects";
 }
 
-function sameLoadoutObject(
-  left: WildShapeLoadoutObjectRef,
-  right: WildShapeLoadoutObjectRef,
+function sameEquipmentObject(
+  left: WildShapeEquipmentObjectRef,
+  right: WildShapeEquipmentObjectRef,
 ): boolean {
   return left.kind === right.kind && left.objectId === right.objectId;
 }
 
-function wildShapeLoadoutObjectKey(item: WildShapeLoadoutObjectRef): string {
+function wildShapeEquipmentObjectKey(
+  item: WildShapeEquipmentObjectRef,
+): string {
   return `${item.kind}:${item.objectId}`;
 }

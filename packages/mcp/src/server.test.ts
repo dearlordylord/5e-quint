@@ -2913,6 +2913,11 @@ describe("MCP server route", () => {
       "Attack",
       "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
+      // A Grapple or Shove that first stows, or first drops, the held weapon.
+      "Unarmed Strike (Grapple)",
+      "Unarmed Strike (Grapple)",
+      "Unarmed Strike (Shove)",
+      "Unarmed Strike (Shove)",
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
@@ -8311,6 +8316,11 @@ describe("MCP server route", () => {
       ...GENERIC_COMBAT_ACTION_LABELS,
       "Help (Ability Check)",
       "Unarmed Strike (Shove)",
+      // A Grapple or Shove that first stows, or first drops, the held weapon.
+      "Unarmed Strike (Grapple)",
+      "Unarmed Strike (Grapple)",
+      "Unarmed Strike (Shove)",
+      "Unarmed Strike (Shove)",
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
@@ -12039,6 +12049,7 @@ function battleAttackSubjectForName(
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
       !("weaponDelivery" in candidate.subject) &&
+      !("weaponChange" in candidate.subject) &&
       (candidate.subject.statBlockDamageSelection === undefined ||
         candidate.subject.statBlockDamageSelection.every(
           ({ notation }) => notation === "rolled",

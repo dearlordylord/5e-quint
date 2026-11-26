@@ -1,3 +1,4 @@
+import { loadoutWeaponSlot } from "./battle-object-lifecycle.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.ACTION.ATTACK_WEAPON_CHANGE BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 import { Match } from "effect";
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
@@ -29,7 +30,10 @@ import {
   type CombatantId,
 } from "../identity.ts";
 import type { AttackWeaponChange, BattleSubject } from "../battle-subjects.ts";
-import { loadoutWeaponChangeAttackQuery } from "./loadout-weapon-custody.ts";
+import {
+  offeredOtherOwnedWeaponAttacks,
+  ownedWeaponChangeAttackQuery,
+} from "./owned-weapon-custody.ts";
 import type {
   BattleEquipmentQuery,
   BattleObjectCustodyQuery,
@@ -113,7 +117,10 @@ import {
   type WildShapeWornLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
 import { battleObjectIsOnGround } from "./object-custody-queries.ts";
-import { combatantHandUses } from "./creature-state-leaves.ts";
+import {
+  combatantHandUses,
+  weaponIsHeldWithTwoHands,
+} from "./creature-state-leaves.ts";
 import {
   characterEffectiveLoadoutFromOrigin,
   loadoutWeaponIsStowed,
@@ -488,7 +495,7 @@ export function attackActionOptionsAfterWeaponChange(
   actorId: CombatantId,
   change: AttackWeaponChange,
 ): readonly BoundSupportedAttackActionOption[] {
-  const query = loadoutWeaponChangeAttackQuery(state, actorId, change);
+  const query = ownedWeaponChangeAttackQuery(state, actorId, change);
   return query.tag === "invalid"
     ? []
     : characterAttackActionOptions(state, query.actor, query.equipment);
@@ -505,6 +512,7 @@ function characterAttackActionOptions(
   );
   return [
     ...mainWeaponAttackOptions(state, actor, equipment),
+    ...carriedThrownWeaponAttackOptions(state, actor, equipment),
     unarmedStrike,
   ].filter((attack) => ammunitionForAttackIsReady(equipment, actor, attack));
 }
@@ -567,6 +575,35 @@ function creatureHasFreeHand(
 ): boolean {
   const hands = combatantHandUses(state, actor, state.grapples);
   return hands.left === "free" || hands.right === "free";
+}
+
+/**
+ * The throws of the weapons a character carries outside its loadout. SRD
+ * 5.2.1 equipment.md "Thrown": "you can draw that weapon as part of the
+ * attack", so a carried Thrown weapon is drawn into a free hand and thrown
+ * without the Attack action's weapon change. One on the ground is picked
+ * up, not drawn.
+ */
+function carriedThrownWeaponAttackOptions(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  equipment: BattleEquipmentQuery,
+): readonly BoundSupportedAttackActionOption[] {
+  if (!creatureHasFreeHand(equipment, actor)) return [];
+  return offeredOtherOwnedWeaponAttacks(equipment, actor).flatMap((carried) =>
+    battleObjectIsOnGround(equipment, actor.combatantId, carried.weaponObjectId)
+      ? []
+      : uniqueAttackExecutionSelectionOptions(
+          weaponAttackOptionsForActor(
+            state,
+            actor,
+            carried,
+            carried.weaponObjectId,
+            { kind: "ordinary" },
+            equipment,
+          ).filter(weaponAttackIsThrown),
+        ),
+  );
 }
 
 function uniqueAttackExecutionSelectionOptions(
@@ -827,24 +864,56 @@ function weaponAttackOptionsForActor(
   attack: BoundCharacterWeaponAttackActionOption,
   attachedWeaponItemId: BattleObjectId | undefined,
   abilityMode: WeaponAttackAbilityMode = { kind: "ordinary" },
-  equipment: BattleObjectCustodyQuery = state,
+  equipment: BattleEquipmentQuery = state,
 ): readonly BoundCharacterWeaponAttackActionOption[] {
-  return characterWeaponAttackDeliveryOptions(attack).flatMap((delivery) => {
-    const projected = weaponAttackWithActiveSpellEffects(
-      state,
-      actor,
-      weaponAttackWithMeleeGripAndMartialArtsDamage(equipment, actor, delivery),
-      attachedWeaponItemId,
-    );
-    const withAbilityMode = Match.value(abilityMode).pipe(
-      Match.when({ kind: "ordinary" }, () => projected),
-      Match.when({ kind: "lightExtraAttack" }, ({ procedureRefs }) =>
-        lightExtraAttackWithAbilityChoices(projected, procedureRefs),
-      ),
-      Match.exhaustive,
-    );
-    return attackAbilityAndDamageTypeOptions(withAbilityMode);
-  });
+  return characterWeaponAttackDeliveryOptions(attack)
+    .filter((delivery) =>
+      weaponAttackHasRequiredHands(equipment, actor, delivery),
+    )
+    .flatMap((delivery) => {
+      const projected = weaponAttackWithActiveSpellEffects(
+        state,
+        actor,
+        weaponAttackWithMeleeGripAndMartialArtsDamage(
+          equipment,
+          actor,
+          delivery,
+        ),
+        attachedWeaponItemId,
+      );
+      const withAbilityMode = Match.value(abilityMode).pipe(
+        Match.when({ kind: "ordinary" }, () => projected),
+        Match.when({ kind: "lightExtraAttack" }, ({ procedureRefs }) =>
+          lightExtraAttackWithAbilityChoices(projected, procedureRefs),
+        ),
+        Match.exhaustive,
+      );
+      return attackAbilityAndDamageTypeOptions(withAbilityMode);
+    });
+}
+
+/** Two-Handed applies to every delivery, including a weapon drawn for a throw. */
+function weaponAttackHasRequiredHands(
+  equipment: BattleEquipmentQuery,
+  actor: CharacterBattleCreatureState,
+  attack: BoundCharacterWeaponAttackActionOption,
+): boolean {
+  if (!attack.weapon.properties.some(({ kind }) => kind === "two_handed"))
+    return true;
+  if (weaponIsHeldWithTwoHands(equipment, actor, attack.weaponObjectId))
+    return true;
+  const loadout = characterEffectiveLoadoutFromOrigin(
+    equipment,
+    actor.combatantId,
+    actor.origin,
+  );
+  if (
+    loadoutWeaponSlot(loadout, attack.weaponObjectId) !== null ||
+    !weaponAttackIsThrown(attack)
+  )
+    return false;
+  const hands = combatantHandUses(equipment, actor, equipment.grapples);
+  return hands.left === "free" && hands.right === "free";
 }
 
 function lightExtraAttackWithAbilityChoices(

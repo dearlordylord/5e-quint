@@ -3,7 +3,7 @@ import {
   battleObjectIsOnGround,
 } from "./battle-reducer/object-custody-queries.ts";
 import { objectInteractionRulingHole } from "./battle-reducer/object-interaction.ts";
-import { stateWithLoadoutWeaponChange } from "./battle-reducer/loadout-weapon-custody.ts";
+import { stateWithOwnedWeaponChange } from "./battle-reducer/owned-weapon-custody.ts";
 import { loadoutWeaponIsStowed } from "./battle-reducer/character-effective-loadout.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 // SRD 5.2.1 "Thrown": a Melee weapon with the Thrown property can be thrown to
@@ -492,6 +492,31 @@ describe("battle runtime: thrown weapon attacks", () => {
     );
   });
 
+  test("dropping the Dagger first offers no throw of it", () => {
+    // A dropped weapon lies on the ground, where it is picked up, not drawn
+    // (SRD 5.2.1 equipment.md "Thrown"), so it makes no attack after the drop,
+    // unlike a stowed one.
+    const acts = discoverBattleActs(sessionWithDaggers({ mainHand: "dagger" }));
+    const summariesAfter = (kind: "drop" | "stow") =>
+      acts.flatMap((act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        "weaponChange" in act.subject &&
+        act.subject.weaponChange?.kind === kind &&
+        act.subject.weaponChange.objectId === mainDaggerId
+          ? [act.summary]
+          : [],
+      );
+
+    expect(summariesAfter("stow")).toEqual([
+      "Take the Attack action by throwing Dagger.",
+      "Take the Attack action with Unarmed Strike.",
+    ]);
+    expect(summariesAfter("drop")).toEqual([
+      "Take the Attack action with Unarmed Strike.",
+    ]);
+  });
+
   test("a thrown Dagger lands at the table's position on a hit, out of the hand, and its owner can pick it up", () => {
     const state = battleWithDaggers({ mainHand: "dagger" });
     const subject = attackSubjectFor(state, "thrown");
@@ -613,7 +638,7 @@ describe("battle runtime: thrown weapon attacks", () => {
   test("a stowed Dagger is drawn as part of its throw, keeping the weapon change, and lands", () => {
     // SRD 5.2.1 equipment.md "Thrown": "you can draw that weapon as part of
     // the attack", so the draw isn't the Attack action's weapon change.
-    const stowed = stateWithLoadoutWeaponChange(
+    const stowed = stateWithOwnedWeaponChange(
       battleWithDaggers({ mainHand: "dagger" }),
       fighterId,
       { kind: "stow", objectId: mainDaggerId },
@@ -648,7 +673,7 @@ describe("battle runtime: thrown weapon attacks", () => {
   });
 
   test("a stowed Dagger has no throw while no hand is free", () => {
-    const stowed = stateWithLoadoutWeaponChange(
+    const stowed = stateWithOwnedWeaponChange(
       battleWithDaggers({ mainHand: "dagger" }),
       fighterId,
       { kind: "stow", objectId: mainDaggerId },
@@ -681,7 +706,7 @@ describe("battle runtime: thrown weapon attacks", () => {
     // SRD 5.2.1 equipment.md "Versatile" asks for two hands only on a melee
     // attack; a throw draws the weapon into one hand.
     const spearBattle = battleWithSpear("two_handed");
-    const stowed = stateWithLoadoutWeaponChange(spearBattle, fighterId, {
+    const stowed = stateWithOwnedWeaponChange(spearBattle, fighterId, {
       kind: "stow",
       objectId: spearId,
     });
@@ -707,7 +732,7 @@ describe("battle runtime: thrown weapon attacks", () => {
   });
 
   test("a stowed off-hand Dagger is drawn for its Light extra throw after a Shortsword attack", () => {
-    const stowed = stateWithLoadoutWeaponChange(
+    const stowed = stateWithOwnedWeaponChange(
       battleWithDaggers({ mainHand: "shortsword" }),
       fighterId,
       { kind: "stow", objectId: offHandDaggerId },

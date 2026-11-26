@@ -21842,6 +21842,42 @@
                     "action": "shove"
                   },
                   {
+                    "tag": "action",
+                    "actorId": "corpus:character",
+                    "action": "grapple",
+                    "weaponChange": {
+                      "kind": "stow",
+                      "objectId": "main:weapon_longsword"
+                    }
+                  },
+                  {
+                    "tag": "action",
+                    "actorId": "corpus:character",
+                    "action": "grapple",
+                    "weaponChange": {
+                      "kind": "drop",
+                      "objectId": "main:weapon_longsword"
+                    }
+                  },
+                  {
+                    "tag": "action",
+                    "actorId": "corpus:character",
+                    "action": "shove",
+                    "weaponChange": {
+                      "kind": "stow",
+                      "objectId": "main:weapon_longsword"
+                    }
+                  },
+                  {
+                    "tag": "action",
+                    "actorId": "corpus:character",
+                    "action": "shove",
+                    "weaponChange": {
+                      "kind": "drop",
+                      "objectId": "main:weapon_longsword"
+                    }
+                  },
+                  {
                     "tag": "unitFeature",
                     "actorId": "corpus:character",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:character\\\",\\\"kind\\\":\\\"characterExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}"

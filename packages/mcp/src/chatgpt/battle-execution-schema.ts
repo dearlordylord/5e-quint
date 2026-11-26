@@ -4,6 +4,7 @@ import {
 } from "./battle-fill-input-schema.ts";
 import { BattleActKeySchema } from "./battle-act-selection.ts";
 import {
+  READIED_WEAPON_CHANGE_ACTIONS,
   BattleSubjectSchema,
   BattleFillSchema,
   BattleFallingCreatureMitigationTriggerFactSchema,
@@ -188,6 +189,12 @@ export function chatGptBattleExecutionInputSchema(
       ? null
       : battleFillInputSchemaForOperation(selectionSchema, {
           ordinaryAllowed: false,
+          readiedActionWeaponChangeAllowed: READIED_WEAPON_CHANGE_ACTIONS.some(
+            (action) =>
+              chatGptToolsForExposure(
+                accounting.readiedActionSubjects[`action.${action}`],
+              ).includes(tool),
+          ),
           reactionChoices,
           modifierKinds,
           declineAllowed: tool === "decline_reaction",
@@ -303,6 +310,7 @@ export function chatGptBattleHoleInputSchema(): McpObjectInputSchema {
       },
       {
         ordinaryAllowed: true,
+        readiedActionWeaponChangeAllowed: false,
         reactionChoices: [],
         modifierKinds: [],
         declineAllowed: false,

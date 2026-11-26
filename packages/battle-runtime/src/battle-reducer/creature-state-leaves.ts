@@ -12,7 +12,10 @@ import { deathSaveStateIsDead } from "@dnd/shared-algebras/death-saves-algebra";
 import type { ArmorCategory, HandUse } from "@dnd/shared/types";
 import { Match } from "effect";
 import { characterEffectiveLoadoutFromOrigin } from "./character-effective-loadout.ts";
-import type { BattleObjectCustodyQuery } from "./object-custody-queries.ts";
+import type {
+  BattleEquipmentQuery,
+  BattleObjectCustodyQuery,
+} from "./object-custody-queries.ts";
 import {
   type WildShapeArmorClassWornKind,
   wildShapeEquipmentDispositionWearsKind,
@@ -25,9 +28,10 @@ import {
   type BattleGrappleLink,
   type BattleHand,
   type BattleState,
+  type CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
 import type { CharacterBattleLoadoutRef } from "../character-creature-execution-facts.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleObjectId, CombatantId } from "../identity.ts";
 import type { ActiveDruidWildShape } from "./druid-wild-shape-types.ts";
 
 export function combatantCanSee(
@@ -431,5 +435,25 @@ export function combatantCanTakeReactions(
     !combatant.activeEffects.some(
       (effect) => effect.kind === "saveGatedTurnConstraintBundle",
     )
+  );
+}
+
+/** A held weapon has both operating hands, without borrowing an occupied hand. */
+export function weaponIsHeldWithTwoHands(
+  state: BattleEquipmentQuery,
+  actor: CharacterBattleCreatureState,
+  objectId: BattleObjectId,
+): boolean {
+  const weapon = characterEffectiveLoadoutFromOrigin(
+    state,
+    actor.combatantId,
+    actor.origin,
+  ).weapon;
+  const hands = combatantHandUses(state, actor, state.grapples);
+  return (
+    weapon?.itemId === objectId &&
+    weapon.grip === "two_handed" &&
+    hands.left === "mainWeapon" &&
+    hands.right === "mainWeapon"
   );
 }

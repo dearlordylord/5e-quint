@@ -475,6 +475,9 @@ export function combatantOriginSnapshot(
         attackProcedureRef: origin.attack?.procedureRef ?? null,
         unarmedStrikeProcedureRef: origin.unarmedStrike.procedureRef,
         offHandAttackProcedureRef: origin.offHandAttack?.procedureRef ?? null,
+        otherOwnedWeaponAttackProcedureRefs: origin.otherOwnedWeaponAttacks.map(
+          ({ procedureRef }) => procedureRef,
+        ),
       },
       resources: origin.resources.map(characterResourceSnapshot),
       heroicInspiration: origin.heroicInspiration,

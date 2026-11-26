@@ -63,7 +63,6 @@ export const WEAPON_GRIP_CHANGE_REFUSAL_REASONS = [
   "noHeldMainWeapon",
   "alreadyHeldWithGrip",
   "mainWeaponAttackUnknown",
-  "twoHandedWeapon",
   "handOccupied",
   "unsupportedVersatileDamage",
 ] as const;
@@ -83,8 +82,7 @@ type WeaponGripChangeAdmission = {
 
 /**
  * Whether the actor can change its main weapon to `grip` now. Battle needs the
- * main weapon's attack to tell its properties, and a Two-Handed weapon keeps
- * its two-handed grip (ASSUMPTIONS.md A58). A two-handed grip
+ * main weapon's attack to tell its properties. A two-handed grip
  * needs the other hand free of any shield, off-hand weapon, grapple or held
  * object, and Versatile damage Battle can execute.
  */
@@ -156,7 +154,7 @@ function mainWeaponGripChange(
     );
   }
   const handRefusal = Match.value(grip).pipe(
-    Match.when("one_handed", () => oneHandedGripRefusal(attack.weapon)),
+    Match.when("one_handed", () => null),
     Match.when("two_handed", () =>
       twoHandedGripRefusal(state, actor, attack.weapon),
     ),
@@ -170,17 +168,6 @@ function mainWeaponGripChange(
 type MainWeaponAttackWeapon = NonNullable<
   CharacterBattleCreatureState["origin"]["attack"]
 >["weapon"];
-
-function oneHandedGripRefusal(
-  weapon: MainWeaponAttackWeapon,
-): WeaponGripChangeRefusal | null {
-  return weapon.properties.some(({ kind }) => kind === "two_handed")
-    ? {
-        reason: "twoHandedWeapon",
-        message: "A Two-Handed weapon is held with two hands.",
-      }
-    : null;
-}
 
 function twoHandedGripRefusal(
   state: BattleState,

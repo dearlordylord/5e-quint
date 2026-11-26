@@ -115,7 +115,10 @@ import {
   escapeSpellRestraintAbilityCheckHoleKey,
   grantedAreaSaveDamageActionHoleKey,
 } from "./selected-effect-hole-key.ts";
-import { characterAttackExecutionRefsMatchLayout } from "../attack-execution.ts";
+import {
+  characterAttackExecutionProcedureRefs,
+  characterAttackExecutionRefsMatchLayout,
+} from "../attack-execution.ts";
 import type { SupportedCreatureAttackRollMechanics } from "../battle-action-options.ts";
 import type { BattlePendingProcedure } from "../battle-pending-procedure.ts";
 import {
@@ -123,9 +126,8 @@ import {
   BATTLE_READIED_SPELL_TRIGGERS,
 } from "../battle-interrupt-triggers.ts";
 import {
-  WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS,
   WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES,
-  type WildShapeLoadoutObjectRef,
+  type WildShapeEquipmentObjectRef,
 } from "./wild-shape-equipment.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
@@ -141,6 +143,7 @@ import {
   BattleInterruptSubjectSchema,
   battleInterruptAttackExecutionSelectionWithFields,
   ReadyTriggerDescription,
+  ReadiedAttackWeaponChangeSchema,
   SpellInvocationRefSchema,
 } from "../battle-subjects.ts";
 import {
@@ -483,24 +486,22 @@ const WildShapeOffHandWeaponLoadoutObjectRefSchema = Schema.Struct({
   objectId: BattleObjectId,
 });
 
-const WildShapeLoadoutObjectRefSchemaByKind = {
+const WildShapeEquipmentObjectRefSchemaByKind = {
   armor: WildShapeArmorLoadoutObjectRefSchema,
   shield: WildShapeShieldLoadoutObjectRefSchema,
   mainWeapon: WildShapeMainWeaponLoadoutObjectRefSchema,
   offHandWeapon: WildShapeOffHandWeaponLoadoutObjectRefSchema,
+  carriedWeapon: Schema.Struct({
+    kind: Schema.Literal("carriedWeapon"),
+    objectId: BattleObjectId,
+  }),
 } as const satisfies Record<
-  WildShapeLoadoutObjectRef["kind"],
+  WildShapeEquipmentObjectRef["kind"],
   Schema.Constraint
 >;
 
-const WildShapeLoadoutObjectRefSchema = Schema.Union([
-  ...Object.values(WildShapeLoadoutObjectRefSchemaByKind),
-]);
-
-const WildShapeWornLoadoutObjectRefSchema = Schema.Union([
-  ...WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS.map(
-    (kind) => WildShapeLoadoutObjectRefSchemaByKind[kind],
-  ),
+const WildShapeEquipmentObjectRefSchema = Schema.Union([
+  ...Object.values(WildShapeEquipmentObjectRefSchemaByKind),
 ]);
 
 const WildShapeFallInActorSpaceWitnessSchema = Schema.Struct({
@@ -510,16 +511,16 @@ const WildShapeFallInActorSpaceWitnessSchema = Schema.Struct({
 
 const WildShapeEquipmentDispositionChoiceSchema = Schema.Union([
   Schema.Struct({
-    item: WildShapeLoadoutObjectRefSchema,
+    item: WildShapeEquipmentObjectRefSchema,
     disposition: Schema.Literal("falls"),
     fallInActorSpace: WildShapeFallInActorSpaceWitnessSchema,
   }),
   Schema.Struct({
-    item: WildShapeLoadoutObjectRefSchema,
+    item: WildShapeEquipmentObjectRefSchema,
     disposition: Schema.Literal("merges"),
   }),
   Schema.Struct({
-    item: WildShapeWornLoadoutObjectRefSchema,
+    item: WildShapeEquipmentObjectRefSchema,
     disposition: Schema.Literal("worn"),
     practicality: Schema.Union([
       Schema.Struct({
@@ -2529,7 +2530,7 @@ const BattleHolePayloadMembers = [
     kind: Schema.Literal("wildShapeEquipmentDisposition"),
     actorId: CombatantId,
     formExecutionRef: BattleStatBlockExecutionScopeRef,
-    candidates: Schema.Array(WildShapeLoadoutObjectRefSchema),
+    candidates: Schema.Array(WildShapeEquipmentObjectRefSchema),
   }),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -5048,12 +5049,14 @@ type BattleFillEncoded =
                 }
               | {
                   readonly kind: "releaseReadiedAction";
+                  readonly weaponChange?: typeof ReadiedAttackWeaponChangeSchema.Encoded;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
                   readonly kind: "releaseReadiedAttack";
                   readonly targetId: string;
                   readonly procedureRef: string;
+                  readonly weaponChange?: typeof ReadiedAttackWeaponChangeSchema.Encoded;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
@@ -5362,6 +5365,7 @@ export function battleInterruptDecisionFillSchema() {
           }),
           Schema.Struct({
             kind: Schema.Literal("releaseReadiedAction"),
+            weaponChange: Schema.optionalKey(ReadiedAttackWeaponChangeSchema),
             fills: Schema.Array(BattleFillSchema),
           }),
           Schema.Struct({
@@ -5371,6 +5375,7 @@ export function battleInterruptDecisionFillSchema() {
               BattleAttackProcedureExecutionRef,
               BattleStatBlockProcedureExecutionRef,
             ]),
+            weaponChange: Schema.optionalKey(ReadiedAttackWeaponChangeSchema),
             fills: Schema.Array(BattleFillSchema),
           }),
           Schema.Struct({
@@ -7311,6 +7316,9 @@ const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
       BattleAttackProcedureExecutionRef,
       Schema.Null,
     ]),
+    otherOwnedWeaponAttackProcedureRefs: Schema.Array(
+      BattleAttackProcedureExecutionRef,
+    ),
   }),
   resources: Schema.Array(BattleCharacterResourceSnapshotSchema),
   heroicInspiration: HeroicInspirationSchema,
@@ -7435,11 +7443,6 @@ function characterBattleCreatureSnapshotInvariantsHold(
   characterOrigin: EncodedCharacterBattleCreatureOrigin,
   combatantId: CombatantId,
 ): boolean {
-  const attackProcedureRefs = [
-    characterOrigin.attackExecution.attackProcedureRef,
-    characterOrigin.attackExecution.unarmedStrikeProcedureRef,
-    characterOrigin.attackExecution.offHandAttackProcedureRef,
-  ].filter((reference) => reference !== null);
   return (
     battleCharacterExecutionScopeRefBelongsToCombatant(
       characterOrigin.execution.scopeRef,
@@ -7463,7 +7466,6 @@ function characterBattleCreatureSnapshotInvariantsHold(
       characterOrigin.attackExecution.scopeRef,
       characterOrigin.attackExecution,
     ) &&
-    new Set(attackProcedureRefs).size === attackProcedureRefs.length &&
     characterWildShapeFormScopesAreValid(characterOrigin, combatantId)
   );
 }
@@ -9207,13 +9209,7 @@ function serializedCombatantAuthoritativeExecutionReferences(
     ),
     ...origin.resources.map((resource) => resource.resourcePoolRef),
     origin.attackExecution.scopeRef,
-    ...(origin.attackExecution.attackProcedureRef === null
-      ? []
-      : [origin.attackExecution.attackProcedureRef]),
-    origin.attackExecution.unarmedStrikeProcedureRef,
-    ...(origin.attackExecution.offHandAttackProcedureRef === null
-      ? []
-      : [origin.attackExecution.offHandAttackProcedureRef]),
+    ...characterAttackExecutionProcedureRefs(origin.attackExecution),
     ...origin.druidWildShapeAvailableForms.flatMap((form) =>
       serializedStatBlockAuthoritativeExecutionReferences(form.execution),
     ),
@@ -9318,12 +9314,9 @@ function serializedCharacterAttackProcedureRefIsBound(
   procedureRef: BattleProcedureExecutionRef,
 ): boolean {
   if (combatant?.origin.kind !== "character") return false;
-  const attackExecution = combatant.origin.attackExecution;
-  return (
-    attackExecution.attackProcedureRef === procedureRef ||
-    attackExecution.unarmedStrikeProcedureRef === procedureRef ||
-    attackExecution.offHandAttackProcedureRef === procedureRef
-  );
+  return characterAttackExecutionProcedureRefs(
+    combatant.origin.attackExecution,
+  ).some((reference) => reference === procedureRef);
 }
 
 function serializedOpportunityAttackProcedureRefIsBound(
@@ -10329,7 +10322,11 @@ function pendingReadiedActionChoiceOwnsBoundResponse(
   return readiedResponses.some(
     (readied) =>
       readied.actorId === subject.reactorId &&
-      readied.response.kind === "action",
+      readied.response.kind === "action" &&
+      (subject.weaponChange === undefined ||
+        (readied.response.subject.tag === "action" &&
+          (readied.response.subject.action === "grapple" ||
+            readied.response.subject.action === "shove"))),
   );
 }
 
@@ -10591,6 +10588,7 @@ type EncodedCharacterBattleCreatureOriginSnapshot = {
     readonly offHandAttackProcedureRef:
       | typeof BattleAttackProcedureExecutionRef.Encoded
       | null;
+    readonly otherOwnedWeaponAttackProcedureRefs: readonly (typeof BattleAttackProcedureExecutionRef.Encoded)[];
   };
   readonly resources: readonly (typeof BattleCharacterResourceSnapshotSchema.Encoded)[];
   readonly heroicInspiration: typeof HeroicInspirationSchema.Encoded;

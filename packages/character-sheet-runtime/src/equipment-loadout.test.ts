@@ -231,9 +231,9 @@ describe("Character Sheet equipment loadout ownership", () => {
     );
   });
 
-  test("rejects a two-handed weapon in a one-handed loadout grip", () => {
+  test("holds a Two-Handed weapon with one hand", () => {
     const weapon = equipmentItemId("main", "weapon_greataxe");
-    const issues = failureIssues(
+    expect(
       setCharacterSheetEquipmentLoadout({
         build: armorClassBuild({
           startingClass: "class_fighter",
@@ -242,12 +242,8 @@ describe("Character Sheet equipment loadout ownership", () => {
         patch: { weapon: { itemId: weapon, grip: "one_handed" } },
         unitLibrary,
       }),
-    );
-
-    expect(issues).toEqual(
-      expect.arrayContaining([
-        { tag: "weaponCannotBeHeldOneHanded", itemId: weapon },
-      ]),
+    ).toEqual(
+      Result.succeed({ weapon: { itemId: weapon, grip: "one_handed" } }),
     );
   });
 
@@ -325,9 +321,7 @@ describe("Character Sheet equipment loadout ownership", () => {
       }),
     );
 
-    expect(issues).toEqual([
-      { tag: "weaponCannotBeHeldOneHanded", itemId: off },
-    ]);
+    expect(issues).toEqual([{ tag: "twoHandedWeaponInOffHand", itemId: off }]);
   });
 
   test("rejects a shield and off-hand weapon occupying the same loadout", () => {
@@ -430,7 +424,7 @@ describe("Character Sheet equipment loadout ownership", () => {
       },
       { tag: "armorTrainingRequired", itemId: armor, category: "heavy" },
       { tag: "shieldTrainingRequired", itemId: shield },
-      { tag: "weaponCannotBeHeldOneHanded", itemId: weapon },
+      { tag: "twoHandedWeaponInOffHand", itemId: weapon },
       { tag: "twoHandedGripHandConflict", itemId: weapon },
       { tag: "shieldAndOffHandWeaponConflict" },
       {
@@ -449,7 +443,7 @@ describe("Character Sheet equipment loadout ownership", () => {
       "Equipment item armor:armor_chain_mail is a weapon Unit and cannot fill the armor slot.",
       "Wearing armor armor:armor_chain_mail requires heavy armor training.",
       "Wielding shield shield:equipment_shield requires shield training.",
-      "Weapon main:weapon_greataxe cannot be held one-handed.",
+      "Weapon main:weapon_greataxe cannot be held in the off-hand slot.",
       "Weapon main:weapon_greataxe is held two-handed, which leaves no hand for a shield or an off-hand weapon.",
       "A shield and an off-hand weapon cannot occupy the same loadout.",
       "Equipment item armor:armor_chain_mail has quantity 1, but this loadout requires 2.",

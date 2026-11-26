@@ -63,7 +63,7 @@ import { combatantInsideActiveMagicSuppressionEmanation } from "./magic-suppress
 import { combatantShapeShiftingSuppressed } from "./shape-shifting.ts";
 import {
   wildShapeCanUseWornLoadoutObject,
-  wildShapeLoadoutObjectRefs,
+  wildShapeEquipmentObjectRefs,
   type WildShapeLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
 import { attackActionOptionName } from "./statblock-attacks.ts";
@@ -640,9 +640,7 @@ function wildShapeInitialEquipmentDispositionHoles(
   actor: CharacterBattleCreatureState,
   formExecutionRef: BattleWildShapeEquipmentDispositionHole["formExecutionRef"],
 ): readonly BattleWildShapeEquipmentDispositionHole[] {
-  const candidates = wildShapeLoadoutObjectRefs(
-    characterEffectiveLoadout(state, actor),
-  );
+  const candidates = wildShapeEquipmentObjectRefs(state, actor);
   return [
     wildShapeEquipmentDispositionHole({
       actorId: actor.combatantId,

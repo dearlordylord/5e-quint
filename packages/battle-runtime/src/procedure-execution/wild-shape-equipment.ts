@@ -26,6 +26,11 @@ export type WildShapeLoadoutObjectRef =
       readonly objectId: BattleObjectId;
     };
 
+/** Equipment keeps its identity even when it is carried outside the loadout. */
+export type WildShapeEquipmentObjectRef =
+  | WildShapeLoadoutObjectRef
+  | { readonly kind: "carriedWeapon"; readonly objectId: BattleObjectId };
+
 export const WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES = [
   "canHandleObjects",
   "cannotHandleObjects",
@@ -73,33 +78,33 @@ export type WildShapeFallInActorSpaceWitness = {
 
 export type WildShapeEquipmentDispositionChoice =
   | {
-      readonly item: WildShapeLoadoutObjectRef;
+      readonly item: WildShapeEquipmentObjectRef;
       readonly disposition: "falls";
       readonly fallInActorSpace: WildShapeFallInActorSpaceWitness;
     }
   | {
-      readonly item: WildShapeLoadoutObjectRef;
+      readonly item: WildShapeEquipmentObjectRef;
       readonly disposition: "merges";
     }
   | {
-      readonly item: WildShapeWornLoadoutObjectRef;
+      readonly item: WildShapeEquipmentObjectRef;
       readonly disposition: "worn";
       readonly practicality: WildShapeWearPracticalityWitness;
     };
 
 export type ActiveWildShapeEquipmentDisposition =
   | {
-      readonly item: WildShapeLoadoutObjectRef;
+      readonly item: WildShapeEquipmentObjectRef;
       readonly disposition: "merges";
     }
   | {
-      readonly item: WildShapeWornLoadoutObjectRef;
+      readonly item: WildShapeEquipmentObjectRef;
       readonly disposition: "worn";
     };
 export type ResolvedWildShapeEquipmentDisposition =
   | ActiveWildShapeEquipmentDisposition
   | {
-      readonly item: WildShapeLoadoutObjectRef;
+      readonly item: WildShapeEquipmentObjectRef;
       readonly disposition: "falls";
       readonly fallInActorSpace: WildShapeFallInActorSpaceWitness;
     };
