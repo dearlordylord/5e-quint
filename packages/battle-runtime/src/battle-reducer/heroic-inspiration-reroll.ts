@@ -27,8 +27,8 @@ import {
   type D20TestRollRerollMessages,
 } from "./d20-test-roll-reroll.ts";
 import {
-  battleStateWithD20TestSourcePaid,
-  d20TestSourcePaidOnRoll,
+  battleStateWithD20TestSourceTaken,
+  d20TestSourceTakenOnRoll,
   d20TestSpendAvailability,
   d20TestSpendGate,
   type D20TestSpendAvailability,
@@ -140,7 +140,7 @@ export function heroicInspirationUseForRoll(input: {
   readonly rerolledWithHeroicInspiration: boolean;
 }): HeroicInspirationUse {
   return input.rerolledWithHeroicInspiration &&
-    !d20TestSourcePaidOnRoll({
+    !d20TestSourceTakenOnRoll({
       ...input,
       record: HEROIC_INSPIRATION_SPEND_RECORD,
     })
@@ -163,7 +163,7 @@ export function battleStateAfterHeroicInspirationReroll(
 ): BattleState {
   if (
     !use.spends ||
-    d20TestSourcePaidOnRoll({
+    d20TestSourceTakenOnRoll({
       state,
       scope: use.scope,
       record: HEROIC_INSPIRATION_SPEND_RECORD,
@@ -184,11 +184,11 @@ export function battleStateAfterHeroicInspirationReroll(
       origin: { ...actor.origin, heroicInspiration: NO_HEROIC_INSPIRATION },
     }),
   };
-  return battleStateWithD20TestSourcePaid({
+  return battleStateWithD20TestSourceTaken({
     state: spent,
     scope: use.scope,
     record: HEROIC_INSPIRATION_SPEND_RECORD,
-    paid: use.roll,
+    taken: use.roll,
   });
 }
 

@@ -4,9 +4,9 @@
 // What a D20 Test source that costs something (Heroic Inspiration, a use of a
 // failed saving throw reroll, a Bardic Inspiration die, a use of a failed
 // ability check boost) shares: where its cost stands for one roll, and the
-// record of the rolls that paid it while the subject they belong to can
+// record of the rolls that took it while the subject they belong to can
 // replay. A replay after a reaction window resolves the subject's rolls again
-// from the state after a spend, so the roll that paid can take its source
+// from the state after a spend, so the roll that took its source can take it
 // again without paying twice.
 
 import { Match } from "effect";
@@ -21,7 +21,7 @@ import { subjectContinuationPhaseFor } from "./subject-continuation-phase.ts";
 
 /**
  * Where a roller's cost for a reroll source can stand for one roll:
- * - "available": it can pay, or this roll paid before a replay;
+ * - "available": it can pay, or this roll took the source before a replay;
  * - "spentOnAnotherRoll": another roll of the same subject spent what it had,
  *   so a decline made before that spend still stands;
  * - "unavailable": it has nothing to decide about.
@@ -44,7 +44,7 @@ export type D20TestSpendScope =
   | { readonly kind: "subject"; readonly subject: BattleSubject }
   | { readonly kind: "oneStep" };
 
-/** The replay record each costed source keeps its paid rolls in. */
+/** The replay record each costed source keeps the rolls that took it in. */
 export type D20TestSpendRecord = keyof Pick<
   BattleAcceptedSubjectReplayEvidence,
   | "acceptedHeroicInspirationRerolls"
@@ -53,7 +53,7 @@ export type D20TestSpendRecord = keyof Pick<
   | "acceptedFailedAbilityCheckResourceBoosts"
 >;
 
-/** What one record keeps for each roll that paid: the roll, and what the source needs on a replay. */
+/** What one record keeps for each roll that took its source: the roll, and what the source needs on a replay. */
 export type D20TestSpendRecordEntry<Record extends D20TestSpendRecord> =
   NonNullable<BattleAcceptedSubjectReplayEvidence[Record]>[number];
 
@@ -64,7 +64,7 @@ function sameD20TestRoll(
   return left.rollerId === right.rollerId && left.holeId === right.holeId;
 }
 
-function paidRolls<Record extends D20TestSpendRecord>(
+function takenRolls<Record extends D20TestSpendRecord>(
   state: BattleState,
   scope: D20TestSpendScope,
   record: Record,
@@ -81,7 +81,7 @@ function paidRolls<Record extends D20TestSpendRecord>(
 }
 
 /** The record an earlier pass of the subject kept for this roll taking its source, if it did. */
-export function d20TestSourcePaymentOnRoll<
+export function d20TestSourceTakeOnRoll<
   Record extends D20TestSpendRecord,
 >(input: {
   readonly state: BattleState;
@@ -89,19 +89,19 @@ export function d20TestSourcePaymentOnRoll<
   readonly record: Record;
   readonly roll: BattleD20TestRollKey;
 }): D20TestSpendRecordEntry<Record> | undefined {
-  return paidRolls(input.state, input.scope, input.record).find((paid) =>
-    sameD20TestRoll(paid, input.roll),
+  return takenRolls(input.state, input.scope, input.record).find((taken) =>
+    sameD20TestRoll(taken, input.roll),
   );
 }
 
 /** Whether an earlier pass of the subject recorded this roll as taking its source. */
-export function d20TestSourcePaidOnRoll(input: {
+export function d20TestSourceTakenOnRoll(input: {
   readonly state: BattleState;
   readonly scope: D20TestSpendScope;
   readonly record: D20TestSpendRecord;
   readonly roll: BattleD20TestRollKey;
 }): boolean {
-  return d20TestSourcePaymentOnRoll(input) !== undefined;
+  return d20TestSourceTakeOnRoll(input) !== undefined;
 }
 
 /** Where a roller's cost stands for a roll it cannot pay for: {@link D20_TEST_SPEND_AVAILABILITIES} but "available". */
@@ -111,14 +111,28 @@ export type D20TestSpendUnavailability = Exclude<
 >;
 
 /**
- * Whether a recorded roll paid its source. Every record keeps only rolls
- * that paid, but the failed ability check boost's, which also keeps the rolls
- * it was added to that still failed and so kept the use.
+ * Whether a roll that took its source paid the source's cost, for each
+ * record. Every source pays when its roll takes it, but the failed ability
+ * check boost, which pays only when the check then succeeds.
  */
-function recordedRollPaid(
-  entry: D20TestSpendRecordEntry<D20TestSpendRecord>,
+const D20_TEST_SPEND_RECORD_ENTRY_PAID: {
+  readonly [Record in D20TestSpendRecord]: (
+    entry: D20TestSpendRecordEntry<Record>,
+  ) => boolean;
+} = {
+  acceptedHeroicInspirationRerolls: () => true,
+  acceptedFailedSavingThrowRerolls: () => true,
+  acceptedBardicInspirationDice: () => true,
+  acceptedFailedAbilityCheckResourceBoosts: (entry) => entry.useSpent,
+};
+
+function d20TestSpendRecordEntryPaid<Record extends D20TestSpendRecord>(
+  record: Record,
+  entry: D20TestSpendRecordEntry<Record>,
 ): boolean {
-  return !("useSpent" in entry) || entry.useSpent;
+  const paid: (entry: D20TestSpendRecordEntry<Record>) => boolean =
+    D20_TEST_SPEND_RECORD_ENTRY_PAID[record];
+  return paid(entry);
 }
 
 /**
@@ -126,53 +140,59 @@ function recordedRollPaid(
  * that it cannot pay for now: spent on another roll of the subject, or never
  * there.
  */
-export function d20TestSpendUnavailability(input: {
+export function d20TestSpendUnavailability<
+  Record extends D20TestSpendRecord,
+>(input: {
   readonly state: BattleState;
   readonly scope: D20TestSpendScope;
-  readonly record: D20TestSpendRecord;
+  readonly record: Record;
   readonly roll: BattleD20TestRollKey;
 }): D20TestSpendUnavailability {
-  return paidRolls(input.state, input.scope, input.record).some(
-    (paid) => paid.rollerId === input.roll.rollerId && recordedRollPaid(paid),
+  return takenRolls(input.state, input.scope, input.record).some(
+    (taken) =>
+      taken.rollerId === input.roll.rollerId &&
+      d20TestSpendRecordEntryPaid(input.record, taken),
   )
     ? "spentOnAnotherRoll"
     : "unavailable";
 }
 
 /** Where the roller's cost stands for this roll. */
-export function d20TestSpendAvailability(input: {
+export function d20TestSpendAvailability<
+  Record extends D20TestSpendRecord,
+>(input: {
   readonly state: BattleState;
   readonly scope: D20TestSpendScope;
-  readonly record: D20TestSpendRecord;
+  readonly record: Record;
   readonly roll: BattleD20TestRollKey;
   /** Whether the roller can pay now, in the state as it stands. */
   readonly rollerCanPay: boolean;
 }): D20TestSpendAvailability {
-  if (d20TestSourcePaidOnRoll(input)) return "available";
+  if (d20TestSourceTakenOnRoll(input)) return "available";
   if (input.rollerCanPay) return "available";
   return d20TestSpendUnavailability(input);
 }
 
-/** The state with this roll recorded as paid for the rest of its subject. */
-export function battleStateWithD20TestSourcePaid<
+/** The state with this roll recorded as taking its source for the rest of its subject. */
+export function battleStateWithD20TestSourceTaken<
   Record extends D20TestSpendRecord,
 >(input: {
   readonly state: BattleState;
   readonly scope: D20TestSpendScope;
   readonly record: Record;
   /** The roll, and what the source needs on a replay. */
-  readonly paid: D20TestSpendRecordEntry<Record>;
+  readonly taken: D20TestSpendRecordEntry<Record>;
 }): BattleState {
   const scope = input.scope;
   if (scope.kind === "oneStep") return input.state;
   const phase = subjectContinuationPhaseFor(input.state, scope.subject);
-  const paid: readonly D20TestSpendRecordEntry<Record>[] =
+  const taken: readonly D20TestSpendRecordEntry<Record>[] =
     phase[input.record] ?? [];
   return {
     ...input.state,
     subjectResolutionPhase: {
       ...phase,
-      [input.record]: [...paid, input.paid],
+      [input.record]: [...taken, input.taken],
     },
   };
 }

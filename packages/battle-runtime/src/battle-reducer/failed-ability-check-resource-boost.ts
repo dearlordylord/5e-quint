@@ -34,9 +34,9 @@ import {
   type D20TestAddedDieSourceForRoll,
 } from "./d20-test-added-die.ts";
 import {
-  battleStateWithD20TestSourcePaid,
-  d20TestSourcePaidOnRoll,
-  d20TestSourcePaymentOnRoll,
+  battleStateWithD20TestSourceTaken,
+  d20TestSourceTakenOnRoll,
+  d20TestSourceTakeOnRoll,
   d20TestSpendUnavailability,
   type D20TestSpendRecord,
   type D20TestSpendScope,
@@ -106,7 +106,7 @@ export function failedAbilityCheckResourceBoostForRoll(
     roll,
   };
   const dieSize =
-    d20TestSourcePaymentOnRoll(spend)?.dieSize ??
+    d20TestSourceTakeOnRoll(spend)?.dieSize ??
     payableFailedAbilityCheckResourceBoost(state.combatants.get(roll.rollerId))
       ?.abilityCheck.bonus.dieSize;
   return dieSize === undefined
@@ -187,7 +187,7 @@ export function failedAbilityCheckResourceBoostUseForRoll(input: {
   const boost = input.boost;
   return input.added &&
     boost.availability === "available" &&
-    !d20TestSourcePaidOnRoll({
+    !d20TestSourceTakenOnRoll({
       ...input,
       record: FAILED_ABILITY_CHECK_RESOURCE_BOOST_SPEND_RECORD,
     })
@@ -215,7 +215,7 @@ export function battleStateAfterFailedAbilityCheckResourceBoost(
 ): BattleState {
   if (
     !use.taken ||
-    d20TestSourcePaidOnRoll({
+    d20TestSourceTakenOnRoll({
       state,
       scope: use.scope,
       record: FAILED_ABILITY_CHECK_RESOURCE_BOOST_SPEND_RECORD,
@@ -223,13 +223,13 @@ export function battleStateAfterFailedAbilityCheckResourceBoost(
     })
   )
     return state;
-  return battleStateWithD20TestSourcePaid({
+  return battleStateWithD20TestSourceTaken({
     state: use.roll.useSpent
       ? battleStateWithResourceBoostUseSpent(state, use.roll.rollerId)
       : state,
     scope: use.scope,
     record: FAILED_ABILITY_CHECK_RESOURCE_BOOST_SPEND_RECORD,
-    paid: use.roll,
+    taken: use.roll,
   });
 }
 

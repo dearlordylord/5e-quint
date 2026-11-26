@@ -24,8 +24,8 @@ import {
   type D20TestAddedDieSourceForRoll,
 } from "./d20-test-added-die.ts";
 import {
-  battleStateWithD20TestSourcePaid,
-  d20TestSourcePaymentOnRoll,
+  battleStateWithD20TestSourceTaken,
+  d20TestSourceTakeOnRoll,
   d20TestSpendUnavailability,
   type D20TestSpendRecord,
   type D20TestSpendScope,
@@ -68,7 +68,7 @@ export function bardicInspirationDieForRoll(
     roll,
   };
   const dieSize =
-    d20TestSourcePaymentOnRoll(spend)?.dieSize ??
+    d20TestSourceTakeOnRoll(spend)?.dieSize ??
     heldBardicInspirationDieSize(state.combatants.get(roll.rollerId));
   return dieSize === undefined
     ? { availability: d20TestSpendUnavailability(spend) }
@@ -139,7 +139,7 @@ export function bardicInspirationDieUseForRoll(input: {
   readonly added: boolean;
 }): BardicInspirationDieUse {
   return input.added &&
-    d20TestSourcePaymentOnRoll({
+    d20TestSourceTakeOnRoll({
       ...input,
       record: BARDIC_INSPIRATION_DIE_SPEND_RECORD,
     }) === undefined
@@ -163,7 +163,7 @@ export function battleStateAfterBardicInspirationDie(
 ): BattleState {
   if (
     !use.spends ||
-    d20TestSourcePaymentOnRoll({
+    d20TestSourceTakeOnRoll({
       state,
       scope: use.scope,
       record: BARDIC_INSPIRATION_DIE_SPEND_RECORD,
@@ -184,10 +184,10 @@ export function battleStateAfterBardicInspirationDie(
       ),
     }),
   };
-  return battleStateWithD20TestSourcePaid({
+  return battleStateWithD20TestSourceTaken({
     state: expended,
     scope: use.scope,
     record: BARDIC_INSPIRATION_DIE_SPEND_RECORD,
-    paid: { ...use.roll, dieSize },
+    taken: { ...use.roll, dieSize },
   });
 }

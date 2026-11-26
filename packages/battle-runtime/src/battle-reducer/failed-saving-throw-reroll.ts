@@ -33,8 +33,8 @@ import {
   type D20TestRollRerollMessages,
 } from "./d20-test-roll-reroll.ts";
 import {
-  battleStateWithD20TestSourcePaid,
-  d20TestSourcePaidOnRoll,
+  battleStateWithD20TestSourceTaken,
+  d20TestSourceTakenOnRoll,
   d20TestSpendAvailability,
   d20TestSpendGate,
   type D20TestSpendAvailability,
@@ -229,7 +229,7 @@ export function failedSavingThrowRerollUseForRoll(input: {
   readonly rerolled: boolean;
 }): FailedSavingThrowRerollUse {
   return input.rerolled &&
-    !d20TestSourcePaidOnRoll({
+    !d20TestSourceTakenOnRoll({
       ...input,
       record: FAILED_SAVING_THROW_REROLL_SPEND_RECORD,
     })
@@ -253,7 +253,7 @@ export function battleStateAfterFailedSavingThrowReroll(
 ): BattleState {
   if (
     !use.spends ||
-    d20TestSourcePaidOnRoll({
+    d20TestSourceTakenOnRoll({
       state,
       scope: use.scope,
       record: FAILED_SAVING_THROW_REROLL_SPEND_RECORD,
@@ -282,11 +282,11 @@ export function battleStateAfterFailedSavingThrowReroll(
       },
     }),
   };
-  return battleStateWithD20TestSourcePaid({
+  return battleStateWithD20TestSourceTaken({
     state: spent,
     scope: use.scope,
     record: FAILED_SAVING_THROW_REROLL_SPEND_RECORD,
-    paid: use.roll,
+    taken: use.roll,
   });
 }
 
