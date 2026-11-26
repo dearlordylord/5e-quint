@@ -45,6 +45,7 @@ import {
   isBattleContinuationComparableFill,
 } from "./battle-reducer/battle-fill-equality.ts";
 import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
+import { admitBattle, startBattleOpeningTurn } from "./battle-start.ts";
 import { battleUnitRefWithSupportProfiles } from "./unit-feature-support.ts";
 
 function heroicWarriorRefs() {
@@ -56,13 +57,19 @@ function heroicWarriorRefs() {
   ];
 }
 
-function fighterAndGoblin(input: {
+type FighterAndGoblinInput = {
   readonly fighterInitiative: number;
   readonly heroicWarrior: boolean;
   readonly heroicInspiration: HeroicInspiration;
   readonly currentHp?: number;
-}) {
-  return startBattleSessionRight({
+};
+
+function fighterAndGoblin(input: FighterAndGoblinInput) {
+  return startBattleSessionRight(fighterAndGoblinStart(input));
+}
+
+function fighterAndGoblinStart(input: FighterAndGoblinInput) {
+  return {
     battleId: battleId("battle:turn-start-heroic-inspiration"),
     combatants: [
       characterSeed({
@@ -77,7 +84,7 @@ function fighterAndGoblin(input: {
       }),
       statBlockCreatureInit({ initiative: 15 }),
     ],
-  });
+  };
 }
 
 /** The Goblin's opening turn, about to end into the Fighter's turn. */
@@ -623,6 +630,50 @@ describe("Heroic Warrior on the battle's opening turn", () => {
     expect(endTurn({ state, actorId: fighterId })).toMatchObject({
       tag: "invalid",
       message: "The current turn must start before other battle subjects.",
+    });
+  });
+
+  test("an admitted battle starts its opening turn when asked, and only once", () => {
+    const admitted = Result.getOrThrow(
+      admitBattle(
+        fighterAndGoblinStart({
+          fighterInitiative: 20,
+          heroicWarrior: true,
+          heroicInspiration: NO_HEROIC_INSPIRATION,
+        }),
+      ),
+    );
+    expect(admitted.state.currentTurnStart).toBe("pending");
+    expect(heroicInspirationOf(admitted.state)).toEqual(NO_HEROIC_INSPIRATION);
+
+    // A start that asks a choice stays pending, as `startBattle` leaves it.
+    const asking = Result.getOrThrow(startBattleOpeningTurn(admitted));
+    expect(asking.state.currentTurnStart).toBe("pending");
+    expect(discoverBattleActs(asking).map((act) => act.subject)).toEqual([
+      { tag: "runtimeCommand", actorId: fighterId, command: "startTurn" },
+    ]);
+
+    const opened = Result.getOrThrow(
+      startBattleOpeningTurn(
+        Result.getOrThrow(
+          admitBattle(
+            fighterAndGoblinStart({
+              fighterInitiative: 20,
+              heroicWarrior: false,
+              heroicInspiration: NO_HEROIC_INSPIRATION,
+            }),
+          ),
+        ),
+      ),
+    );
+    expect(opened.state.currentTurnStart).toBe("started");
+    expect(startBattleOpeningTurn(opened)).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        tag: "battleStateInitIssue",
+        kind: "openingTurnStartInvalid",
+        combatantId: fighterId,
+      },
     });
   });
 

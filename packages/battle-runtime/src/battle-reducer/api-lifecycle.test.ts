@@ -976,15 +976,17 @@ describe("battle lifecycle admission issue aggregation", () => {
     });
 
     expect(setup.state.currentTurnStart).toBe("pending");
-    const finished = finishInitialInitiativeSetupFromApi(setup);
+    const finished = Result.getOrThrow(
+      finishInitialInitiativeSetupFromApi(setup),
+    );
     expect(finished.state.currentTurnStart).toBe("started");
     const closedSetup = restoreInitialInitiativeSetup(
       structuredClone(retainInitialInitiativeSetup(setup)),
     );
     expect(closedSetup.state).toEqual(setup.state);
-    expect(finishInitialInitiativeSetupFromApi(closedSetup).state).toEqual(
-      finished.state,
-    );
+    expect(
+      Result.getOrThrow(finishInitialInitiativeSetupFromApi(closedSetup)).state,
+    ).toEqual(finished.state);
     expect(
       applyInitiativeSwap({
         setup: closedSetup,

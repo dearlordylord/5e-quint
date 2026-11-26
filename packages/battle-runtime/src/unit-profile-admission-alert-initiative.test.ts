@@ -235,7 +235,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
     if (Result.isFailure(result)) {
       throw new Error(battleStateInitIssueMessage(result.failure));
     }
-    const state = finishInitialInitiativeSetup(setup);
+    const state = Result.getOrThrow(finishInitialInitiativeSetup(setup));
     expect(initiativeOrder(state.state)).toEqual([
       alertSourceId,
       alertEnemyId,
@@ -247,8 +247,10 @@ describe("L12G deterministic Alert Initiative admission", () => {
   });
 
   test("the opening turn starts for the creature first after the swap", () => {
-    const unswapped = finishInitialInitiativeSetup(
-      alertBattleSetup({ sourceHeroicWarrior: true }),
+    const unswapped = Result.getOrThrow(
+      finishInitialInitiativeSetup(
+        alertBattleSetup({ sourceHeroicWarrior: true }),
+      ),
     );
     expect(unswapped.state.initiative.stillToAct[0].creature).toBe(alertAllyId);
     expect(unswapped.state.currentTurnStart).toBe("started");
@@ -263,7 +265,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     );
-    const swapped = finishInitialInitiativeSetup(setup);
+    const swapped = Result.getOrThrow(finishInitialInitiativeSetup(setup));
 
     // The swapped-in Heroic Warrior starts its turn without Heroic
     // Inspiration, so the opening waits on that creature's choice.
@@ -377,7 +379,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
     const setup = alertBattleSetup();
 
     const actedState = endTurn({
-      state: finishInitialInitiativeSetup(setup).state,
+      state: Result.getOrThrow(finishInitialInitiativeSetup(setup)).state,
       actorId: alertAllyId,
     });
     expect(actedState.tag).toBe("resolved");

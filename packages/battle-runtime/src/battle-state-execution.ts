@@ -4835,6 +4835,10 @@ export type BattleStateInitIssueFacts =
       readonly issueIndex: number;
     }
   | {
+      readonly kind: "openingTurnStartInvalid";
+      readonly combatantId: CombatantId;
+    }
+  | {
       readonly kind: "companionOwnerMissing";
       readonly ownerId: CombatantId;
     }

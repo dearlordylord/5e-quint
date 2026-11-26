@@ -211,10 +211,12 @@ function pendingAction(
   );
   return {
     detail: `${actor} is resolving ${pendingProcedureLabel(pending)}.`,
-    summary:
-      pending.pendingProcedure.kind === "subjectResolution"
-        ? "Battle action pending"
-        : "Turn boundary pending",
+    summary: Match.value(pending.pendingProcedure.kind).pipe(
+      Match.when("subjectResolution", () => "Battle action pending"),
+      Match.when("turnBoundary", () => "Turn boundary pending"),
+      Match.when("turnStart", () => "Turn start pending"),
+      Match.exhaustive,
+    ),
   };
 }
 

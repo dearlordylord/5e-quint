@@ -544,6 +544,10 @@ export function battleInitializationIssueFactFields(
         origin,
         issueIndex,
       }),
+      openingTurnStartInvalid: ({ kind, combatantId }) => ({
+        reason: kind,
+        combatantId,
+      }),
       companionOwnerMissing: ({ kind, ownerId }) => ({
         reason: kind,
         ownerId,
@@ -1253,8 +1257,9 @@ function initializeBattleSpellExecutions(input: {
 }
 
 /**
- * Admit a battle with its opening turn not started yet. The public
- * `startBattle` also starts that turn.
+ * Admit a battle's combatants and establish Initiative without starting the
+ * first participant's turn. Companions can still join before that turn starts;
+ * `startBattleOpeningTurn` then starts it. `startBattle` does both at once.
  */
 export const admitBattle: StartBattle = (input) => {
   if (input.combatants.length === 0) {

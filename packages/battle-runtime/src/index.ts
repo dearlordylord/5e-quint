@@ -638,7 +638,12 @@ export {
   type InitialInitiativeSetup,
   type InitiativeSwapCandidateWitness,
 } from "./battle-reducer/api-lifecycle.ts";
-export { finishInitialInitiativeSetup, startBattle } from "./battle-start.ts";
+export {
+  admitBattle,
+  finishInitialInitiativeSetup,
+  startBattle,
+  startBattleOpeningTurn,
+} from "./battle-start.ts";
 export {
   activeFallingCreatureMitigationDescentRateCapFeetPerRound,
   activeSelfTransformationModeEffect,

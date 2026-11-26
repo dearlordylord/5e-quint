@@ -93,6 +93,9 @@ When that start needs a roll or choice, such as a Death Saving Throw at 0 Hit
 Points or a Heroic Warrior's offer, the battle opens with Start Turn
 (`{ tag: "runtimeCommand", command: "startTurn" }`) as its only Act, and every
 other subject is refused until it resolves.
+A host that admits companions after the battle's combatants calls `admitBattle`
+instead, admits them (each admission rebuilds Initiative, so a companion can go
+first), then calls `startBattleOpeningTurn` once the roster is complete.
 
 The public session trace discovers `initialHoles[]` before publishing the first
 envelope. Submitting an End Turn command with no fills first returns its outgoing
