@@ -1053,25 +1053,6 @@ function appendInitialHidePrerequisiteIssues(
   );
 }
 
-function appendInitialInitiativeIssues(
-  accumulator: InitialBattleAdmissionAccumulator,
-  initiative: Result.Result<BattleState["initiative"], BattleStateInitIssue>,
-): void {
-  if (accumulator.combatants.size === 0 || Result.isSuccess(initiative)) return;
-  accumulator.initializationIssues.push(
-    ...battleStateInitIssueLeaves(initiative.failure).map((issue) =>
-      battleInitializationLeafIssueFromStateIssue(
-        issue,
-        {
-          kind: "initialInitiativeInvalid",
-          initializationReason: "stackConstruction",
-        },
-        ["battleInitialization", "initiative"],
-      ),
-    ),
-  );
-}
-
 function initialBattleState(
   input: BattleStartInput,
   accumulator: InitialBattleAdmissionAccumulator,
@@ -1080,25 +1061,20 @@ function initialBattleState(
     combatants: [...accumulator.combatants.values()],
     emptyRosterMessage: "startBattle requires at least one combatant.",
   });
-  appendInitialInitiativeIssues(accumulator, initiative);
   if (Result.isFailure(initiative)) {
+    const issue = {
+      ...initiative.failure,
+      ownerPath: ["battleInitialization", "initiative"],
+    };
+    if (accumulator.combatants.size > 0) {
+      accumulator.initializationIssues.push(issue);
+    }
     if (isNonEmptyReadonlyArray(accumulator.initializationIssues)) {
       return battleInitializationIssueFromLeafIssues(
         accumulator.initializationIssues,
       );
     }
-    return Result.fail(
-      battleInitializationIssue(
-        {
-          kind: "initialInitiativeInvalid",
-          initializationReason: "emptyRoster",
-        },
-        initiative.failure.tag === "battleStateInitIssue"
-          ? initiative.failure.message
-          : "Battle initialization could not create an initiative stack.",
-        ["battleInitialization", "initiative"],
-      ),
-    );
+    return Result.fail(issue);
   }
   if (
     accumulator.initializationIssues.length > 0 &&
@@ -1349,17 +1325,27 @@ type InitialInitiativeCombatant = Pick<
   "combatantId" | "initiative"
 >;
 
+type InitialInitiativeIssue = Extract<
+  BattleInitializationLeafIssue,
+  {
+    readonly kind: "initialCombatantOrderMissing" | "initialInitiativeInvalid";
+  }
+>;
+
 export function createInitialInitiativeForCombatants(input: {
   readonly combatants: readonly InitialInitiativeCombatant[];
   readonly initialCombatantOrder?: ReadonlyMap<CombatantId, number>;
   readonly emptyRosterMessage: string;
-}): Result.Result<BattleState["initiative"], BattleStateInitIssue> {
+}): Result.Result<BattleState["initiative"], InitialInitiativeIssue> {
   if (input.initialCombatantOrder !== undefined) {
     for (const combatant of input.combatants) {
       if (!input.initialCombatantOrder.has(combatant.combatantId)) {
-        return battleStateInitIssue(
-          "Initial combatant order must include every combatant.",
-        );
+        return Result.fail({
+          tag: "battleStateInitIssue",
+          kind: "initialCombatantOrderMissing",
+          combatantId: combatant.combatantId,
+          message: "Initial combatant order must include every combatant.",
+        });
       }
     }
   }
@@ -1380,7 +1366,12 @@ export function createInitialInitiativeForCombatants(input: {
       initiative: combatant.initiative,
     }));
   if (!isNonEmptyReadonlyArray(orderedEntries)) {
-    return battleStateInitIssue(input.emptyRosterMessage);
+    return Result.fail({
+      tag: "battleStateInitIssue",
+      kind: "initialInitiativeInvalid",
+      initializationReason: "emptyRoster",
+      message: input.emptyRosterMessage,
+    });
   }
 
   const initiative = createScoredInitiativeStack<CombatantId>(
@@ -1388,7 +1379,12 @@ export function createInitialInitiativeForCombatants(input: {
     INITIAL_ROUND,
   );
   return Result.isFailure(initiative)
-    ? battleStateInitIssue(initiative.failure)
+    ? Result.fail({
+        tag: "battleStateInitIssue",
+        kind: "initialInitiativeInvalid",
+        initializationReason: "stackConstruction",
+        message: initiative.failure,
+      })
     : Result.succeed(initiative.success);
 }
 

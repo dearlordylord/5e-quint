@@ -474,6 +474,8 @@ describe("battle lifecycle admission issue aggregation", () => {
     if (Result.isFailure(incompleteOrder)) {
       expect(incompleteOrder.failure).toEqual({
         tag: "battleStateInitIssue",
+        kind: "initialCombatantOrderMissing",
+        combatantId: combatant.combatantId,
         message: "Initial combatant order must include every combatant.",
       });
     }
@@ -486,6 +488,8 @@ describe("battle lifecycle admission issue aggregation", () => {
     if (Result.isFailure(empty)) {
       expect(empty.failure).toEqual({
         tag: "battleStateInitIssue",
+        kind: "initialInitiativeInvalid",
+        initializationReason: "emptyRoster",
         message: "synthetic empty roster",
       });
     }
