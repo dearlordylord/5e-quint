@@ -5,6 +5,7 @@
 
 import type {
   BattleAbilityCheckAddedDieDecision,
+  BattleAttackRollAddedDieDecision,
   BattleRolledOutcomeAddedDieDecision,
 } from "../battle-state-execution.ts";
 
@@ -15,14 +16,19 @@ export function d20TestAddedDieDecisionTakesDie(decision: {
   return decision.kind === "addDie";
 }
 
-/** An ability check's total after one added-die decision: the number rolled adds to it. */
-export function abilityCheckAfterAddedDie<T extends { readonly total: number }>(
-  check: T,
-  decision: BattleAbilityCheckAddedDieDecision,
+/**
+ * A D20 Test's total after one added-die decision (an ability check or an
+ * attack roll): the number rolled adds to it, and the d20 doesn't change.
+ */
+export function totalAfterAddedDie<T extends { readonly total: number }>(
+  test: T,
+  decision:
+    | BattleAbilityCheckAddedDieDecision
+    | BattleAttackRollAddedDieDecision,
 ): T {
   return decision.kind === "addDie"
-    ? { ...check, total: check.total + Number(decision.dieRoll) }
-    : check;
+    ? { ...test, total: test.total + Number(decision.dieRoll) }
+    : test;
 }
 
 /**

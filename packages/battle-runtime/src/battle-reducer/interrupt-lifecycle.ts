@@ -8,6 +8,7 @@ import {
   sameBattleSubject,
 } from "../battle-subjects.ts";
 import { interruptChoiceResponderId } from "../battle-state-execution.ts";
+import { attackRollLoweredBy } from "./reaction-lowered-attack-roll.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleAttackDamageEvent,
@@ -1001,7 +1002,7 @@ function interruptCheckpointAfterModifier(
               ...frame.continuation,
               fills: reactionModifiedAttackRollFills(
                 frame.continuation.fills,
-                frame.attackRoll.total - reduction,
+                reduction,
               ),
             }
           : frame.continuation,
@@ -1063,13 +1064,18 @@ function interruptCheckpointAfterModifier(
   return frame;
 }
 
+/**
+ * The fills an interrupted attack replays with after a Reaction lowered its
+ * roll: the attack roll lowered by the reduction, without the damage and
+ * Concentration fills the lowered roll no longer decides.
+ */
 function reactionModifiedAttackRollFills(
   fills: readonly BattleFill[],
-  total: number,
+  reduction: number,
 ): readonly BattleFill[] {
   return fills.flatMap<BattleFill>((fill) => {
     if (fill.kind === "attackRoll") {
-      return [{ ...fill, value: { ...fill.value, total } }];
+      return [{ ...fill, value: attackRollLoweredBy(fill.value, reduction) }];
     }
     return fill.kind === "rolledDice" ||
       fill.kind === "concentrationSavingThrow"

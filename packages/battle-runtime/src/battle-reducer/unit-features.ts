@@ -27,7 +27,6 @@ import {
   applyCondition,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
-import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
@@ -93,7 +92,6 @@ import {
   spendReactionModifierResource,
 } from "./reaction-modifiers.ts";
 import {
-  attackRollHitsWithCriticalThreshold,
   openClassFeatureExtraAttackResource,
   spendAttackActionResource,
 } from "./attack-resolution.ts";
@@ -118,8 +116,6 @@ import {
   wildShapeGroundObjectPlacement,
 } from "./battle-object-lifecycle.ts";
 import type {
-  BardicInspirationFailedAttackRollResolutionInput,
-  BardicInspirationFailedAttackRollResolutionResult,
   BattleCreatureState,
   BattleDroppedObjectOutcome,
   BattleFill,
@@ -142,7 +138,6 @@ import type {
 } from "../battle-state-execution.ts";
 import type { UnitFeatureRolledDiceFill } from "./battle-runtime-protocol.ts";
 import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
-import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
 import {
   magicActionAreaSaveDamageHealingSphereFactsHole,
@@ -1572,142 +1567,6 @@ export function resolveBardicInspirationGrantUnitFeature(
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
-  };
-}
-
-export function resolveBardicInspirationFailedAttackRoll(
-  input: BardicInspirationFailedAttackRollResolutionInput,
-): BardicInspirationFailedAttackRollResolutionResult {
-  const actor = input.state.combatants.get(input.failedAttackRoll.actorId);
-  if (actor === undefined) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Bardic Inspiration is no longer available for the D20 Test actor.",
-    );
-  }
-
-  const die = actor.activeEffects.find(
-    (effect) => effect.kind === "bardicInspirationDie",
-  );
-  if (die === undefined) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Bardic Inspiration is no longer available for the D20 Test actor.",
-    );
-  }
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !Number.isInteger(input.bardicInspirationRoll) ||
-    input.bardicInspirationRoll < 1 ||
-    input.bardicInspirationRoll > die.dieSize
-  ) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      `Bardic Inspiration roll must be a 1d${die.dieSize} result.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-
-  const outcome = bardicInspirationAttackRollOutcome(input);
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (outcome.tag === "invalid") {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", outcome.message);
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (outcome.value.originalSucceeded) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Bardic Inspiration requires an already-failed D20 Test.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-
-  const nextActor: BattleCreatureState = {
-    ...actor,
-    activeEffects: actor.activeEffects.filter(
-      (effect) => effect.kind !== "bardicInspirationDie",
-    ),
-  };
-  const nextState = {
-    ...input.state,
-    combatants: new Map(input.state.combatants).set(
-      input.failedAttackRoll.actorId,
-      nextActor,
-    ),
-  };
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-    bardicInspirationAttackRoll: {
-      boostedTotal: outcome.value.boostedTotal,
-      boostedSucceeded: outcome.value.boostedSucceeded,
-    },
-  };
-}
-
-function bardicInspirationAttackRollOutcome(
-  input: BardicInspirationFailedAttackRollResolutionInput,
-):
-  | {
-      readonly tag: "ok";
-      readonly value: {
-        readonly originalSucceeded: boolean;
-        readonly boostedTotal: number;
-        readonly boostedSucceeded: boolean;
-      };
-    }
-  | { readonly tag: "invalid"; readonly message: string } {
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!attackRollResultIsValid(input.failedAttackRoll.attackRoll)) {
-    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
-    return {
-      tag: "invalid",
-      message: "Attack roll result is outside the d20 attack-roll protocol.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
-    input.failedAttackRoll.attackRoll,
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (spellAttackRerollIssue !== null) {
-    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
-    return {
-      tag: "invalid",
-      message: spellAttackRerollIssue,
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  const criticalThreshold = input.failedAttackRoll.criticalThreshold ?? 20;
-  const boostedRoll = {
-    ...input.failedAttackRoll.attackRoll,
-    total:
-      input.failedAttackRoll.attackRoll.total + input.bardicInspirationRoll,
-  };
-  return {
-    tag: "ok",
-    value: {
-      originalSucceeded: attackRollHitsWithCriticalThreshold(
-        input.failedAttackRoll.attackRoll,
-        input.failedAttackRoll.armorClass,
-        criticalThreshold,
-      ),
-      boostedTotal: boostedRoll.total,
-      boostedSucceeded: attackRollHitsWithCriticalThreshold(
-        boostedRoll,
-        input.failedAttackRoll.armorClass,
-        criticalThreshold,
-      ),
-    },
   };
 }
 

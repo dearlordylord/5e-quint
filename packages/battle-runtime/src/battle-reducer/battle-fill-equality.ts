@@ -207,7 +207,8 @@ type BattleRerollDecisionFill = Extract<
   { readonly kind: (typeof BATTLE_REROLL_DECISION_FILL_KINDS)[number] }
 >;
 
-function isBattleRerollDecisionFill(
+/** Whether the fill is a D20 Test roll, which may carry after-roll decisions. */
+export function isBattleRerollDecisionFill(
   fill: BattleFill,
 ): fill is BattleRerollDecisionFill {
   return BATTLE_REROLL_DECISION_FILL_KINDS.some((kind) => kind === fill.kind);
@@ -243,14 +244,22 @@ function resubmittedFillAtAcceptedDecisions(
 ): object | null {
   return Match.value(resubmitted).pipe(
     Match.discriminatorsExhaustive("kind")({
-      attackRoll: (fill) =>
-        fillValueAtAcceptedRerolls(
-          fill,
+      attackRoll: (fill) => {
+        const value = valueAtAcceptedAddedDice(
+          valueAtAcceptedRerolls(
+            fill.value,
+            accepted.kind === "attackRoll"
+              ? accepted.value.d20TestRerolls
+              : undefined,
+            d20TestRollRerollDecisionsEqual,
+          ),
           accepted.kind === "attackRoll"
-            ? accepted.value.d20TestRerolls
+            ? accepted.value.d20TestAddedDice
             : undefined,
-          d20TestRollRerollDecisionsEqual,
-        ),
+          d20TestAddedDieDecisionsEqual,
+        );
+        return value === null ? null : { ...fill, value };
+      },
       abilityCheck: (fill) => {
         const value = valueAtAcceptedAddedDice(
           valueAtAcceptedRerolls(
@@ -321,20 +330,6 @@ function resubmittedFillAtAcceptedDecisions(
   );
 }
 
-function fillValueAtAcceptedRerolls<
-  Decision,
-  Fill extends {
-    readonly value: { readonly d20TestRerolls?: readonly Decision[] };
-  },
->(
-  fill: Fill,
-  accepted: readonly Decision[] | undefined,
-  decisionsEqual: (a: Decision, b: Decision) => boolean,
-): object | null {
-  const value = valueAtAcceptedRerolls(fill.value, accepted, decisionsEqual);
-  return value === null ? null : { ...fill, value };
-}
-
 /**
  * Whether the resubmitted decisions start with the accepted ones; a
  * resubmission may add decisions after the accepted ones.
@@ -401,6 +396,7 @@ type ComparableAttackRollResult = Pick<
       | "activatedOngoingFeatureProcedureRef"
       | "missToHitReplacementProcedureRef"
       | "d20TestRerolls"
+      | "d20TestAddedDice"
     >
   >;
 
@@ -418,6 +414,11 @@ function attackRollResultsEqual(
       a.d20TestRerolls,
       b.d20TestRerolls,
       d20TestRollRerollDecisionsEqual,
+    ) &&
+    rerollDecisionListsEqual(
+      a.d20TestAddedDice,
+      b.d20TestAddedDice,
+      d20TestAddedDieDecisionsEqual,
     )
   );
 }

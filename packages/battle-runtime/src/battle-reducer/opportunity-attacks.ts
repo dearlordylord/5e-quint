@@ -47,14 +47,12 @@ import {
 } from "./attack-roll.ts";
 import { armorClassAgainstAttack } from "./armor-class-collector.ts";
 import {
-  attackRollD20TestRerolls,
-  attackRollHoleWithD20TestRerollOptions,
-  type AttackRollD20TestRerolls,
-} from "./attack-roll-d20-test-rerolls.ts";
-import {
-  battleStateAfterHeroicInspirationReroll,
-  type HeroicInspirationUse,
-} from "./heroic-inspiration-reroll.ts";
+  attackRollAfterRollDecisions,
+  attackRollHoleAskedAfterRoll,
+  battleStateAfterAttackRollAfterRollUses,
+  type AttackRollAfterRoll,
+  type AttackRollAfterRollUses,
+} from "./attack-roll-after-roll-decisions.ts";
 import {
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
@@ -211,7 +209,7 @@ type ReactionAttackRollPreparation =
   | {
       readonly tag: "ready";
       readonly effectiveAttackRoll: BattleAttackRollResult;
-      readonly heroicInspirationUse: HeroicInspirationUse;
+      readonly afterRollUses: AttackRollAfterRollUses;
       readonly hiddenBeforeAttack: BattleHiddenState | null;
       readonly attackRollRelationshipFacts: Exclude<
         ReturnType<typeof parseAttackRollRelationshipFacts>,
@@ -325,7 +323,7 @@ function reactionAttackRollIssue(input: {
   return null;
 }
 
-function reactionAttackRerollResult(input: {
+function reactionAttackAfterRollResult(input: {
   readonly context: ReactionAttackCommandContext;
   readonly attackRoll: BattleAttackRollResult;
   readonly reactor: BattleCreatureState | undefined;
@@ -335,23 +333,38 @@ function reactionAttackRerollResult(input: {
   >;
 }):
   | { readonly tag: "result"; readonly result: BattleResolutionResult }
-  | Extract<AttackRollD20TestRerolls, { readonly tag: "resolved" }> {
-  const d20TestRerolls = attackRollD20TestRerolls({
+  | Extract<AttackRollAfterRoll, { readonly tag: "resolved" }> {
+  const criticalThreshold = criticalThresholdForAttack(
+    input.reactor,
+    input.context.attack,
+  );
+  const targetArmorClass = armorClassAgainstAttack(
+    input.context.input.state,
+    input.context.target,
+    input.context.targetCover,
+  );
+  const afterRoll = attackRollAfterRollDecisions({
     state: input.context.input.state,
     subject: input.context.input.subject,
     attackerId: input.context.input.subject.reactorId,
     attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: input.attackRoll,
     requiredRollMode: input.requiredRollMode,
+    misses: (roll) =>
+      !attackRollHitsWithCriticalThreshold(
+        roll,
+        targetArmorClass,
+        criticalThreshold,
+      ),
   });
-  if (d20TestRerolls.tag === "decisionsRequired") {
+  if (afterRoll.tag === "decisionsRequired") {
     return {
       tag: "result",
       result: needsHolesResult(
         input.context.input.state,
         input.context.input.subject,
         [
-          attackRollHoleWithD20TestRerollOptions(
+          attackRollHoleAskedAfterRoll(
             reactionAttackRollHoleWithRelationshipFacts({
               state: input.context.input.state,
               reactorId: input.context.input.subject.reactorId,
@@ -360,22 +373,22 @@ function reactionAttackRerollResult(input: {
               reactor: input.reactor,
               requiredRollMode: input.requiredRollMode,
             }),
-            d20TestRerolls.options,
+            afterRoll.ask,
           ),
         ],
       ),
     };
   }
-  return d20TestRerolls.tag === "invalid"
+  return afterRoll.tag === "invalid"
     ? {
         tag: "result",
         result: invalidResult(
           input.context.input.state,
           "invalidFill",
-          d20TestRerolls.issue,
+          afterRoll.issue,
         ),
       }
-    : d20TestRerolls;
+    : afterRoll;
 }
 
 function prepareReactionAttackRoll(
@@ -420,7 +433,7 @@ function prepareReactionAttackRoll(
   const reactor = input.input.state.combatants.get(
     input.input.subject.reactorId,
   );
-  const rerollResult = reactionAttackRerollResult({
+  const rerollResult = reactionAttackAfterRollResult({
     context: input,
     attackRoll,
     reactor,
@@ -451,8 +464,8 @@ function prepareReactionAttackRoll(
   }
   return {
     tag: "ready",
-    effectiveAttackRoll: rerollResult.effectiveAttackRoll,
-    heroicInspirationUse: rerollResult.heroicInspirationUse,
+    effectiveAttackRoll: rerollResult.roll,
+    afterRollUses: rerollResult.uses,
     hiddenBeforeAttack:
       input.input.state.combatants.get(input.input.subject.reactorId)?.hidden ??
       null,
@@ -800,9 +813,9 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
   let attackRolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
       revealHidden(
-        battleStateAfterHeroicInspirationReroll(
+        battleStateAfterAttackRollAfterRollUses(
           input.state,
-          afterRollInput.rollPreparation.heroicInspirationUse,
+          afterRollInput.rollPreparation.afterRollUses,
         ),
         subject.reactorId,
       ),

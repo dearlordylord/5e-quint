@@ -100,7 +100,7 @@
               "numerator": 48
             },
             "witnessKinds": {
-              "contract-test": 14,
+              "contract-test": 15,
               "deterministic-qnt-replay": 5,
               "focused-mbt": 57,
               "runtime-test": 19
@@ -481,7 +481,7 @@
               "numerator": 51
             },
             "witnessKinds": {
-              "contract-test": 14,
+              "contract-test": 15,
               "deterministic-qnt-replay": 8,
               "focused-mbt": 57,
               "runtime-test": 19
@@ -865,7 +865,7 @@
               "numerator": 77
             },
             "witnessKinds": {
-              "contract-test": 14,
+              "contract-test": 15,
               "deterministic-qnt-replay": 14,
               "focused-mbt": 79,
               "runtime-test": 34
@@ -1112,7 +1112,7 @@
               "numerator": 78
             },
             "witnessKinds": {
-              "contract-test": 14,
+              "contract-test": 15,
               "deterministic-qnt-replay": 15,
               "focused-mbt": 79,
               "runtime-test": 36
@@ -1360,7 +1360,7 @@
               "numerator": 84
             },
             "witnessKinds": {
-              "contract-test": 14,
+              "contract-test": 15,
               "deterministic-qnt-replay": 17,
               "focused-mbt": 82,
               "runtime-test": 42
@@ -1614,7 +1614,7 @@
               "numerator": 85
             },
             "witnessKinds": {
-              "contract-test": 14,
+              "contract-test": 15,
               "deterministic-qnt-replay": 18,
               "focused-mbt": 82,
               "runtime-test": 44
@@ -1869,7 +1869,7 @@
               "numerator": 86
             },
             "witnessKinds": {
-              "contract-test": 14,
+              "contract-test": 15,
               "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
               "runtime-test": 46
@@ -2125,7 +2125,7 @@
               "numerator": 86
             },
             "witnessKinds": {
-              "contract-test": 14,
+              "contract-test": 15,
               "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
               "runtime-test": 46
@@ -2381,7 +2381,7 @@
               "numerator": 86
             },
             "witnessKinds": {
-              "contract-test": 14,
+              "contract-test": 15,
               "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
               "runtime-test": 46
@@ -2625,7 +2625,7 @@
               "numerator": 86
             },
             "witnessKinds": {
-              "contract-test": 14,
+              "contract-test": 15,
               "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
               "runtime-test": 46

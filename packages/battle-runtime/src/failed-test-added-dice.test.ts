@@ -23,8 +23,6 @@ import {
   deathSavingThrowFill,
   endTurn,
   fighterId,
-  goblinId,
-  grantBardicInspirationToGoblin,
   hidePrerequisites,
   holeId,
   requireResolved,
@@ -35,6 +33,7 @@ import {
   statBlockCreatureInit,
   supportedBattleUnitRef,
   unitLibrary,
+  withBardicInspirationDie,
   type BattleState,
   type BattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -42,7 +41,6 @@ import {
   BARDIC_INSPIRATION_DIE_EFFECT_KIND,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
-  type BattleActiveEffect,
   type BattleD20TestRoll,
   type BattleFill,
   type BattleTakenFailedAbilityCheckResourceBoost,
@@ -981,34 +979,6 @@ function viciousMockerySave() {
     "savingThrowOutcome",
   );
   return { state, subject: act.subject, targetSelection, savingThrow };
-}
-
-/** The state with a d6 Bardic Inspiration die, granted by a Bard, held by the creature. */
-function withBardicInspirationDie(
-  state: BattleState,
-  holderId: CombatantId,
-): BattleState {
-  const die = grantBardicInspirationToGoblin()
-    .combatants.get(goblinId)
-    ?.activeEffects.find(
-      (
-        effect,
-      ): effect is Extract<
-        BattleActiveEffect,
-        { readonly kind: "bardicInspirationDie" }
-      > => effect.kind === "bardicInspirationDie",
-    );
-  const holder = state.combatants.get(holderId);
-  if (die === undefined || holder === undefined) {
-    throw new Error("Expected a granted die and its holder.");
-  }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(holderId, {
-      ...holder,
-      activeEffects: [...holder.activeEffects, die],
-    }),
-  };
 }
 
 function withAddedDice(

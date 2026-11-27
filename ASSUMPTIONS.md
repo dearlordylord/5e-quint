@@ -570,3 +570,26 @@ Indomitable added; the model keeps it, since the reroll replaces the die and
 not the saving throw's modifiers. Bardic Inspiration adds "the number rolled to
 the d20", which the model reads the same way as any bonus: it adds to the roll's
 total, and the d20 still shows its face.
+
+## A69: A die added to a missed attack roll answers the Armor Class as it stands
+
+**Assumption:** A die added to an attack roll that misses (Bardic Inspiration,
+after the roll's rerolls as A67 sets) is offered while the roll misses the
+target's Armor Class as it stands, including after a Reaction raises that Armor
+Class (Shield) or lowers the roll (Cutting Words) and so turns a hit into a
+miss. The die adds to the roll's total and the d20 keeps its face, so the die
+can't make a Critical Hit, and a 1 on the d20 still misses.
+
+**Rules basis / gap:** `.references/srd-5.2.1/classes.md`, "Bardic
+Inspiration": "Once within the next hour when the creature fails a D20 Test,
+the creature can roll the Bardic Inspiration die and add the number rolled to
+the d20, potentially turning the failure into a success." `.references/srd-5.2.1/playing-the-game.md`,
+"Rolling 20 or 1": a 20 on the d20 "hits regardless of any modifiers or the
+target's AC. This is called a Critical Hit", and a 1 "misses regardless of any
+modifiers or the target's AC". `.references/srd-5.2.1/spells.md`, "Shield":
+"you gain a +5 bonus to AC, including against the triggering attack". The SRD
+doesn't say when an attack roll has failed if a Reaction to the hit changes
+the result; the model reads the failure from the result that stands, so the
+attacker may answer the Reaction's miss with the die. It reads "add the number
+rolled to the d20" as A68 does: the number adds to the total, and the d20 still
+shows its face.

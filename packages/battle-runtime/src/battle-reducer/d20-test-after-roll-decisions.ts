@@ -24,15 +24,15 @@ import {
   abilityCheckAddedDice,
   abilityCheckHoleWithAddedDieOptions,
   battleStateAfterAbilityCheckAddedDieUses,
-  battleStateAfterSavingThrowAddedDieUses,
+  battleStateAfterD20TestAddedDieUses,
   deathSavingThrowAddedDice,
   rolledOutcomeAddedDice,
-  savingThrowHoleWithAddedDieOptions,
+  d20TestHoleWithAddedDieOptions,
   type AbilityCheckAddedDieOptions,
   type AbilityCheckAddedDieUses,
   type D20TestAddedDice,
-  type SavingThrowAddedDieOptions,
-  type SavingThrowAddedDieUses,
+  type D20TestAddedDieOptions,
+  type D20TestAddedDieUses,
 } from "./d20-test-added-dice.ts";
 import {
   battleStateAfterD20TestRerollUses,
@@ -56,7 +56,7 @@ export type SavingThrowAfterRollAsk =
   | { readonly stage: "rerolls"; readonly options: SavingThrowRerollOptions }
   | {
       readonly stage: "addedDice";
-      readonly options: SavingThrowAddedDieOptions;
+      readonly options: D20TestAddedDieOptions;
     };
 
 /** What an ability check hole is asked again with: its rerolls, or once they are decided, its added dice. */
@@ -73,7 +73,7 @@ export type AbilityCheckAfterRollAsk =
 /** What an admitted saving throw's after-roll decisions cost its roller. */
 export type SavingThrowAfterRollUses = {
   readonly rerolls: SavingThrowRerollUses;
-  readonly addedDice: SavingThrowAddedDieUses;
+  readonly addedDice: D20TestAddedDieUses;
 };
 
 /** What an admitted ability check's after-roll decisions cost its roller. */
@@ -98,13 +98,17 @@ export type D20TestAfterRoll<Roll, Ask, Uses> =
     };
 
 /** The roll being checked: where it belongs, and who rolled it for which hole. */
-type D20TestAfterRollContext = {
+export type D20TestAfterRollContext = {
   readonly state: BattleState;
   readonly scope: D20TestSpendScope;
   readonly roll: BattleD20TestRollKey;
 };
 
-function afterRollDecisions<
+/**
+ * One roll's after-roll decisions: its rerolls, then once they are decided,
+ * the dice added to the roll they leave.
+ */
+export function afterRollDecisions<
   Roll,
   RerollOptions extends D20TestOutcomeRerollOptions,
   RerollUses extends D20TestRerollUses,
@@ -213,7 +217,7 @@ export function battleStateAfterSavingThrowAfterRollUses(
 ): BattleState {
   return uses.reduce(
     (current, use) =>
-      battleStateAfterSavingThrowAddedDieUses(
+      battleStateAfterD20TestAddedDieUses(
         battleStateAfterSavingThrowRerollUses(current, [use.rerolls]),
         [use.addedDice],
       ),
@@ -242,7 +246,7 @@ export function savingThrowHoleAskedAfterRoll<
 >(hole: T, ask: SavingThrowAfterRollAsk): T {
   return ask.stage === "rerolls"
     ? savingThrowHoleWithRerollOptions(hole, ask.options)
-    : savingThrowHoleWithAddedDieOptions(hole, ask.options);
+    : d20TestHoleWithAddedDieOptions(hole, ask.options);
 }
 
 /** The ability check hole asked again with what its roller has to decide next. */

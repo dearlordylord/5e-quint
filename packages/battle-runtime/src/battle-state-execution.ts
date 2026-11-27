@@ -4670,18 +4670,6 @@ export type BattleState = {
   readonly legendaryActionWindow: LegendaryActionWindow | null;
 };
 
-/**
- * An attack roll that missed, which a Bardic Inspiration die may turn into a
- * hit. Ability checks and saving throws take the die in battle, through the
- * D20 Test's added-die step.
- */
-export type BattleBardicInspirationFailedAttackRollFacts = {
-  readonly actorId: CombatantId;
-  readonly attackRoll: BattleAttackRollResult;
-  readonly armorClass: ArmorClass;
-  readonly criticalThreshold?: CriticalHitThreshold;
-};
-
 export type BattleSuccessfulAbilityCheckFacts = {
   readonly actorId: CombatantId;
   readonly ability: Ability;
@@ -4691,12 +4679,6 @@ export type BattleSuccessfulAbilityCheckFacts = {
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 };
 
-export type BardicInspirationFailedAttackRollResolutionInput = {
-  readonly state: BattleState;
-  readonly failedAttackRoll: BattleBardicInspirationFailedAttackRollFacts;
-  readonly bardicInspirationRoll: number;
-};
-
 export type SuccessfulAbilityCheckReactionReductionResolutionInput = {
   readonly state: BattleState;
   readonly reactorId: CombatantId;
@@ -4704,15 +4686,6 @@ export type SuccessfulAbilityCheckReactionReductionResolutionInput = {
   readonly abilityCheck: BattleSuccessfulAbilityCheckFacts;
   readonly reductionRoll: number;
 };
-
-export type BardicInspirationFailedAttackRollResolutionResult =
-  | (Extract<BattleResolutionResult, { readonly tag: "resolved" }> & {
-      readonly bardicInspirationAttackRoll: {
-        readonly boostedTotal: number;
-        readonly boostedSucceeded: boolean;
-      };
-    })
-  | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 
 export type SuccessfulAbilityCheckReactionReductionResolutionResult =
   | (Extract<BattleResolutionResult, { readonly tag: "resolved" }> & {
@@ -5659,7 +5632,7 @@ export type BattleAttackRollHole = Extract<
     BattleHeroicInspirationRerollOption,
   ];
   readonly relationshipFactRequest?: BattleAttackRollRelationshipFactRequest;
-};
+} & BattleD20TestAddedDieHoleOptions;
 export type AttackRollFeatureActivation = {
   readonly procedureRef: BattleProcedureExecutionRef;
   readonly rollMode: AttackRollMode;
@@ -5964,6 +5937,19 @@ export type BattleDeathSavingThrowAddedDieDecisions = readonly [
   BattleDeathSavingThrowAddedDieDecision,
   ...BattleDeathSavingThrowAddedDieDecision[],
 ];
+/**
+ * A source's decision on a die added to an attack roll that misses: the
+ * engine adds the number rolled to the total and judges the hit. The d20
+ * stays, so a die can't turn a 1 into a hit or make a Critical Hit.
+ */
+export type BattleAttackRollAddedDieDecision = BattleD20TestAddedDieDecision<
+  typeof BARDIC_INSPIRATION_DIE_EFFECT_KIND
+>;
+/** An attack roll's added-die decisions in the order the roller made them. */
+export type BattleAttackRollAddedDieDecisions = readonly [
+  BattleAttackRollAddedDieDecision,
+  ...BattleAttackRollAddedDieDecision[],
+];
 export type BattleSpellDamageRerollOption = {
   readonly effectKind: "damage_dice_reroll";
   readonly label: string;
@@ -5995,7 +5981,7 @@ export type BattleSpellAttackRollHole = Extract<
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
   ];
-};
+} & BattleD20TestAddedDieHoleOptions;
 export type BattleCunningStrikeOptionSelection = {
   readonly procedureRef: BattleProcedureExecutionRef;
   readonly optionId: CunningStrikeOptionSelectionId;
@@ -7644,6 +7630,8 @@ export type BattleAttackRollResult = AttackRollResult & {
   readonly activatedOngoingFeatureProcedureRef?: BattleProcedureExecutionRef;
   readonly missToHitReplacementProcedureRef?: BattleProcedureExecutionRef;
   readonly d20TestRerolls?: BattleAttackRollD20TestRerollDecisions;
+  /** The dice added to the roll its rerolls leave, while it misses. */
+  readonly d20TestAddedDice?: BattleAttackRollAddedDieDecisions;
 };
 export type BattleRolledDiceFill = {
   readonly kind: "rolledDice";

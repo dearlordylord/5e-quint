@@ -6936,6 +6936,10 @@
       "parityWitnesses": [
         {
           "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/attack-roll-added-dice.test.ts"
+        },
+        {
+          "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
         },
         {
@@ -6950,7 +6954,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
       ],
-      "reason": "The QNT owner offers each source only while the test as it stands fails and the roller has it, a Bardic Inspiration die on ability checks and saving throws and the failed ability check resource boost on ability checks only; each source decides once on each roll and adds its die at most once, an ability check adds the die to its total and compares it with the DC while a saving throw carries the table's ruling with the die, and a rolled Death Saving Throw adds the Bardic Inspiration die to its d20 toward 10 with a 1 or a 20 on the d20 deciding first (A68), and on that roll a decision, a decline included, is refused where nothing was offered. The Bardic Inspiration die is expended when it is rolled; the boost's use is spent only when the check succeeds with every added die. d20-test-after-roll-decisions asks for the added dice only once d20-test-outcome-rerolls has decided every reroll, so the dice go on the roll the rerolls leave (A67), and refuses added dice sent before that; d20-test-added-dice folds the sources on that roll for every saving throw, Concentration save and ability check that d20-test-reroll-fills checks, the Glyph release and the start-turn Death Saving Throw that turn-boundary-lifecycle resolves in one step, where death-saves-algebra judges the roll with the die; each source owns its availability, option, decision checks and spend, recorded on the subject so a replay does not spend twice. A take of the boost is recorded with whether it spent the use, so a replay accepts the boost its first pass took on a check that still failed, and only a spent use makes the roller's other rolls spentOnAnotherRoll. The QNT core models one roll: on a roll of a multi-roll subject whose source was spent on another roll, the runtime lets a decline stand and refuses a die, which the core's single-roll offer does not reach. Attack rolls are not yet offered the dice. The executable parity witnesses cover the offer, a die that turns the test and one that falls short, decline, no die or use left, a face outside the die, both dice in either order, a die after the test succeeded, the order after a Heroic Inspiration reroll, a saving throw with the table's ruling and a replay across its damage, a Concentration save, boost replays with and without the use spent, a real-catalog Champion Fighter's Hide check, and on a death save the offer, a die that turns it and one that falls short, a 1 on the d20, decline, no offer on a success, no die or a face outside it, and the die after a Heroic Inspiration reroll.",
+      "reason": "The QNT owner offers each source only while the test as it stands fails and the roller has it, a Bardic Inspiration die on ability checks, saving throws and attack rolls and the failed ability check resource boost on ability checks only; each source decides once on each roll and adds its die at most once, an ability check adds the die to its total and compares it with the DC while a saving throw carries the table's ruling with the die, a rolled Death Saving Throw adds the Bardic Inspiration die to its d20 toward 10 with a 1 or a 20 on the d20 deciding first (A68), and an attack roll adds the die to its total against the Armor Class with a 1 or a 20 on the d20 deciding first, and on that roll a decision, a decline included, is refused where nothing was offered. The Bardic Inspiration die is expended when it is rolled; the boost's use is spent only when the check succeeds with every added die. d20-test-after-roll-decisions asks for the added dice only once d20-test-outcome-rerolls has decided every reroll, so the dice go on the roll the rerolls leave (A67), and refuses added dice sent before that; d20-test-added-dice folds the sources on that roll for every saving throw, Concentration save and ability check that d20-test-reroll-fills checks, the Glyph release and the start-turn Death Saving Throw that turn-boundary-lifecycle resolves in one step, where death-saves-algebra judges the roll with the die, and attack-roll-after-roll-decisions runs both stages for every attack roll site, judging the miss against the Armor Class as it stands, so a roll a Reaction turns into a miss is asked again for the die when the attack replays (A69), and the replay takes the resubmitted roll's added dice on the roll a Reaction lowered; each source owns its availability, option, decision checks and spend, recorded on the subject so a replay does not spend twice. A take of the boost is recorded with whether it spent the use, so a replay accepts the boost its first pass took on a check that still failed, and only a spent use makes the roller's other rolls spentOnAnotherRoll. The QNT core models one roll: on a roll of a multi-roll subject whose source was spent on another roll, the runtime lets a decline stand and refuses a die, which the core's single-roll offer does not reach. The executable parity witnesses cover the offer, a die that turns the test and one that falls short, decline, no die or use left, a face outside the die, both dice in either order, a die after the test succeeded, the order after a Heroic Inspiration reroll, a saving throw with the table's ruling and a replay across its damage, a Concentration save, boost replays with and without the use spent, a real-catalog Champion Fighter's Hide check, on a death save the offer, a die that turns it and one that falls short, a 1 on the d20, decline, no offer on a success, no die or a face outside it, and the die after a Heroic Inspiration reroll, and on an attack roll the offer on a weapon attack, a Spell Attack and an Opportunity Attack, a die that turns the miss and one that falls short, a 1 on the d20, decline, no offer on a hit, no die or a face outside it, the die after a Heroic Inspiration reroll, and the die after Shield and after Cutting Words.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts",
@@ -7339,12 +7343,13 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
-        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE"
       ],
       "followUpTaskIds": [],
       "holeKind": "attackRoll",
       "id": "BattleAttackRollHole",
-      "reason": "Attack Roll results drive hit, miss, Critical Hit, replacement, and post-hit continuation semantics across attacks and feature riders; generic attack branch coverage is split from feature-specific follow-ups. The protocol ordering obligation also owns the Stat Block Attack Roll position after Stat Block target choice or Multiattack dispatch control. BATTLE.STAT_BLOCK.ATTACK_PROCEDURE owns formal semantics for the admitted Stat Block attack, damage, and typed-rider family.",
+      "reason": "Attack Roll results drive hit, miss, Critical Hit, replacement, and post-hit continuation semantics across attacks and feature riders; generic attack branch coverage is split from feature-specific follow-ups. A Bardic Inspiration die may be added to a roll that misses by the failed D20 Test added die obligation. The protocol ordering obligation also owns the Stat Block Attack Roll position after Stat Block target choice or Multiattack dispatch control. BATTLE.STAT_BLOCK.ATTACK_PROCEDURE owns formal semantics for the admitted Stat Block attack, damage, and typed-rider family.",
       "subject": "battle-hole-family"
     },
     {
@@ -7353,12 +7358,13 @@
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
         "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
-        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE"
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE"
       ],
       "followUpTaskIds": [],
       "holeKind": "attackRoll",
       "id": "BattleSpellAttackRollHole",
-      "reason": "Spell Attack Roll results drive spell hit, miss, Critical Hit, after-hit, beam/ray, and chained continuations. Generic spell attack damage branches and specialized spell attack continuations are covered by the spell, damage, after-hit rider, and attack-sequence obligations.",
+      "reason": "Spell Attack Roll results drive spell hit, miss, Critical Hit, after-hit, beam/ray, and chained continuations. Generic spell attack damage branches and specialized spell attack continuations are covered by the spell, damage, after-hit rider, and attack-sequence obligations, and a Bardic Inspiration die added to a roll that misses by the failed D20 Test added die obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -7893,12 +7899,13 @@
         "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
-        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE"
       ],
       "fillKind": "attackRoll",
       "followUpTaskIds": [],
       "id": "attackRoll",
-      "reason": "Attack Roll fills drive hit, miss, Critical Hit, replacement, and downstream attack or spell damage/continuation semantics. The protocol ordering obligation also owns Stat Block Attack Roll fills after Stat Block target choice or Multiattack dispatch control.",
+      "reason": "Attack Roll fills drive hit, miss, Critical Hit, replacement, and downstream attack or spell damage/continuation semantics; their added die decisions are checked by the failed D20 Test added die obligation. The protocol ordering obligation also owns Stat Block Attack Roll fills after Stat Block target choice or Multiattack dispatch control.",
       "subject": "battle-fill-kind"
     },
     {
@@ -14091,7 +14098,7 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Owns the dice added to a failed D20 Test once its rerolls are decided: each source's offer while the test still fails, one decision per source on each roll, the ability check total against the DC or the table's ruling on a saving throw, the Bardic Inspiration die expended when rolled and the resource boost's use spent only on success, independently of battle or authored identity.",
+      "evidence": "Owns the dice added to a failed D20 Test once its rerolls are decided: each source's offer while the test still fails, one decision per source on each roll, the ability check total against the DC, the table's ruling on a saving throw, a rolled Death Saving Throw toward 10 or an attack roll against the Armor Class, the Bardic Inspiration die expended when rolled and the resource boost's use spent only on success, independently of battle or authored identity.",
       "obligationIds": ["BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
       "profileScopes": [
@@ -14107,7 +14114,7 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "Executable closed examples cover the offer of both dice, a boost that turns the check and one that falls short, both dice in either order, a decline asked again after another die, no offer or decision on a success, no use left, a face outside the die, a source twice, and a saving throw with the table's ruling and no boost.",
+      "evidence": "Executable closed examples cover the offer of both dice, a boost that turns the check and one that falls short, both dice in either order, a decline asked again after another die, no offer or decision on a success, no use left, a face outside the die, a source twice, a saving throw with the table's ruling and no boost, a rolled Death Saving Throw, and an attack roll: the offer, a die that turns the miss and one that falls short, a 1 on the d20, no Critical Hit from the die, a hit refusing the die, and no boost.",
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt",
       "role": "proof-only"

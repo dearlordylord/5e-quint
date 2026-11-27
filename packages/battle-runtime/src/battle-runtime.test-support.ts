@@ -1,4 +1,5 @@
 import type {
+  BattleActiveEffect,
   BattleInputFrontier,
   BattleOrdinaryHoleFrontier,
 } from "./battle-state-execution.ts";
@@ -307,7 +308,6 @@ import {
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   parseSupportedUnitFeatureProfile,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
-  resolveBardicInspirationFailedAttackRoll,
   resolveBattleConcentrationDamage,
   resolveBattleInterrupt,
   resolveBattleSubject as resolveBattleSubjectRuntime,
@@ -1207,19 +1207,6 @@ export function requireResolved(
     throw new Error(
       `Expected resolved battle result, got ${result.tag}${detail}.`,
     );
-  }
-
-  return result;
-}
-
-export function requireBardicInspirationAttackRollResolved(
-  result: ReturnType<typeof resolveBardicInspirationFailedAttackRoll>,
-): Extract<
-  ReturnType<typeof resolveBardicInspirationFailedAttackRoll>,
-  { readonly tag: "resolved" }
-> {
-  if (result.tag !== "resolved") {
-    throw new Error(`Expected resolved battle result, got ${result.tag}.`);
   }
 
   return result;
@@ -3384,6 +3371,10 @@ export function attackRollFill(
       BattleFill,
       { readonly kind: "attackRoll" }
     >["value"]["d20TestRerolls"];
+    readonly d20TestAddedDice?: Extract<
+      BattleFill,
+      { readonly kind: "attackRoll" }
+    >["value"]["d20TestAddedDice"];
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   if (hole.kind !== "attackRoll") {
@@ -3424,6 +3415,9 @@ export function attackRollFill(
       ...(value.d20TestRerolls === undefined
         ? {}
         : { d20TestRerolls: value.d20TestRerolls }),
+      ...(value.d20TestAddedDice === undefined
+        ? {}
+        : { d20TestAddedDice: value.d20TestAddedDice }),
     },
   };
 }
@@ -5706,6 +5700,34 @@ export function grantBardicInspirationToGoblin(): BattleState {
   ).state;
 }
 
+/** The state with a d6 Bardic Inspiration die, granted by a Bard, held by the creature. */
+export function withBardicInspirationDie(
+  state: BattleState,
+  holderId: CombatantId,
+): BattleState {
+  const die = grantBardicInspirationToGoblin()
+    .combatants.get(goblinId)
+    ?.activeEffects.find(
+      (
+        effect,
+      ): effect is Extract<
+        BattleActiveEffect,
+        { readonly kind: "bardicInspirationDie" }
+      > => effect.kind === "bardicInspirationDie",
+    );
+  const holder = state.combatants.get(holderId);
+  if (die === undefined || holder === undefined) {
+    throw new Error("Expected a granted die and its holder.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(holderId, {
+      ...holder,
+      activeEffects: [...holder.activeEffects, die],
+    }),
+  };
+}
+
 export function combatantHasBardicInspirationDie(
   state: BattleState,
   actorId: CombatantId,
@@ -6962,7 +6984,6 @@ export {
   pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
   removeCondition,
   requiredAbilityCheckRollMode,
-  resolveBardicInspirationFailedAttackRoll,
   resolveBattleConcentrationDamage,
   resolveBattleInterrupt,
   resolveBattleSubject,

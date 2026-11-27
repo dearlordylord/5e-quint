@@ -5,7 +5,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test
 
 module battleRuntimeBardicInspiration {
-  import attackRollDamageDiceCore.* from "../shared-algebras/proofs/rule-core/attack-roll-damage-dice-core"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
@@ -99,19 +98,6 @@ module battleRuntimeBardicInspiration {
   pure def bardicInspirationDifficultyClassD20TestSucceeds(total: int, dc: int): bool =
     total >= dc
 
-  pure def bardicInspirationAttackRollSucceeds(
-    total: int,
-    naturalD20: int,
-    armorClass: int,
-    criticalThreshold: int,
-  ): bool =
-    attackRollOutcomeHits(resolveAttackRoll({
-      naturalD20: naturalD20,
-      total: total,
-      armorClass: armorClass,
-      criticalThreshold: criticalThreshold,
-    }))
-
   pure def bardicInspirationDifficultyClassD20TestAdmitted(
     hasBardicInspirationDie: bool,
     dieSize: int,
@@ -121,20 +107,6 @@ module battleRuntimeBardicInspiration {
   ): bool =
     hasBardicInspirationDie
       and not(bardicInspirationDifficultyClassD20TestSucceeds(originalTotal, dc))
-      and bardicInspirationRoll >= 1
-      and bardicInspirationRoll <= dieSize
-
-  pure def bardicInspirationAttackRollAdmitted(
-    hasBardicInspirationDie: bool,
-    dieSize: int,
-    originalTotal: int,
-    naturalD20: int,
-    armorClass: int,
-    criticalThreshold: int,
-    bardicInspirationRoll: int,
-  ): bool =
-    hasBardicInspirationDie
-      and not(bardicInspirationAttackRollSucceeds(originalTotal, naturalD20, armorClass, criticalThreshold))
       and bardicInspirationRoll >= 1
       and bardicInspirationRoll <= dieSize
 

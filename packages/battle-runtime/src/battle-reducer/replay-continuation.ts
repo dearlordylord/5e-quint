@@ -21,6 +21,7 @@ import {
   battleContinuationFillEquals,
   isBattleContinuationComparableFill,
 } from "./battle-fill-equality.ts";
+import { recordedRollAnsweredAgain } from "./reaction-lowered-attack-roll.ts";
 import { DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY } from "../battle-state-execution.ts";
 import {
   currentInterruptCheckpoint,
@@ -212,14 +213,50 @@ export function resolveReplayContinuation(input: {
   });
 }
 
+/**
+ * The fills a replay resumes with: the recorded fills, each roll the replay
+ * asked again answered by its resubmission, then the submitted fills the
+ * recording doesn't already hold.
+ */
 export function reconstructReplayContinuationFills(
   recordedFills: readonly BattleFill[],
   submittedFills: readonly BattleFill[],
 ): readonly BattleFill[] {
+  const answeredAgain = new Set<BattleFill>();
+  const decidedFills = recordedFills.map((recordedFill) => {
+    const answer = recordedRollAnswer(recordedFill, submittedFills);
+    if (answer === null) return recordedFill;
+    answeredAgain.add(answer.submitted);
+    return answer.fill;
+  });
   return [
-    ...recordedFills,
-    ...replayContinuationSuffixFills(recordedFills, submittedFills),
+    ...decidedFills,
+    ...replayContinuationSuffixFills(
+      decidedFills,
+      submittedFills.filter((fill) => !answeredAgain.has(fill)),
+    ),
   ];
+}
+
+/**
+ * The submitted fill that answers a recorded roll the replay asked again,
+ * adding its later after-roll decisions (a roll that a Reaction turned into a
+ * miss is asked again with its added dice), and the fill the replay meets in
+ * the recorded roll's place. Null when a submitted fill repeats the recorded
+ * one, or none answers it.
+ */
+function recordedRollAnswer(
+  recordedFill: BattleFill,
+  submittedFills: readonly BattleFill[],
+): { readonly submitted: BattleFill; readonly fill: BattleFill } | null {
+  for (const submitted of submittedFills) {
+    if (replayContinuationRecordedFillMatches(recordedFill, submitted)) {
+      return null;
+    }
+    const fill = recordedRollAnsweredAgain(recordedFill, submitted);
+    if (fill !== null) return { submitted, fill };
+  }
+  return null;
 }
 
 function replayContinuationSuffixFills(

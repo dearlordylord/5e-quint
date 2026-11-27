@@ -24,11 +24,10 @@ import {
 } from "../optional-property.ts";
 import { attackRollIsCriticalHit } from "./attack-resolution.ts";
 import {
-  attackRollAfterD20TestRerolls,
-  attackRollD20TestRerolls,
-  attackRollHoleWithD20TestRerollOptions,
-} from "./attack-roll-d20-test-rerolls.ts";
-import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
+  attackRollAfterRollDecisions,
+  attackRollHoleAskedAfterRoll,
+  battleStateAfterAttackRollAfterRollUses,
+} from "./attack-roll-after-roll-decisions.ts";
 import {
   objectTargetAttackNeedsSightFact,
   attackRollModeMatches,
@@ -332,30 +331,31 @@ function resolveObjectTargetSpellAttackCore(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const d20TestRerolls = attackRollD20TestRerolls({
+  const afterRoll = attackRollAfterRollDecisions({
     state: input.input.state,
     subject: input.input.subject,
     attackerId: input.actorId,
     attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: attackRoll,
     requiredRollMode,
+    misses: (roll) =>
+      !attackRollHits(
+        roll,
+        armorClassBehindCover(objectFact.armorClass, objectFact.cover),
+      ),
   });
-  if (d20TestRerolls.tag === "decisionsRequired") {
+  if (afterRoll.tag === "decisionsRequired") {
     return needsHolesResult(input.input.state, input.input.subject, [
-      attackRollHoleWithD20TestRerollOptions(
+      attackRollHoleAskedAfterRoll(
         spellObjectAttackRollHole(input.invocation, requiredRollMode),
-        d20TestRerolls.options,
+        afterRoll.ask,
       ),
     ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestRerolls.tag === "invalid") {
+  if (afterRoll.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      d20TestRerolls.issue,
-    );
+    return invalidResult(input.input.state, "invalidFill", afterRoll.issue);
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -372,15 +372,15 @@ function resolveObjectTargetSpellAttackCore(
   }
   /* v8 ignore stop -- @preserve */
 
-  const effectiveAttackRoll = attackRollAfterD20TestRerolls(attackRoll);
+  const effectiveAttackRoll = afterRoll.roll;
   const hit = attackRollHits(
     effectiveAttackRoll,
     armorClassBehindCover(objectFact.armorClass, objectFact.cover),
   );
   const critical = attackRollIsCriticalHit(effectiveAttackRoll);
-  const spentState = battleStateAfterHeroicInspirationReroll(
+  const spentState = battleStateAfterAttackRollAfterRollUses(
     input.input.state,
-    d20TestRerolls.heroicInspirationUse,
+    afterRoll.uses,
   );
   const attackRolledState = consumeSelfAttackRollEffects(
     {

@@ -2,13 +2,15 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bardic-inspiration-failed-d20-test
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.failed-ability-check-resource-boost
 // The dice added to a D20 Test that stands failed once its rerolls are
-// decided (ASSUMPTIONS.md A67): a Bardic Inspiration die on an ability check,
-// a saving throw or a rolled Death Saving Throw, and a failed ability check
-// resource boost on an ability check. Each source is offered while the test
-// as it stands fails, in the order the roller chooses, and every added die
-// counts before the test is judged. An ability check's added die adds to its total, which the engine
-// compares with the DC; a saving throw's carries the table's ruling; a Death
-// Saving Throw's adds to the d20, and the engine judges it (A68).
+// decided (ASSUMPTIONS.md A67): a Bardic Inspiration die on any D20 Test (an
+// ability check, a saving throw, a rolled Death Saving Throw or an attack
+// roll), and a failed ability check resource boost on an ability check. Each
+// source is offered while the test as it stands fails, in the order the
+// roller chooses, and every added die counts before the test is judged. An
+// ability check's added die adds to its total, which the engine compares with
+// the DC; a saving throw's carries the table's ruling; a Death Saving Throw's
+// adds to the d20, and the engine judges it (A68); an attack roll's adds to
+// its total, and the engine judges the hit.
 
 import type { DifficultyClass } from "@dnd/shared/types";
 import {
@@ -23,6 +25,8 @@ import {
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
   type BattleAbilityCheckAddedDieDecision,
   type BattleAbilityCheckAddedDieHoleOptions,
+  type BattleAttackRollAddedDieDecision,
+  type BattleAttackRollResult,
   type BattleBardicInspirationDieOption,
   type BattleD20TestAddedDieHoleOptions,
   type BattleDeathSavingThrowAddedDieDecision,
@@ -43,7 +47,7 @@ import {
 } from "./bardic-inspiration-failed-d20-test.ts";
 import { d20TestAddedDieOffered } from "./d20-test-added-die.ts";
 import {
-  abilityCheckAfterAddedDie,
+  totalAfterAddedDie,
   d20TestAddedDieDecisionTakesDie,
   rolledOutcomeAfterAddedDie,
 } from "./d20-test-added-die-roll.ts";
@@ -72,45 +76,45 @@ const ABILITY_CHECK_ADDED_DIE_SOURCES = [
   "failedAbilityCheckResourceBoost",
 ] as const satisfies readonly D20TestAddedDieSource[];
 
-/** The sources that may add a die to a saving throw. */
-const SAVING_THROW_ADDED_DIE_SOURCES = [
+/** The sources that may add a die to any D20 Test. */
+const EVERY_D20_TEST_ADDED_DIE_SOURCES = [
   "bardicInspiration",
 ] as const satisfies readonly D20TestAddedDieSource[];
 
-/** The dice a saving throw hole is asked again with. */
-export type SavingThrowAddedDieOptions = {
+/** The dice any D20 Test hole is asked again with. */
+export type D20TestAddedDieOptions = {
   readonly bardicInspirationDie?: BattleBardicInspirationDieOption;
 };
 
 /** The dice an ability check hole is asked again with. */
-export type AbilityCheckAddedDieOptions = SavingThrowAddedDieOptions & {
+export type AbilityCheckAddedDieOptions = D20TestAddedDieOptions & {
   readonly failedAbilityCheckResourceBoost?: BattleFailedAbilityCheckResourceBoostOption;
 };
 
-/** What the dice an admitted saving throw took cost its roller. */
-export type SavingThrowAddedDieUses = {
+/** What the dice an admitted D20 Test took cost its roller. */
+export type D20TestAddedDieUses = {
   readonly bardicInspiration: BardicInspirationDieUse;
 };
 
 /** What the dice an admitted ability check took cost its roller. */
-export type AbilityCheckAddedDieUses = SavingThrowAddedDieUses & {
+export type AbilityCheckAddedDieUses = D20TestAddedDieUses & {
   readonly failedAbilityCheckResourceBoost: FailedAbilityCheckResourceBoostUse;
 };
 
 /** What a test that took no die costs. */
-const NO_SAVING_THROW_ADDED_DIE_USES: SavingThrowAddedDieUses = {
+const NO_D20_TEST_ADDED_DIE_USES: D20TestAddedDieUses = {
   bardicInspiration: NO_BARDIC_INSPIRATION_DIE_USE,
 };
 
 const NO_ABILITY_CHECK_ADDED_DIE_USES: AbilityCheckAddedDieUses = {
-  ...NO_SAVING_THROW_ADDED_DIE_USES,
+  ...NO_D20_TEST_ADDED_DIE_USES,
   failedAbilityCheckResourceBoost: NO_FAILED_ABILITY_CHECK_RESOURCE_BOOST_USE,
 };
 
-/** Spends what each admitted saving throw's added dice cost, in order. */
-export function battleStateAfterSavingThrowAddedDieUses(
+/** Spends what each admitted D20 Test's added dice cost, in order. */
+export function battleStateAfterD20TestAddedDieUses(
   state: BattleState,
-  uses: readonly SavingThrowAddedDieUses[],
+  uses: readonly D20TestAddedDieUses[],
 ): BattleState {
   return uses.reduce(
     (current, use) =>
@@ -127,7 +131,7 @@ export function battleStateAfterAbilityCheckAddedDieUses(
   return uses.reduce(
     (current, use) =>
       battleStateAfterFailedAbilityCheckResourceBoost(
-        battleStateAfterSavingThrowAddedDieUses(current, [use]),
+        battleStateAfterD20TestAddedDieUses(current, [use]),
         use.failedAbilityCheckResourceBoost,
       ),
     state,
@@ -158,15 +162,15 @@ type D20TestAddedDieContext = {
  */
 export function rolledOutcomeAddedDice<T extends BattleD20TestOutcome>(
   input: D20TestAddedDieContext & { readonly outcome: T },
-): D20TestAddedDice<T, SavingThrowAddedDieOptions, SavingThrowAddedDieUses> {
+): D20TestAddedDice<T, D20TestAddedDieOptions, D20TestAddedDieUses> {
   // A saving throw failed without a roll has nothing to add a die to.
   if (input.outcome.withoutRoll === true)
     return {
       tag: "resolved",
       roll: input.outcome,
-      uses: NO_SAVING_THROW_ADDED_DIE_USES,
+      uses: NO_D20_TEST_ADDED_DIE_USES,
     };
-  return savingThrowAddedDice({
+  return everyD20TestAddedDice({
     context: input,
     roll: input.outcome,
     decisions: input.outcome.d20TestAddedDice ?? [],
@@ -187,10 +191,10 @@ export function deathSavingThrowAddedDice(
   },
 ): D20TestAddedDice<
   DeathSavingThrowRoll,
-  SavingThrowAddedDieOptions,
-  SavingThrowAddedDieUses
+  D20TestAddedDieOptions,
+  D20TestAddedDieUses
 > {
-  return savingThrowAddedDice({
+  return everyD20TestAddedDice({
     context: input,
     roll: input.deathSavingThrowRoll,
     decisions: input.decisions,
@@ -202,22 +206,51 @@ export function deathSavingThrowAddedDice(
   });
 }
 
-/** An added-die decision on a rolled saving throw or a Death Saving Throw. */
-type SavingThrowAddedDieDecision =
-  | BattleRolledOutcomeAddedDieDecision
-  | BattleDeathSavingThrowAddedDieDecision;
+/**
+ * An attack roll's added dice, on the roll its rerolls leave. The engine
+ * judges the hit: each die adds to the total, and the d20 stays, so a die
+ * can't turn a 1 into a hit or make a Critical Hit.
+ */
+export function attackRollAddedDice(
+  input: D20TestAddedDieContext & {
+    readonly attackRoll: BattleAttackRollResult;
+    /** Whether a roll misses the target, with its Armor Class as it stands. */
+    readonly misses: (attackRoll: BattleAttackRollResult) => boolean;
+  },
+): D20TestAddedDice<
+  BattleAttackRollResult,
+  D20TestAddedDieOptions,
+  D20TestAddedDieUses
+> {
+  return everyD20TestAddedDice({
+    context: input,
+    roll: input.attackRoll,
+    decisions: input.attackRoll.d20TestAddedDice ?? [],
+    standsFailed: input.misses,
+    rollAfter: totalAfterAddedDie,
+  });
+}
 
 /**
- * Checks one saving throw added-die decision against its source. The match is
- * exhaustive, so a new added-die source on either saving throw must say how
- * its decision is checked.
+ * A decision on a die any D20 Test may take: on a rolled saving throw, a
+ * Death Saving Throw or an attack roll.
  */
-function savingThrowAddedDieDecisionStep(input: {
+type D20TestAddedDieDecision =
+  | BattleRolledOutcomeAddedDieDecision
+  | BattleDeathSavingThrowAddedDieDecision
+  | BattleAttackRollAddedDieDecision;
+
+/**
+ * Checks one decision on a die any D20 Test may take against its source. The
+ * match is exhaustive, so a new added-die source on any of these tests must
+ * say how its decision is checked.
+ */
+function d20TestAddedDieDecisionStep(input: {
   readonly die: ReturnType<typeof bardicInspirationDieForRoll>;
   readonly standsFailed: boolean;
-  readonly decision: SavingThrowAddedDieDecision;
+  readonly decision: D20TestAddedDieDecision;
 }): {
-  readonly source: (typeof SAVING_THROW_ADDED_DIE_SOURCES)[number];
+  readonly source: (typeof EVERY_D20_TEST_ADDED_DIE_SOURCES)[number];
   readonly issue: string | null;
 } {
   return Match.value(input.decision).pipe(
@@ -235,24 +268,20 @@ function savingThrowAddedDieDecisionStep(input: {
 }
 
 /**
- * The saving throw added-die fold: a Bardic Inspiration die, offered while
- * the save as it stands fails. Each saving throw says what fails and what a
- * die does to its roll.
+ * The added-die fold of a D20 Test that takes only the dice any D20 Test may
+ * take: a Bardic Inspiration die, offered while the test as it stands fails.
+ * Each test says what fails and what a die does to its roll.
  */
-function savingThrowAddedDice<
+function everyD20TestAddedDice<
   Roll,
-  Decision extends SavingThrowAddedDieDecision,
+  Decision extends D20TestAddedDieDecision,
 >(input: {
   readonly context: D20TestAddedDieContext;
   readonly roll: Roll;
   readonly decisions: readonly Decision[];
   readonly standsFailed: (roll: Roll) => boolean;
   readonly rollAfter: (roll: Roll, decision: Decision) => Roll;
-}): D20TestAddedDice<
-  Roll,
-  SavingThrowAddedDieOptions,
-  SavingThrowAddedDieUses
-> {
+}): D20TestAddedDice<Roll, D20TestAddedDieOptions, D20TestAddedDieUses> {
   const { context, standsFailed } = input;
   const die = bardicInspirationDieForRoll(
     context.state,
@@ -262,14 +291,14 @@ function savingThrowAddedDice<
   const decisions = d20TestDecisions<
     Roll,
     Decision,
-    (typeof SAVING_THROW_ADDED_DIE_SOURCES)[number]
+    (typeof EVERY_D20_TEST_ADDED_DIE_SOURCES)[number]
   >({
     roll: input.roll,
     decisions: input.decisions,
     rules: {
-      sources: SAVING_THROW_ADDED_DIE_SOURCES,
+      sources: EVERY_D20_TEST_ADDED_DIE_SOURCES,
       step: (roll, decision) =>
-        savingThrowAddedDieDecisionStep({
+        d20TestAddedDieDecisionStep({
           die,
           standsFailed: standsFailed(roll),
           decision,
@@ -376,7 +405,7 @@ export function abilityCheckAddedDice<T extends D20TestAbilityCheckValue>(
           }),
         ),
       takes: d20TestAddedDieDecisionTakesDie,
-      rollAfter: abilityCheckAfterAddedDie,
+      rollAfter: totalAfterAddedDie,
       offered: {
         bardicInspiration: (check) =>
           d20TestAddedDieOffered({ source: die, standsFailed: fails(check) }),
@@ -434,10 +463,10 @@ export function abilityCheckAddedDice<T extends D20TestAbilityCheckValue>(
   );
 }
 
-/** The saving throw hole asked again with the dice its roller has not decided on yet. */
-export function savingThrowHoleWithAddedDieOptions<
+/** A D20 Test hole asked again with the Bardic Inspiration die its roller has not decided on yet. */
+export function d20TestHoleWithAddedDieOptions<
   T extends BattleD20TestAddedDieHoleOptions,
->(hole: T, options: SavingThrowAddedDieOptions): T {
+>(hole: T, options: D20TestAddedDieOptions): T {
   return options.bardicInspirationDie === undefined
     ? hole
     : { ...hole, bardicInspirationDice: [options.bardicInspirationDie] };
@@ -447,10 +476,7 @@ export function savingThrowHoleWithAddedDieOptions<
 export function abilityCheckHoleWithAddedDieOptions<
   T extends BattleAbilityCheckAddedDieHoleOptions,
 >(hole: T, options: AbilityCheckAddedDieOptions): T {
-  const withBardicInspiration = savingThrowHoleWithAddedDieOptions(
-    hole,
-    options,
-  );
+  const withBardicInspiration = d20TestHoleWithAddedDieOptions(hole, options);
   return options.failedAbilityCheckResourceBoost === undefined
     ? withBardicInspiration
     : {

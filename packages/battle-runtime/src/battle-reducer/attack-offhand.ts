@@ -42,10 +42,10 @@ import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
 
 import { armorClassAgainstAttack } from "./armor-class-collector.ts";
 import {
-  attackRollD20TestRerolls,
-  attackRollHoleWithD20TestRerollOptions,
-} from "./attack-roll-d20-test-rerolls.ts";
-import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
+  attackRollAfterRollDecisions,
+  attackRollHoleAskedAfterRoll,
+  battleStateAfterAttackRollAfterRollUses,
+} from "./attack-roll-after-roll-decisions.ts";
 
 import {
   applyAttackDamageAmount,
@@ -379,17 +379,29 @@ function resolveBonusActionAttack(
   }
   /* v8 ignore stop -- @preserve */
   const attacker = input.state.combatants.get(input.subject.actorId);
-  const d20TestRerolls = attackRollD20TestRerolls({
+  const criticalThreshold = criticalThresholdForAttack(attacker, attack);
+  const targetArmorClass = armorClassAgainstAttack(
+    input.state,
+    target,
+    targetAdmission.cover,
+  );
+  const afterRoll = attackRollAfterRollDecisions({
     state: input.state,
     subject: input.subject,
     attackerId: input.subject.actorId,
     attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: fillSet.attackRoll,
     requiredRollMode,
+    misses: (roll) =>
+      !attackRollHitsWithCriticalThreshold(
+        roll,
+        targetArmorClass,
+        criticalThreshold,
+      ),
   });
-  if (d20TestRerolls.tag === "decisionsRequired") {
+  if (afterRoll.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.subject, [
-      attackRollHoleWithD20TestRerollOptions(
+      attackRollHoleAskedAfterRoll(
         attackRollHole(
           attacker,
           attack,
@@ -400,27 +412,18 @@ function resolveBonusActionAttack(
             attack,
           ),
         ),
-        d20TestRerolls.options,
+        afterRoll.ask,
       ),
     ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestRerolls.tag === "invalid") {
-    return invalidResult(input.state, "invalidFill", d20TestRerolls.issue);
+  if (afterRoll.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", afterRoll.issue);
   }
   /* v8 ignore stop -- @preserve */
-  const effectiveAttackRoll = d20TestRerolls.effectiveAttackRoll;
+  const effectiveAttackRoll = afterRoll.roll;
   const hiddenBeforeAttack =
     input.state.combatants.get(input.subject.actorId)?.hidden ?? null;
-  const criticalThreshold = criticalThresholdForAttack(
-    input.state.combatants.get(input.subject.actorId),
-    attack,
-  );
-  const targetArmorClass = armorClassAgainstAttack(
-    input.state,
-    target,
-    targetAdmission.cover,
-  );
   const hit = attackRollHitsWithCriticalThreshold(
     effectiveAttackRoll,
     targetArmorClass,
@@ -429,10 +432,7 @@ function resolveBonusActionAttack(
   let attackRolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
       revealHidden(
-        battleStateAfterHeroicInspirationReroll(
-          input.state,
-          d20TestRerolls.heroicInspirationUse,
-        ),
+        battleStateAfterAttackRollAfterRollUses(input.state, afterRoll.uses),
         input.subject.actorId,
       ),
       input.subject.actorId,

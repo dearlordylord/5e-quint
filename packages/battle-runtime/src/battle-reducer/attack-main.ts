@@ -48,13 +48,11 @@ import {
   ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
 } from "./attack-ordering-messages.ts";
 import {
-  attackRollD20TestRerolls,
-  attackRollHoleWithD20TestRerollOptions,
-} from "./attack-roll-d20-test-rerolls.ts";
-import {
-  battleStateAfterHeroicInspirationReroll,
-  type HeroicInspirationUse,
-} from "./heroic-inspiration-reroll.ts";
+  attackRollAfterRollDecisions,
+  attackRollHoleAskedAfterRoll,
+  battleStateAfterAttackRollAfterRollUses,
+  type AttackRollAfterRollUses,
+} from "./attack-roll-after-roll-decisions.ts";
 
 import {
   attackRollHole,
@@ -1237,6 +1235,7 @@ function resolveOrdinaryObjectAttack<
     attackerId,
     fillSet,
     objectFact,
+    targetCover,
   });
   if (rollPreparation.tag === "result") return rollPreparation.result;
   const rollOutcome = resolveOrdinaryObjectAttackRoll({
@@ -1346,7 +1345,7 @@ type OrdinaryObjectAttackRollPreparation =
   | {
       readonly tag: "ready";
       readonly effectiveAttackRoll: BattleAttackRollResult;
-      readonly heroicInspirationUse: HeroicInspirationUse;
+      readonly afterRollUses: AttackRollAfterRollUses;
     };
 
 type OrdinaryObjectAttackRollContext<
@@ -1357,7 +1356,31 @@ type OrdinaryObjectAttackRollContext<
   readonly attackerId: CombatantId;
   readonly fillSet: OrdinaryObjectAttackFillSet;
   readonly objectFact: OrdinaryObjectAttackTableFact;
+  readonly targetCover: DirectTargetCover;
 };
+
+/** Whether an ordinary object attack roll as it stands hits the object. */
+function ordinaryObjectAttackRollHits<
+  Attack extends BoundSupportedAttackActionOption,
+>(
+  context: Pick<
+    OrdinaryObjectAttackRollContext<Attack>,
+    "input" | "attack" | "attackerId" | "objectFact" | "targetCover"
+  >,
+  attackRoll: BattleAttackRollResult,
+): boolean {
+  return attackRollHitsWithCriticalThreshold(
+    attackRoll,
+    armorClassBehindCover(
+      Number(context.objectFact.armorClass),
+      context.targetCover,
+    ),
+    criticalThresholdForAttack(
+      context.input.state.combatants.get(context.attackerId),
+      context.attack,
+    ),
+  );
+}
 
 function prepareOrdinaryObjectAttackRoll<
   Attack extends BoundSupportedAttackActionOption,
@@ -1409,39 +1432,36 @@ function prepareOrdinaryObjectAttackRoll<
     };
   }
   const attacker = input.input.state.combatants.get(input.attackerId);
-  const d20TestRerolls = attackRollD20TestRerolls({
+  const afterRoll = attackRollAfterRollDecisions({
     state: input.input.state,
     subject: input.input.subject,
     attackerId: input.attackerId,
     attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll,
     requiredRollMode,
+    misses: (roll) => !ordinaryObjectAttackRollHits(input, roll),
   });
-  if (d20TestRerolls.tag === "decisionsRequired") {
+  if (afterRoll.tag === "decisionsRequired") {
     return {
       tag: "result",
       result: needsHolesResult(input.input.state, input.input.subject, [
-        attackRollHoleWithD20TestRerollOptions(
+        attackRollHoleAskedAfterRoll(
           attackRollHole(attacker, input.attack, requiredRollMode),
-          d20TestRerolls.options,
+          afterRoll.ask,
         ),
       ]),
     };
   }
-  if (d20TestRerolls.tag === "invalid") {
+  if (afterRoll.tag === "invalid") {
     return {
       tag: "result",
-      result: invalidResult(
-        input.input.state,
-        "invalidFill",
-        d20TestRerolls.issue,
-      ),
+      result: invalidResult(input.input.state, "invalidFill", afterRoll.issue),
     };
   }
   return {
     tag: "ready",
-    effectiveAttackRoll: d20TestRerolls.effectiveAttackRoll,
-    heroicInspirationUse: d20TestRerolls.heroicInspirationUse,
+    effectiveAttackRoll: afterRoll.roll,
+    afterRollUses: afterRoll.uses,
   };
 }
 
@@ -1494,23 +1514,16 @@ function resolveOrdinaryObjectAttackRoll<
   >;
   readonly targetCover: DirectTargetCover;
 }): OrdinaryObjectAttackRollOutcome {
-  const hit = attackRollHitsWithCriticalThreshold(
+  const hit = ordinaryObjectAttackRollHits(
+    input,
     input.rollPreparation.effectiveAttackRoll,
-    armorClassBehindCover(
-      Number(input.objectFact.armorClass),
-      input.targetCover,
-    ),
-    criticalThresholdForAttack(
-      input.input.state.combatants.get(input.attackerId),
-      input.attack,
-    ),
   );
-  const attackRollState = battleStateAfterHeroicInspirationReroll(
+  const attackRollState = battleStateAfterAttackRollAfterRollUses(
     battleStateAfterTargetActionEarlyEndForActor(
       input.input.state,
       input.attackerId,
     ),
-    input.rollPreparation.heroicInspirationUse,
+    input.rollPreparation.afterRollUses,
   );
   const attackRollObservedState = {
     ...revealHidden(attackRollState, input.attackerId),
@@ -2229,38 +2242,43 @@ export function resolveSelectedAttackProcedure<
       "Attack actor is no longer in the battle.",
     );
   }
-  const d20TestRerolls = attackRollD20TestRerolls({
-    state: input.state,
-    subject: input.subject,
-    attackerId: attackerId,
-    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
-    attackRoll: fillSet.attackRoll,
-    requiredRollMode: resolvedRequiredRollMode,
-  });
-  if (d20TestRerolls.tag === "decisionsRequired") {
-    return needsHolesResult(input.state, input.subject, [
-      attackRollHoleWithD20TestRerollOptions(
-        attackRollHole(
-          attacker,
-          attack,
-          resolvedRequiredRollMode,
-          attackRollOngoingFeatureActivations(input.state, attackerId, attack),
-        ),
-        d20TestRerolls.options,
-      ),
-    ]);
-  }
-  if (d20TestRerolls.tag === "invalid") {
-    return invalidResult(input.state, "invalidFill", d20TestRerolls.issue);
-  }
-  const effectiveAttackRoll = d20TestRerolls.effectiveAttackRoll;
-
   const criticalThreshold = criticalThresholdForAttack(attacker, attack);
   const targetArmorClass = armorClassAgainstAttack(
     input.state,
     target,
     targetAdmission.cover,
   );
+  const afterRoll = attackRollAfterRollDecisions({
+    state: input.state,
+    subject: input.subject,
+    attackerId: attackerId,
+    attackRollHoleId: ATTACK_ROLL_HOLE_ID,
+    attackRoll: fillSet.attackRoll,
+    requiredRollMode: resolvedRequiredRollMode,
+    misses: (roll) =>
+      !attackRollHitsWithCriticalThreshold(
+        roll,
+        targetArmorClass,
+        criticalThreshold,
+      ),
+  });
+  if (afterRoll.tag === "decisionsRequired") {
+    return needsHolesResult(input.state, input.subject, [
+      attackRollHoleAskedAfterRoll(
+        attackRollHole(
+          attacker,
+          attack,
+          resolvedRequiredRollMode,
+          attackRollOngoingFeatureActivations(input.state, attackerId, attack),
+        ),
+        afterRoll.ask,
+      ),
+    ]);
+  }
+  if (afterRoll.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", afterRoll.issue);
+  }
+  const effectiveAttackRoll = afterRoll.roll;
   const ordinaryHit = attackRollHitsWithCriticalThreshold(
     effectiveAttackRoll,
     targetArmorClass,
@@ -2300,9 +2318,9 @@ export function resolveSelectedAttackProcedure<
     );
   }
   /* v8 ignore stop -- @preserve */
-  const attackRollState = battleStateAfterHeroicInspirationReroll(
+  const attackRollState = battleStateAfterAttackRollAfterRollUses(
     battleStateAfterTargetActionEarlyEndForActor(input.state, attackerId),
-    d20TestRerolls.heroicInspirationUse,
+    afterRoll.uses,
   );
   const hiddenBeforeAttack =
     attackRollState.combatants.get(attackerId)?.hidden ?? null;
@@ -4396,7 +4414,7 @@ type AdditionalWeaponAttackRollResolution =
       readonly tag: "ok";
       readonly fill: AdditionalWeaponAttackRollFill;
       readonly attackRoll: BattleAttackRollResult;
-      readonly heroicInspirationUse: HeroicInspirationUse;
+      readonly afterRollUses: AttackRollAfterRollUses;
     };
 
 function resolveAdditionalWeaponAttackRoll(input: {
@@ -4412,6 +4430,7 @@ function resolveAdditionalWeaponAttackRoll(input: {
     | import("@dnd/shared-algebras/runtime-hole-algebra").AttackRollMode
     | undefined;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+  readonly targetCover: DirectTargetCover;
   readonly attackRollHole: BattleAttackRollHole;
 }): AdditionalWeaponAttackRollResolution {
   const { attackRoll } = input.family.fills;
@@ -4460,38 +4479,50 @@ function resolveAdditionalWeaponAttackRoll(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const d20TestRerolls = attackRollD20TestRerolls({
+  const targetArmorClass = armorClassAgainstAttack(
+    input.state,
+    input.target,
+    input.targetCover,
+  );
+  const criticalThreshold = criticalThresholdForAttack(
+    input.state.combatants.get(input.subject.actorId),
+    input.attack,
+  );
+  const afterRoll = attackRollAfterRollDecisions({
     state: input.state,
     subject: input.subject,
     attackerId: input.subject.actorId,
     attackRollHoleId: input.attackRollHole.holeId,
     attackRoll: attackRoll.value,
     requiredRollMode,
+    misses: (roll) =>
+      !attackRollHitsWithCriticalThreshold(
+        roll,
+        targetArmorClass,
+        criticalThreshold,
+      ),
   });
-  if (d20TestRerolls.tag === "decisionsRequired") {
+  if (afterRoll.tag === "decisionsRequired") {
     return {
       tag: "result",
       result: needsHolesResult(input.state, input.subject, [
-        attackRollHoleWithD20TestRerollOptions(
-          input.attackRollHole,
-          d20TestRerolls.options,
-        ),
+        attackRollHoleAskedAfterRoll(input.attackRollHole, afterRoll.ask),
       ]),
     };
   }
-  /* v8 ignore start -- @preserve -- Malformed fill: a reroll decision must match the options attached to this exact additional-attack roll. */
-  if (d20TestRerolls.tag === "invalid") {
+  /* v8 ignore start -- @preserve -- Malformed fill: a reroll or added-die decision must match the options attached to this exact additional-attack roll. */
+  if (afterRoll.tag === "invalid") {
     return {
       tag: "result",
-      result: invalidResult(input.state, "invalidFill", d20TestRerolls.issue),
+      result: invalidResult(input.state, "invalidFill", afterRoll.issue),
     };
   }
   /* v8 ignore stop -- @preserve */
   return {
     tag: "ok",
     fill: attackRoll,
-    attackRoll: d20TestRerolls.effectiveAttackRoll,
-    heroicInspirationUse: d20TestRerolls.heroicInspirationUse,
+    attackRoll: afterRoll.roll,
+    afterRollUses: afterRoll.uses,
   };
 }
 
@@ -4774,9 +4805,9 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
         revealHidden(
-          battleStateAfterHeroicInspirationReroll(
+          battleStateAfterAttackRollAfterRollUses(
             input.state,
-            cleaveAttackRoll.heroicInspirationUse,
+            cleaveAttackRoll.afterRollUses,
           ),
           input.subject.actorId,
         ),
@@ -5173,6 +5204,7 @@ function prepareWeaponMasteryCleaveAttack(input: {
     target: secondTarget,
     requiredRollMode: cleaveRollMode,
     targetSpatialFacts: cleaveTargetFacts,
+    targetCover: targetAdmission.cover,
     attackRollHole: weaponMasteryCleaveAttackRollHole(
       input.state,
       input.subject.actorId,
@@ -5525,9 +5557,9 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   const rolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
       revealHidden(
-        battleStateAfterHeroicInspirationReroll(
+        battleStateAfterAttackRollAfterRollUses(
           input.state,
-          hordeBreakerAttackRoll.heroicInspirationUse,
+          hordeBreakerAttackRoll.afterRollUses,
         ),
         input.subject.actorId,
       ),
@@ -5993,6 +6025,7 @@ function prepareHuntersPreyHordeBreakerAttack(input: {
     target: secondTarget,
     requiredRollMode: hordeBreakerRollMode,
     targetSpatialFacts: targetFacts,
+    targetCover: targetAdmission.cover,
     attackRollHole: huntersPreyHordeBreakerAttackRollHole(
       input.state,
       input.subject.actorId,

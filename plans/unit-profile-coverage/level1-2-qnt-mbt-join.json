@@ -852,6 +852,10 @@
       "parityWitnesses": [
         {
           "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/attack-roll-added-dice.test.ts"
+        },
+        {
+          "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
         },
         {
@@ -3674,6 +3678,10 @@
       "obligationStatus": "covered",
       "obligationTitle": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails",
       "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/attack-roll-added-dice.test.ts"
+        },
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
