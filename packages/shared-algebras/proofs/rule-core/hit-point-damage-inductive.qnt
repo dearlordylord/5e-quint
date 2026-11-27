@@ -94,7 +94,7 @@ module hitPointDamageInductive {
 
   val invariant = all {
     qKind.in(Set(PlayerCharacter, MonsterCreature)),
-    qHitPointMaximum.in(Set(8, 12)),
+    qHitPointMaximum.in(Set(0, 8, 12)),
     qHitPoints.in(0.to(12)),
     qTemporaryHitPoints.in(0.to(4)),
     qDead.in(Set(true, false)),

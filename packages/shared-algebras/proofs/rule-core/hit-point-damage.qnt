@@ -28,8 +28,14 @@ module hitPointDamage {
     else if (hitPoints > hitPointMaximum) hitPointMaximum
     else hitPoints
 
+  // playing-the-game.md, "Instant Death": "A creature dies if its Hit Point
+  // maximum reaches 0." So a maximum of 0 is legal only for a dead creature;
+  // a living one always has a positive maximum. No transition here lowers a
+  // maximum: the effects that drain one aren't modeled yet (README, "Hit Point
+  // maximum of 0").
   pure def legalVitals(vitals: CreatureVitals): bool = all {
-    vitals.hitPointMaximum > 0,
+    vitals.hitPointMaximum >= 0,
+    not(vitals.dead) implies vitals.hitPointMaximum > 0,
     vitals.hitPoints >= 0,
     vitals.hitPoints <= vitals.hitPointMaximum,
     vitals.temporaryHitPoints >= 0,
