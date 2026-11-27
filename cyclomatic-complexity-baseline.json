@@ -506,7 +506,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts": {
       "module/binding:expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames/call:[...combatants].map:argument-0": 10,
-      "module/binding:resolveEndTurnCommandForParent": 50
+      "module/binding:resolveEndTurnCommandForParent": 48
     },
     "packages/battle-runtime/src/battle-reducer/unit-feature-discovery.ts": {
       "module/binding:sacredWeaponHeldMeleeWeapons": 13,

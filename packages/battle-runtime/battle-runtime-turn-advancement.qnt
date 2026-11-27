@@ -8,10 +8,41 @@ module battleRuntimeTurnAdvancement {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
+  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
 
-  pure def endTurn(state: BattleState): BattleState = {
-    val featureChecked = normalizeFighterEarlyEndedOngoingFeatures(expireFighterEndOfTurnOngoingFeatures(expireEndOfTurnSpellEffects(state)))
-    val advancedInitiative = nextInitiative(featureChecked.initiative)
+  pure def actorIsDead(state: BattleState, actor: Actor): bool =
+    match actor {
+      | Fighter => combatantIsDead(state.fighter)
+      | Goblin => combatantIsDead(state.goblin)
+    }
+
+  // ASSUMPTIONS.md A71: a dead creature takes no turn. Its turn passes with
+  // only what ends at its start and end, and nothing asked of it. `state` has
+  // the Initiative order on the passed turn.
+  pure def passDeadActorTurn(state: BattleState): BattleState = {
+    val passedActor = currentActor(state)
+    expireFighterEndOfTurnOngoingFeatures(expireEndOfTurnSpellEffects(
+      expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(state, passedActor), passedActor)
+    ))
+  }
+
+  // With nobody alive, the order stays where it is (A71).
+  pure def endTurn(state: BattleState): BattleState =
+    if (actorIsDead(state, Fighter) and actorIsDead(state, Goblin)) state
+    else endTurnToNextLivingActor(state)
+
+  pure def endTurnToNextLivingActor(state: BattleState): BattleState = {
+    val outgoing = normalizeFighterEarlyEndedOngoingFeatures(expireFighterEndOfTurnOngoingFeatures(expireEndOfTurnSpellEffects(state)))
+    val followingInitiative = nextInitiative(outgoing.initiative)
+    // Two participants: when the following one is dead, the turn passes back
+    // to the one ending its turn.
+    val passesDeadTurn = actorIsDead(outgoing, followingInitiative.stillToAct.actor)
+    val featureChecked =
+      if (passesDeadTurn) passDeadActorTurn({ ...outgoing, initiative: followingInitiative }).with("initiative", outgoing.initiative)
+      else outgoing
+    val advancedInitiative =
+      if (passesDeadTurn) nextInitiative(followingInitiative)
+      else followingInitiative
     val nextActor = advancedInitiative.stillToAct.actor
     val featureAdvanced = applyStartOfTurnSpellEffects(expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(featureChecked, nextActor), nextActor), nextActor)
     val spellDurationAdvanced = if (advancedInitiative.round > featureChecked.initiative.round)

@@ -120,4 +120,28 @@ module battleRuntimeTurnOrderTests {
       assert(initiativeStillToActActors(result.initiative) == [Fighter, Goblin]),
     }
   }
+
+  run test_end_turn_passes_a_dead_creature_back_to_the_living_one = {
+    val deadGoblin = { ...initialState, goblin: { ...initialState.goblin, hp: 0 } }
+    val result = endTurn({ ...deadGoblin, actionAvailable: false })
+    all {
+      assert(actorIsDead(deadGoblin, Goblin)),
+      assert(currentActor(result) == Fighter),
+      assert(result.initiative.round == 2),
+      assert(result.actionAvailable),
+      assert(result.lastTurnActor == LastTurnFighter),
+    }
+  }
+
+  run test_end_turn_with_nobody_alive_leaves_the_order_where_it_is = {
+    val nobodyAlive = {
+      ...initialState,
+      fighter: { ...initialState.fighter, hp: 0, deathFailures: 3 },
+      goblin: { ...initialState.goblin, hp: 0 },
+    }
+    all {
+      assert(actorIsDead(nobodyAlive, Fighter)),
+      assert(endTurn(nobodyAlive) == nobodyAlive),
+    }
+  }
 }

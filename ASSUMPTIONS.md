@@ -563,3 +563,22 @@ doesn't say what an added die does to a later reroll. The model takes the
 rerolls first. The SRD also doesn't say whether Tactical Mind's "still fails"
 reads the check before or after another added die; the model judges the check
 once with every added die.
+
+## A71: A dead creature's turn passes without being taken
+
+**Assumption:** A dead creature takes no turn. When its place in the
+Initiative order comes up, its turn passes on its own: nothing is rolled,
+saved or chosen for it, but whatever lasts until the start or the end of its
+turn still ends then. It keeps its place in the order, so a creature that
+returns to life takes its turns there again. When no participant is alive,
+the order stops where it is, End Turn stays offered, and the table decides
+when the battle ends. The engine never ends a battle on its own.
+
+**Rules basis / gap:** `.references/srd-5.2.1/playing-the-game.md`, "Take
+Turns": "Each participant in the battle takes a turn in Initiative order."
+"Initiative Order": "The Initiative order remains the same from round to
+round." `.references/srd-5.2.1/rules-glossary.md`, "Object": "An object is a
+nonliving, distinct thing", and "Dead" describes a dead creature returning to
+life. The SRD doesn't say whether a dead creature is still a participant that
+takes turns, or what happens to the order when nobody is left alive. The
+runtime owner is `turn-order-advance.ts:nextLivingTurn`.

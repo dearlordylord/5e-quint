@@ -47,10 +47,7 @@ import { longCastingMustFailAtTurnEnd } from "./long-casting-progress.ts";
 import { enableMovementActionBonusActionExclusion } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
-  currentActing,
-  nextInitiative,
-} from "@dnd/shared-algebras/initiative-algebra";
+import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   holeId,
@@ -126,6 +123,11 @@ import {
 } from "./turn-start-heroic-inspiration.ts";
 import { applyCompelledHaltAtTurnStart } from "./compelled-behavior-halt.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
+import {
+  nextLivingTurn,
+  type NextLivingTurn,
+  type ParticipantTurn,
+} from "./turn-order-advance.ts";
 import {
   battleStateAfterD20TestRerollUses,
   d20TestDeathSavingThrowRerolls,
@@ -1199,32 +1201,52 @@ function finishOutgoingTurn(fills: OutgoingTurnFills): BattleState {
     fills.damageDispositions,
     fills.endTurnSaveGatedConditionWithRepeatDamageRepeatSaves,
   ).combatants;
+  return expireEndOfTurnTimings(
+    {
+      ...stateAfterHitPointBudgetConditionRepeatSaves,
+      combatants: combatantsAfterSpellTurnEndDamage,
+    },
+    { actorId, round },
+  );
+}
+
+/**
+ * What ends at the end of a participant's turn without asking anything: its
+ * end-of-turn effects and light. End Turn runs it after the outgoing turn's
+ * saves and damage; a dead participant's passed turn runs it on its own.
+ */
+function expireEndOfTurnTimings(
+  state: BattleState,
+  turn: ParticipantTurn,
+): BattleState {
   return {
-    ...stateAfterHitPointBudgetConditionRepeatSaves,
+    ...state,
     combatants: expireEndOfTurnEffects(
-      combatantsAfterSpellTurnEndDamage,
-      actorId,
-      round,
+      state.combatants,
+      turn.actorId,
+      turn.round,
     ),
     lightEmitters: expireBattleLightEmitters(
-      stateAfterHitPointBudgetConditionRepeatSaves.lightEmitters,
+      state.lightEmitters,
       (emitter) =>
         emitter.expiresAt.kind === "endOfTurn" &&
-        emitter.expiresAt.combatantId === actorId &&
-        emitter.expiresAt.round === round,
+        emitter.expiresAt.combatantId === turn.actorId &&
+        emitter.expiresAt.round === turn.round,
     ),
   };
 }
 
 /**
- * The current actor's turn as it starts, before its start-turn occurrences:
- * the creature's per-turn state and the turn's resources reset, and what lasts
- * "until the start of" its turn ends. Both the battle's opening turn and every
- * turn End Turn reaches start here.
+ * What ends at the start of a participant's turn without asking anything:
+ * readied spells and responses that expire then (a readied spell's
+ * concentration breaks), Help given to or by it, and effects and ongoing
+ * features that last "until the start of" its turn. A starting turn and a dead
+ * participant's passed turn both run it.
  */
-function prepareStartingTurn(state: BattleState): BattleState {
-  const actorId = currentActorId(state);
-  const combatants = resetStartingTurnCombatants(state, actorId);
+function expireStartOfTurnTimings(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleState {
   const expiringReadiedSpellCasterIds = [...state.readiedSpells]
     .filter(
       ([, readiedSpell]) => readiedSpell.expiresAt.combatantId === actorId,
@@ -1245,7 +1267,7 @@ function prepareStartingTurn(state: BattleState): BattleState {
   let combatantsAfterExpiredReadiedSpells: ReadonlyMap<
     CombatantId,
     BattleCreatureState
-  > = combatants;
+  > = state.combatants;
   for (const casterId of expiringReadiedSpellCasterIds) {
     const broken = breakCombatantConcentration(
       { ...state, combatants: combatantsAfterExpiredReadiedSpells },
@@ -1257,50 +1279,16 @@ function prepareStartingTurn(state: BattleState): BattleState {
       ...broken.grantedFlightEndFallCleanupFrames,
     );
   }
-  const combatantsAfterStartEffects = expireStartOfTurnEffects(
-    expireStartOfTurnOngoingFeatures(
-      combatantsAfterExpiredReadiedSpells,
-      actorId,
-    ),
-    actorId,
-  );
-  const combatantsAfterPersistentAreaSaveResets =
-    resetAllTranslatingPersistentAreaSavedThisTurn(
-      resetAllStationaryPersistentAreaSavedThisTurn(
-        resetAllPersistentAreaSaveCompositeSavedThisTurn(
-          resetAllPersistentAreaSaveConditionEscapeSavedThisTurn(
-            resetAllMovablePersistentAreaSavedThisTurn(
-              combatantsAfterStartEffects,
-            ),
-          ),
-        ),
-      ),
-    );
-  const combatantsAfterDamageReductionReset =
-    resetSpellDamageReductionsForNewTurn(
-      combatantsAfterPersistentAreaSaveResets,
-    );
-  const stateAfterCompelledHalt = applyCompelledHaltAtTurnStart({
-    ...state,
-    combatants: combatantsAfterDamageReductionReset,
-    currentTurnResources: spellGrantedActionResourceTurnResources(
-      resetBattleTurnResources(state.currentTurnResources),
-      combatantsAfterDamageReductionReset.get(actorId),
-    ),
-  });
-  const actor = stateAfterCompelledHalt.combatants.get(actorId);
   return battleStateWithFlySpeedGrantEndFallCleanupFrames(
     {
-      ...stateAfterCompelledHalt,
-      currentTurnResources: moveActionBonusActionTurnResources(
-        saveGatedTurnConstraintActionOrBonusActionTurnResources(
-          stateAfterCompelledHalt,
-          stateAfterCompelledHalt.currentTurnResources,
-          actor,
+      ...state,
+      combatants: expireStartOfTurnEffects(
+        expireStartOfTurnOngoingFeatures(
+          combatantsAfterExpiredReadiedSpells,
+          actorId,
         ),
-        actor,
+        actorId,
       ),
-      currentTurnStart: "started",
       readiedSpells,
       readiedResponses,
       helpAttacks: state.helpAttacks.filter(
@@ -1315,17 +1303,99 @@ function prepareStartingTurn(state: BattleState): BattleState {
 }
 
 /**
- * End Turn's boundary without its start-turn occurrences: the outgoing turn
- * finishes, Initiative moves to the next participant, and that participant's
- * turn starts.
+ * The current actor's turn as it starts, before its start-turn occurrences:
+ * the creature's per-turn state and the turn's resources reset, and what lasts
+ * "until the start of" its turn ends. Both the battle's opening turn and every
+ * turn End Turn reaches start here.
  */
-function advanceTurn(fills: OutgoingTurnFills): BattleState {
+function prepareStartingTurn(state: BattleState): BattleState {
+  const actorId = currentActorId(state);
+  const stateAfterStartTimings = expireStartOfTurnTimings(
+    { ...state, combatants: resetStartingTurnCombatants(state, actorId) },
+    actorId,
+  );
+  const combatantsAfterPersistentAreaSaveResets =
+    resetAllTranslatingPersistentAreaSavedThisTurn(
+      resetAllStationaryPersistentAreaSavedThisTurn(
+        resetAllPersistentAreaSaveCompositeSavedThisTurn(
+          resetAllPersistentAreaSaveConditionEscapeSavedThisTurn(
+            resetAllMovablePersistentAreaSavedThisTurn(
+              stateAfterStartTimings.combatants,
+            ),
+          ),
+        ),
+      ),
+    );
+  const combatantsAfterDamageReductionReset =
+    resetSpellDamageReductionsForNewTurn(
+      combatantsAfterPersistentAreaSaveResets,
+    );
+  const stateAfterCompelledHalt = applyCompelledHaltAtTurnStart({
+    ...stateAfterStartTimings,
+    combatants: combatantsAfterDamageReductionReset,
+    currentTurnResources: spellGrantedActionResourceTurnResources(
+      resetBattleTurnResources(state.currentTurnResources),
+      combatantsAfterDamageReductionReset.get(actorId),
+    ),
+  });
+  const actor = stateAfterCompelledHalt.combatants.get(actorId);
+  return {
+    ...stateAfterCompelledHalt,
+    currentTurnResources: moveActionBonusActionTurnResources(
+      saveGatedTurnConstraintActionOrBonusActionTurnResources(
+        stateAfterCompelledHalt,
+        stateAfterCompelledHalt.currentTurnResources,
+        actor,
+      ),
+      actor,
+    ),
+    currentTurnStart: "started",
+  };
+}
+
+/**
+ * A dead participant's turn, passed without being taken (ASSUMPTIONS.md A71):
+ * only what its turn's start and end end without asking anything, so an effect
+ * that lasts until the start or end of its turn still ends then. Nothing is
+ * rolled, saved or chosen for it.
+ */
+function passDeadParticipantTurn(
+  state: BattleState,
+  turn: ParticipantTurn,
+): BattleState {
+  const afterStart = expireStartOfTurnTimings(state, turn.actorId);
+  return expireEndOfTurnTimings(
+    {
+      ...afterStart,
+      combatants: expireEndOfTurnOngoingFeatures(
+        afterStart.combatants,
+        turn.actorId,
+        turn.round,
+      ),
+    },
+    turn,
+  );
+}
+
+/**
+ * End Turn's boundary without its start-turn occurrences: the outgoing turn
+ * finishes, Initiative moves past any dead participants to the next one alive,
+ * and that participant's turn starts.
+ */
+function advanceTurn(
+  fills: OutgoingTurnFills,
+  nextTurn: Extract<NextLivingTurn, { readonly tag: "living" }>,
+): BattleState {
   const endingActorId = currentActorId(fills.state);
   const outgoing = finishOutgoingTurn(fills);
+  const afterPassedTurns = nextTurn.passedTurns.reduce(
+    passDeadParticipantTurn,
+    outgoing,
+  );
   return {
     ...prepareStartingTurn({
-      ...outgoing,
-      initiative: nextInitiative(outgoing.initiative),
+      ...afterPassedTurns,
+      initiative: nextTurn.initiative,
     }),
     legendaryActionWindow: {
       afterTurnActorId: endingActorId,
@@ -1336,10 +1406,10 @@ function advanceTurn(fills: OutgoingTurnFills): BattleState {
 
 function roundDurationCohort(
   state: BattleState,
+  nextTurn: Extract<NextLivingTurn, { readonly tag: "living" }>,
 ): BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"] {
   const wrapsRound =
-    Number(nextInitiative(state.initiative).round) >
-    Number(state.initiative.round);
+    Number(nextTurn.initiative.round) > Number(state.initiative.round);
   if (!wrapsRound) return { activeEffectRefs: [], lightEmitterRefs: [] };
   return {
     activeEffectRefs: [...state.combatants].flatMap(([, combatant]) =>
@@ -4942,7 +5012,7 @@ export function resolveEndTurnCommand(
   input: EndTurnResolutionInput,
 ): BattleResolutionResult {
   const parent = replayParentContinuationFor(input);
-  const result = resolveEndTurnCommandForParent(input, parent);
+  const result = resolveEndTurnForParent(input, parent);
   return input.replayParentPosition === undefined
     ? projectReplayChildResult(parent, result)
     : result;
@@ -4983,7 +5053,7 @@ function resolveDelegatedEndTurnCommandWithReplayState(
       ? {}
       : { objectOutcomes: parentInput.replayObjectOutcomes }),
   });
-  const result = resolveEndTurnCommandForParent(
+  const result = resolveEndTurnForParent(
     {
       ...endTurnInput,
       ...(parentInput.replayParentPosition === undefined
@@ -5162,7 +5232,13 @@ function orderedStartTurnOccurrenceCohort(
   };
 }
 
-function resolveEndTurnCommandForParent(
+/**
+ * End Turn for its replay parent: an unrelated fill is refused, a resumed
+ * start-turn sequence continues, and otherwise the turn ends toward the next
+ * participant alive. With nobody left alive the order stays where it is, End
+ * Turn stays offered, and the table decides how the battle ends.
+ */
+function resolveEndTurnForParent(
   input: EndTurnResolutionInput,
   parent: ReplayParentContinuation,
 ): BattleResolutionResult {
@@ -5187,7 +5263,23 @@ function resolveEndTurnCommandForParent(
     });
   }
 
-  const initiative = nextInitiative(input.state.initiative);
+  const nextTurn = nextLivingTurn(input.state);
+  if (nextTurn.tag === "noLivingParticipant") {
+    return {
+      tag: "resolved",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+  return resolveEndTurnCommandForParent(input, parent, nextTurn);
+}
+
+function resolveEndTurnCommandForParent(
+  input: EndTurnResolutionInput,
+  parent: ReplayParentContinuation,
+  nextTurn: Extract<NextLivingTurn, { readonly tag: "living" }>,
+): BattleResolutionResult {
+  const initiative = nextTurn.initiative;
   const nextActorId = currentActing(initiative);
   const nextActor = input.state.combatants.get(nextActorId);
   const actorId = currentActorId(input.state);
@@ -5297,7 +5389,10 @@ function resolveEndTurnCommandForParent(
     actorId: nextActorId,
     round: initiative.round,
   };
-  const boundaryRoundDurationCohort = roundDurationCohort(input.state);
+  const boundaryRoundDurationCohort = roundDurationCohort(
+    input.state,
+    nextTurn,
+  );
   const startTurnCohort = startTurnOccurrenceCohort({
     state: input.state,
     subject: input.subject,
@@ -5881,22 +5976,25 @@ function resolveEndTurnCommandForParent(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const advancedTurnState = advanceTurn({
-    state: input.state,
-    hitPointBudgetConditionRepeatSaves,
-    saveGatedConditionWithRepeatRepeatSaves,
-    spellConditionEndTurnSaves,
-    spellConditionCountedEndTurnSaves,
-    unitFeatureConditionEndTurnSaves,
-    saveGatedTurnConstraintBundleEndTurnSaves,
-    abilityD20TestRollModeEndTurnSaves: abilityD20TestEndTurnSaves,
-    spellTurnEndDamageRolls: endTurnDamageRolls,
-    endTurnSaveGatedConditionWithRepeatDamageRepeatSaves,
-    concentrationSavingThrows: concentrationSavingThrowFills.filter((fill) =>
-      concentrationHoleIds.has(fill.holeId),
-    ),
-    damageDispositions: damageDispositionFills,
-  });
+  const advancedTurnState = advanceTurn(
+    {
+      state: input.state,
+      hitPointBudgetConditionRepeatSaves,
+      saveGatedConditionWithRepeatRepeatSaves,
+      spellConditionEndTurnSaves,
+      spellConditionCountedEndTurnSaves,
+      unitFeatureConditionEndTurnSaves,
+      saveGatedTurnConstraintBundleEndTurnSaves,
+      abilityD20TestRollModeEndTurnSaves: abilityD20TestEndTurnSaves,
+      spellTurnEndDamageRolls: endTurnDamageRolls,
+      endTurnSaveGatedConditionWithRepeatDamageRepeatSaves,
+      concentrationSavingThrows: concentrationSavingThrowFills.filter((fill) =>
+        concentrationHoleIds.has(fill.holeId),
+      ),
+      damageDispositions: damageDispositionFills,
+    },
+    nextTurn,
+  );
   const startedTurn = resolveStartTurnOccurrences({
     startingTurnState: advancedTurnState,
     rootState: input.state,
