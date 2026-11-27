@@ -382,7 +382,7 @@ module reactionsContinuationsConcentrationInductive {
     doReset,
   }
 
-  val invariant = all {
+  val protocolInvariant = all {
     qInterruptedActionQuota.in(Set(ActionAvailable, ActionSpent)),
     qInterruptedBonusActionAvailable.in(Set(true, false)),
     qInterruptedReactionAvailable.in(Set(true, false)),
@@ -420,4 +420,42 @@ module reactionsContinuationsConcentrationInductive {
     qReactorConcentration.in(Set(NoConcentration, Concentrating)),
     legalReactionProtocolState(qReactionProtocolState),
   }
+
+  // Bind unchanged frame fields before SMT enumerates their legal domains.
+  // Every transition must preserve these equalities as well as protocol legality.
+  val actorFramesPreserved = all {
+    qInterruptedActionQuota == initialReactionProtocolState.interruptedActor.turn.actionQuota,
+    qInterruptedBonusActionAvailable == initialReactionProtocolState.interruptedActor.turn.bonusActionAvailable,
+    qInterruptedReactionAvailable == initialReactionProtocolState.interruptedActor.turn.reactionAvailable,
+    qInterruptedDashMovementBonusFeet == initialReactionProtocolState.interruptedActor.turn.dashMovementBonusFeet,
+    qInterruptedDisengaged == initialReactionProtocolState.interruptedActor.turn.disengaged,
+    qInterruptedDodging == initialReactionProtocolState.interruptedActor.turn.dodging,
+    qInterruptedHidden == initialReactionProtocolState.interruptedActor.turn.hidden,
+    qInterruptedHelpAttackHeld == initialReactionProtocolState.interruptedActor.turn.helpAttackHeld,
+    qInterruptedReadiedMovementHeld == initialReactionProtocolState.interruptedActor.turn.readiedMovementHeld,
+    qInterruptedStartOfTurnHookActive == initialReactionProtocolState.interruptedActor.turn.startOfTurnHookActive,
+    qInterruptedEndOfTurnHookActive == initialReactionProtocolState.interruptedActor.turn.endOfTurnHookActive,
+    qInterruptedCurrentActorOwnsTurn == initialReactionProtocolState.interruptedActor.turn.currentActorOwnsTurn,
+    qInterruptedSpeedFeet == initialReactionProtocolState.interruptedActor.speedFeet,
+    qInterruptedMovementSpentFeet == initialReactionProtocolState.interruptedActor.movementSpentFeet,
+    qInterruptedProne == initialReactionProtocolState.interruptedActor.prone,
+    qInterruptedGrapple == initialReactionProtocolState.interruptedActor.grapple,
+    qReactorActionQuota == initialReactionProtocolState.reactor.turn.actionQuota,
+    qReactorBonusActionAvailable == initialReactionProtocolState.reactor.turn.bonusActionAvailable,
+    qReactorDashMovementBonusFeet == initialReactionProtocolState.reactor.turn.dashMovementBonusFeet,
+    qReactorDisengaged == initialReactionProtocolState.reactor.turn.disengaged,
+    qReactorDodging == initialReactionProtocolState.reactor.turn.dodging,
+    qReactorHidden == initialReactionProtocolState.reactor.turn.hidden,
+    qReactorHelpAttackHeld == initialReactionProtocolState.reactor.turn.helpAttackHeld,
+    qReactorReadiedMovementHeld == initialReactionProtocolState.reactor.turn.readiedMovementHeld,
+    qReactorStartOfTurnHookActive == initialReactionProtocolState.reactor.turn.startOfTurnHookActive,
+    qReactorEndOfTurnHookActive == initialReactionProtocolState.reactor.turn.endOfTurnHookActive,
+    qReactorCurrentActorOwnsTurn == initialReactionProtocolState.reactor.turn.currentActorOwnsTurn,
+    qReactorSpeedFeet == initialReactionProtocolState.reactor.speedFeet,
+    qReactorMovementSpentFeet == initialReactionProtocolState.reactor.movementSpentFeet,
+    qReactorProne == initialReactionProtocolState.reactor.prone,
+    qReactorGrapple == initialReactionProtocolState.reactor.grapple,
+  }
+
+  val invariant = all { actorFramesPreserved, protocolInvariant }
 }

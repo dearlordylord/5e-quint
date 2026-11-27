@@ -1,36 +1,40 @@
-FROM node:24.20.0-bookworm
-
-LABEL io.dnd.verification-image="1"
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ripgrep openjdk-17-jre-headless jq \
-    && rm -rf /var/lib/apt/lists/*
-RUN corepack enable && corepack prepare pnpm@10.29.3 --activate
-
-ARG TARGETARCH
+FROM --platform=linux/amd64 node:24.20.0-trixie AS dhall
 COPY dhall-json-toolchain.json /tmp/dhall-json-toolchain.json
 RUN set -eu; \
-    case "$TARGETARCH" in \
-      amd64) ;; \
-      arm64) dpkg --add-architecture amd64 ;; \
-      *) exit 78 ;; \
-    esac; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends libc6:amd64 libgmp10:amd64 zlib1g:amd64 libtinfo6:amd64; \
-    if [ "$TARGETARCH" = arm64 ]; then apt-get install -y --no-install-recommends qemu-user-static; fi; \
-    set -- $(node -e 'const t = require("/tmp/dhall-json-toolchain.json"); console.log(t.dhallHaskellRelease, t.dhallJsonVersion, t.linuxX64ArchiveSha256)'); \
+    toolchain="$(node -e 'const t = require("/tmp/dhall-json-toolchain.json"); console.log(t.dhallHaskellRelease, t.dhallJsonVersion, t.linuxX64ArchiveSha256)')"; \
+    set -- $toolchain; \
     curl --fail --location --retry 3 \
       "https://github.com/dhall-lang/dhall-haskell/releases/download/$1/dhall-json-$2-x86_64-linux.tar.bz2" \
       --output /tmp/dhall-json.tar.bz2; \
     echo "$3  /tmp/dhall-json.tar.bz2" | sha256sum --check; \
-    mkdir -p /opt/dhall-json; \
-    tar -xjf /tmp/dhall-json.tar.bz2 -C /opt/dhall-json; \
-    if [ "$TARGETARCH" = arm64 ]; then \
-      printf '#!/bin/sh\nexec /usr/bin/qemu-x86_64-static /opt/dhall-json/bin/dhall-to-json "$@"\n' > /usr/local/bin/dhall-to-json; \
-      chmod +x /usr/local/bin/dhall-to-json; \
-    else ln -s /opt/dhall-json/bin/dhall-to-json /usr/local/bin/dhall-to-json; fi; \
-    test "$(dhall-to-json --version)" = "$2"; \
-    rm -rf /var/lib/apt/lists/* /tmp/dhall-json.tar.bz2 /tmp/dhall-json-toolchain.json
+    mkdir -p /opt/dhall; \
+    tar -xjf /tmp/dhall-json.tar.bz2 -C /opt/dhall; \
+    cp -L --parents /lib/x86_64-linux-gnu/libm.so.6 /lib/x86_64-linux-gnu/libz.so.1 \
+      /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libgmp.so.10 \
+      /lib/x86_64-linux-gnu/libc.so.6 /lib64/ld-linux-x86-64.so.2 /opt/dhall; \
+    test "$(/opt/dhall/bin/dhall-to-json --version)" = "$2"
 
+FROM node:24.20.0-trixie
+
+LABEL io.dnd.verification-image="1"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ripgrep jq openjdk-21-jre-headless \
+    && rm -rf /var/lib/apt/lists/*
+RUN corepack enable && corepack prepare pnpm@10.29.3 --activate
+
+ARG TARGETARCH
+COPY --from=dhall /opt/dhall /opt/dhall
+RUN set -eu; \
+    case "$TARGETARCH" in \
+      amd64) ln -s /opt/dhall/bin/dhall-to-json /usr/local/bin/dhall-to-json ;; \
+      arm64) apt-get update && apt-get install -y --no-install-recommends qemu-user \
+        && rm -rf /var/lib/apt/lists/*; \
+        printf '%s\n' '#!/bin/sh' 'exec qemu-x86_64 -L /opt/dhall /opt/dhall/bin/dhall-to-json "$@"' \
+          > /usr/local/bin/dhall-to-json; \
+        chmod +x /usr/local/bin/dhall-to-json ;; \
+      *) exit 78 ;; \
+    esac; \
+    dhall-to-json --version
 RUN case "$TARGETARCH" in amd64) arch=x64 ;; arm64) arch=arm64 ;; *) exit 78 ;; esac \
     && curl --fail --location --retry 3 \
       "https://github.com/jdx/mise/releases/download/v2026.8.10/mise-v2026.8.10-linux-${arch}.tar.xz" \

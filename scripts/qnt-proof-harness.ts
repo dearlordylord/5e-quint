@@ -61,7 +61,6 @@ type ProofProcessConfig = {
   readonly proofKind: "inductive" | "run-block";
   readonly args: NonEmptyReadonlyArray<string>;
   readonly timedOutDetail: string;
-  readonly env?: NodeJS.ProcessEnv;
   readonly requiredStdoutFragment?: string;
 };
 
@@ -71,7 +70,6 @@ const runBlockPattern = /^[ \t]*run\s+([A-Za-z_][A-Za-z0-9_]*)\b/gm;
 
 export const proofModuleTimeoutMs = 360_000;
 const proofProgressIntervalMs = 60_000;
-const apalacheJavaBin = `${process.env.HOME ?? ""}/.local/java/jdk-17.0.18+8-jre/bin`;
 
 function nonEmptyEnvironmentValue(
   value: string | undefined,
@@ -235,14 +233,6 @@ function killProcessTree(rootPid: number): void {
   }
 }
 
-function quintVerifyEnv(): NodeJS.ProcessEnv {
-  if (process.env.HOME === undefined) return process.env;
-  return {
-    ...process.env,
-    PATH: `${apalacheJavaBin}:${process.env.PATH ?? ""}`,
-  };
-}
-
 function elapsedMsSince(startedAtMs: number): number {
   return Date.now() - startedAtMs;
 }
@@ -285,7 +275,6 @@ async function runProofProcess(
       {
         cwd: fileURLToPath(config.packageRootUrl),
         encoding: "utf8",
-        env: config.env ?? process.env,
         maxBuffer: 64 * 1024 * 1024,
       },
       (error, stdout, stderr) => {
@@ -396,6 +385,5 @@ export async function runInductiveProofModule(
       "1",
     ],
     timedOutDetail: `this module's inductive proof was hard-killed at ${proofModuleTimeoutMs / 1000}s without finishing`,
-    env: quintVerifyEnv(),
   });
 }

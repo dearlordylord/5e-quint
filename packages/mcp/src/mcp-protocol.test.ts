@@ -459,7 +459,7 @@ describe("MCP protocol server", () => {
     } finally {
       await Promise.allSettled([client.close(), host.server.close()]);
     }
-  }, 30_000);
+  });
 
   test(
     "creates, resumes, and independently mutates isolated Play Sessions",
@@ -971,7 +971,7 @@ describe("MCP protocol server", () => {
     } finally {
       await Promise.allSettled([client.close(), host.server.close()]);
     }
-  }, 30_000);
+  });
 
   test("character-font-of-magic-protocol", async () => {
     const [clientTransport, serverTransport] =
@@ -1022,7 +1022,7 @@ describe("MCP protocol server", () => {
     } finally {
       await Promise.allSettled([client.close(), host.server.close()]);
     }
-  }, 30_000);
+  });
 
   test("character-row-coverage-druid-known-form", async () => {
     await withCharacterRowCoverage(
@@ -2131,7 +2131,7 @@ describe("MCP protocol server", () => {
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
-  }, 30_000);
+  });
 
   test("battle-roster-lifecycle-protocol", async () => {
     const [clientTransport, serverTransport] =
@@ -2586,7 +2586,7 @@ describe("MCP protocol server", () => {
     } finally {
       await Promise.allSettled([client.close(), host.server.close()]);
     }
-  }, 30_000);
+  });
 
   test("returns one typed restoration result for a handle absent from the process", async () => {
     const [clientTransport, serverTransport] =
@@ -2854,7 +2854,7 @@ describe("MCP protocol server", () => {
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
-  }, 30_000);
+  });
 
   test("create-level-six-rogue-expertise-and-steady-aim-battle-handoff", async () => {
     const [clientTransport, serverTransport] =
@@ -2873,7 +2873,7 @@ describe("MCP protocol server", () => {
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
-  }, 30_000);
+  });
 
   test("runs the Wizard Ice Knife battle handoff client over in-memory MCP", async () => {
     const [clientTransport, serverTransport] =
@@ -2892,7 +2892,7 @@ describe("MCP protocol server", () => {
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
-  }, 30_000);
+  });
 
   test("character-healing-lay-on-hands-protocol", async () => {
     const [clientTransport, serverTransport] =
@@ -2955,7 +2955,7 @@ describe("MCP protocol server", () => {
     } finally {
       await Promise.allSettled([client.close(), host.server.close()]);
     }
-  }, 30_000);
+  });
 
   test("returns atomic recovery when a routed spell-rest batch commit fails", async () => {
     const [clientTransport, serverTransport] =
@@ -3067,7 +3067,7 @@ describe("MCP protocol server", () => {
     } finally {
       await Promise.allSettled([client.close(), host.server.close()]);
     }
-  }, 30_000);
+  });
 
   test("routes unknown healing sources through operation-aware recovery", async () => {
     const [clientTransport, serverTransport] =
@@ -3112,7 +3112,7 @@ describe("MCP protocol server", () => {
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
-  }, 30_000);
+  });
 });
 
 type OutputSchemaValidator = (value: unknown) => { readonly valid: boolean };
