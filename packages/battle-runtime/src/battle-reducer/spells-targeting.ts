@@ -1153,6 +1153,8 @@ const SPELL_OBJECT_TARGET_SIGHT_FAILURES = [
 ] as const;
 type SpellObjectTargetSightFailure =
   (typeof SPELL_OBJECT_TARGET_SIGHT_FAILURES)[number];
+const [missingObjectSight, foreignObjectSight, duplicateObjectSight] =
+  SPELL_OBJECT_TARGET_SIGHT_FAILURES;
 
 /** Admit the one table answer directed at this spell's selected object. */
 export function admitSpellObjectTargetSight(input: {
@@ -1164,14 +1166,14 @@ export function admitSpellObjectTargetSight(input: {
   const [fact, ...others] = input.facts.filter(
     (candidate) => candidate.kind === "spellObjectTargetSight",
   );
-  if (fact === undefined) return Result.fail("missing");
-  if (others.length > 0) return Result.fail("duplicate");
+  if (fact === undefined) return Result.fail(missingObjectSight);
+  if (others.length > 0) return Result.fail(duplicateObjectSight);
   if (
     fact.casterId !== input.casterId ||
     fact.objectId !== input.objectId ||
     fact.sourceProcedureRef !== input.sourceProcedureRef
   )
-    return Result.fail("foreign");
+    return Result.fail(foreignObjectSight);
   return Result.succeed(fact);
 }
 

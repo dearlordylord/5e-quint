@@ -48,12 +48,10 @@ export function enemyProximityConstraint(
   definitions: McpOutputSchema,
   scope: { readonly attackerId: string; readonly procedureRef: string },
 ): McpOutputSchema {
-  return exactlyOneScopedFact(
-    "rangedAttackEnemyProximity",
-    facts,
-    definitions,
-    scope,
-  );
+  return exactlyOneScopedFact(facts, definitions, {
+    kind: "rangedAttackEnemyProximity",
+    ...scope,
+  });
 }
 
 /** Any other attack takes no thrown weapon landing fact. */
@@ -67,15 +65,28 @@ export function thrownWeaponLandingConstraint(
   definitions: McpOutputSchema,
   scope: { readonly attackerId: string; readonly procedureRef: string },
 ): McpOutputSchema {
-  return exactlyOneScopedFact("thrownWeaponLanding", facts, definitions, scope);
+  return exactlyOneScopedFact(facts, definitions, {
+    kind: "thrownWeaponLanding",
+    ...scope,
+  });
 }
 
 function exactlyOneScopedFact(
-  kind: "rangedAttackEnemyProximity" | "thrownWeaponLanding",
   facts: readonly McpOutputSchema[],
   definitions: McpOutputSchema,
-  scope: { readonly attackerId: string; readonly procedureRef: string },
+  request:
+    | {
+        readonly kind: "rangedAttackEnemyProximity" | "thrownWeaponLanding";
+        readonly attackerId: string;
+        readonly procedureRef: string;
+      }
+    | {
+        readonly kind: "spellObjectTargetSight";
+        readonly casterId: string;
+        readonly sourceProcedureRef: string;
+      },
 ): McpOutputSchema {
+  const { kind } = request;
   const scoped = facts.filter((fact) => hasKind(fact, kind, definitions));
   if (scoped.length === 0)
     throw new Error(`The canonical target fill must contain the ${kind} fact.`);
@@ -86,7 +97,7 @@ function exactlyOneScopedFact(
       { contains: { anyOf: scoped }, maxContains: 1 },
       {
         contains: {
-          anyOf: scoped.map((fact) => pinFact(fact, { kind, ...scope })),
+          anyOf: scoped.map((fact) => pinFact(fact, request)),
         },
       },
     ],
@@ -313,11 +324,8 @@ export function rangedSpellTargetSchema(
   definitions: McpOutputSchema,
 ): McpOutputSchema {
   const request = Match.value(hole).pipe(
-    Match.when(
+    Match.whenOr(
       { kind: "targetChoice" },
-      (request) => request.spellTargetSpatialFactRequest,
-    ),
-    Match.when(
       { kind: "targetingSaveInterdictionOutcome" },
       (request) => request.spellTargetSpatialFactRequest,
     ),
@@ -327,13 +335,21 @@ export function rangedSpellTargetSchema(
     ),
     Match.exhaustive,
   );
-  if (request?.requiresEnemyProximityQualification !== true)
-    return hole.kind === "objectTargetChoice" && request !== undefined
+  if (request === undefined) return member;
+  const spellProcedureScope = {
+    casterId: request.casterId,
+    sourceProcedureRef: request.sourceProcedureRef,
+  };
+  if (request.requiresEnemyProximityQualification !== true)
+    return hole.kind === "objectTargetChoice"
       ? withRequiredSpatialFacts(member, definitions, [
-          objectTargetSightConstraint(
+          exactlyOneScopedFact(
             targetFactMembers(member, definitions),
-            request,
             definitions,
+            {
+              kind: "spellObjectTargetSight",
+              ...spellProcedureScope,
+            },
           ),
         ])
       : member;
@@ -378,7 +394,10 @@ export function rangedSpellTargetSchema(
               },
               maxContains: 1,
             },
-            objectTargetSightConstraint(facts, request, definitions),
+            exactlyOneScopedFact(facts, definitions, {
+              kind: "spellObjectTargetSight",
+              ...spellProcedureScope,
+            }),
           ]
         : []),
     ],
@@ -417,36 +436,5 @@ function withRequiredSpatialFacts(
         ],
       },
     },
-  };
-}
-
-/**
- * SRD "Unseen Attackers and Targets": every spell attack against an object
- * carries exactly one table answer to whether the caster can see it.
- */
-function objectTargetSightConstraint(
-  facts: readonly McpOutputSchema[],
-  request: { readonly casterId: string; readonly sourceProcedureRef: string },
-  definitions: McpOutputSchema,
-): McpOutputSchema {
-  const sightFacts = facts.filter((fact) =>
-    hasKind(fact, "spellObjectTargetSight", definitions),
-  );
-  return {
-    contains: { anyOf: sightFacts },
-    maxContains: 1,
-    allOf: [
-      {
-        contains: {
-          anyOf: sightFacts.map((fact) =>
-            pinFact(fact, {
-              kind: "spellObjectTargetSight",
-              casterId: request.casterId,
-              sourceProcedureRef: request.sourceProcedureRef,
-            }),
-          ),
-        },
-      },
-    ],
   };
 }
