@@ -123,9 +123,12 @@ When that start needs a roll or choice, such as a Death Saving Throw at 0 Hit
 Points or a Heroic Warrior's offer, the battle opens with Start Turn
 (`{ tag: "runtimeCommand", command: "startTurn" }`) as its only Act, and every
 other subject is refused until it resolves.
-A host that admits companions after the battle's combatants calls `admitBattle`
-instead, admits them (each admission rebuilds Initiative, so a companion can go
-first), then calls `startBattleOpeningTurn` once the roster is complete.
+Initial retained-companion composition is owned by
+`@dnd/character-battle-runtime` `startBattleWithCompanionRoster`: it admits the
+complete roster before starting the opening turn, so a companion may go first.
+Individual companion admission into a published battle preserves its current
+actor and round, including while its opening start asks for a roll, through the ordinary Initiative insertion; it does not rebuild
+initial Initiative.
 
 The public session trace discovers `initialHoles[]` before publishing the first
 envelope. Submitting an End Turn command with no fills first returns its outgoing

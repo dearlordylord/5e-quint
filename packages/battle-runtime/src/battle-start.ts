@@ -18,8 +18,8 @@ export { admitBattle };
  * Start a battle: admit its combatants, establish Initiative, and start the
  * first participant's turn. The battle opens on ordinary Acts when that turn's
  * start needs no choice or roll; otherwise its only Act is that turn's start.
- * A battle that admits companions after its combatants uses `admitBattle`,
- * then `startBattleOpeningTurn` once its roster is complete.
+ * Initial companions are composed by the Character Battle runtime's
+ * `startBattleWithCompanionRoster` before this opening turn is published.
  */
 export const startBattle: StartBattle = (input) => {
   const admitted = admitBattle(input);

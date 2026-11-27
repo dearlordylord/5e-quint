@@ -7,8 +7,8 @@
   0 Hit Points or Heroic Warrior's Heroic Inspiration. When that start needs a
   roll or choice, the battle opens with Start Turn as its only Act and a
   `turnStart` pending procedure; MCP exposes it as `start_turn`. Hosts that
-  admit companions use `admitBattle`, then `startBattleOpeningTurn` once the
-  roster is complete. `finishInitialInitiativeSetup` now returns a `Result`.
+  admit initial companions use `startBattleWithCompanionRoster`, replacing
+  `composeBattleCompanionRoster`; it completes the roster before opening the turn. `finishInitialInitiativeSetup` now returns a `Result`.
 
 - Expose the required spell-area input shape and explicit object facts in Battle
   requests. Retain invalid requests for correction, and add safe cancellation of

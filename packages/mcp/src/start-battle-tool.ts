@@ -1,11 +1,7 @@
-import {
-  admitBattle,
-  startBattleOpeningTurn,
-  type CombatantId,
-} from "@dnd/battle-runtime";
+import { type BattleStartInput, type CombatantId } from "@dnd/battle-runtime";
 import {
   composeBattleRoster,
-  composeBattleCompanionRoster,
+  startBattleWithCompanionRoster,
   type BattleRosterAdmission,
   type BattleRosterComposition,
   type BattleRosterEntries,
@@ -19,9 +15,8 @@ import { type StartBattleToolInput } from "./start-battle-tool-input.ts";
 import type { ToolError } from "./schema-codec.ts";
 import { startInitialInitiativeSetup } from "./initial-initiative-setup-start.ts";
 import {
-  battleRuntimeIssuePayload,
   battleStartIssuesContent,
-  battleCompanionRosterIssuePayload,
+  battleRosterStartIssuePayload,
   battleRosterIssuePayload,
 } from "./battle-start-failure.ts";
 import {
@@ -43,37 +38,31 @@ export type StartableBattleCombatants = {
   readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
 };
 
-/**
- * Admit the battle without starting its opening turn: companions join next,
- * and one of them can be first in Initiative.
- */
-function battleRuntimeSessionForStart(
+/** Initialization facts for the complete roster startup operation. */
+function battleInputForStart(
   input: StartBattleToolInput,
   combatants: StartableBattleCombatants,
-): ReturnType<typeof admitBattle> | undefined {
+): BattleStartInput | undefined {
   const admissions = battleRosterAdmissions(combatants.composition);
   if (admissions.length === 0) return undefined;
-  return admitBattle({
+  return {
     battleId: input.battleId,
     combatants: admissions.map(({ combatant }) => combatant),
     ownerPathForCombatant: (combatant) => {
       const ownerPath = combatants.ownerPaths.get(combatant.combatantId);
       return ownerPath ?? ["battleInitialization", "global"];
     },
-  });
+  };
 }
 
 function composeStartBattleCompanions(input: {
   readonly root: McpPlaySessionRoot;
   readonly startInput: StartBattleToolInput;
   readonly combatants: StartableBattleCombatants;
-  readonly session: ReturnType<typeof admitBattle> | undefined;
+  readonly battle: BattleStartInput | undefined;
 }) {
-  return composeBattleCompanionRoster({
-    session:
-      input.session !== undefined && Result.isSuccess(input.session)
-        ? input.session.success
-        : undefined,
+  return startBattleWithCompanionRoster({
+    battle: input.battle,
     owners: input.combatants.characterSessions.map(
       ({ index, character, session: characterSession }) => ({
         index,
@@ -94,22 +83,19 @@ function completeStartBattle(
   input: StartBattleToolInput,
   combatants: StartableBattleCombatants,
 ) {
-  const session = battleRuntimeSessionForStart(input, combatants);
+  const battle = battleInputForStart(input, combatants);
   const companionRoster = composeStartBattleCompanions({
     root,
     startInput: input,
     combatants,
-    session,
+    battle,
   });
   const issues = [
     ...battleRosterIssues(combatants.composition).flatMap((issue) =>
       battleRosterIssuePayload(issue),
     ),
-    ...(session !== undefined && Result.isFailure(session)
-      ? battleRuntimeIssuePayload(session.failure)
-      : []),
     ...battleCompanionIssues(companionRoster).flatMap(
-      battleCompanionRosterIssuePayload,
+      battleRosterStartIssuePayload,
     ),
   ];
   if (issues.length > 0) return battleStartIssuesContent(issues);
@@ -120,42 +106,27 @@ function completeStartBattle(
   });
 }
 
-/** Commit the battle once its complete roster has started the opening turn. */
-function commitOpenedBattleStart(input: {
-  readonly root: McpPlaySessionRoot;
-  readonly combatants: StartableBattleCombatants;
-  readonly opened: ReturnType<typeof startBattleOpeningTurn>;
-}) {
-  return Result.isFailure(input.opened)
-    ? battleStartIssuesContent(battleRuntimeIssuePayload(input.opened.failure))
-    : commitActiveBattleStart({
-        root: input.root,
-        session: input.opened.success,
-        characterSessions: input.combatants.characterSessions,
-      });
-}
-
 function completeAdmittedCompanionStart(input: {
   readonly root: McpPlaySessionRoot;
   readonly combatants: StartableBattleCombatants;
-  readonly companionRoster: ReturnType<typeof composeBattleCompanionRoster>;
+  readonly companionRoster: ReturnType<typeof startBattleWithCompanionRoster>;
 }) {
   return Match.value(input.companionRoster).pipe(
     Match.when({ tag: "admitted" }, ({ session: admittedSession }) =>
-      commitOpenedBattleStart({
+      commitActiveBattleStart({
         root: input.root,
-        combatants: input.combatants,
-        opened: startBattleOpeningTurn(admittedSession),
+        session: admittedSession,
+        characterSessions: input.combatants.characterSessions,
       }),
     ),
     Match.when({ tag: "rejected" }, ({ issues: companionIssues }) =>
       battleStartIssuesContent(
-        companionIssues.flatMap(battleCompanionRosterIssuePayload),
+        companionIssues.flatMap(battleRosterStartIssuePayload),
       ),
     ),
     Match.when({ tag: "dependentUnavailable" }, ({ issues: companionIssues }) =>
       battleStartIssuesContent(
-        companionIssues.flatMap(battleCompanionRosterIssuePayload),
+        companionIssues.flatMap(battleRosterStartIssuePayload),
       ),
     ),
     Match.exhaustive,
@@ -283,8 +254,8 @@ function battleRosterIssues(
 }
 
 function battleCompanionIssues(
-  composition: ReturnType<typeof composeBattleCompanionRoster>,
-): readonly Parameters<typeof battleCompanionRosterIssuePayload>[0][] {
+  composition: ReturnType<typeof startBattleWithCompanionRoster>,
+): readonly Parameters<typeof battleRosterStartIssuePayload>[0][] {
   return Match.value(composition).pipe(
     Match.when({ tag: "admitted" }, () => []),
     Match.when({ tag: "rejected" }, ({ issues }) => issues),

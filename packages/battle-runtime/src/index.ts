@@ -635,6 +635,7 @@ export {
 } from "./battle-snapshot-presentation.ts";
 export {
   addBattleRuntimeCombatant,
+  createInitialInitiativeForCombatants,
   applyInitiativeSwap,
   battleInitializationIssueFactFields,
   battleInitializationIssueLeaves,

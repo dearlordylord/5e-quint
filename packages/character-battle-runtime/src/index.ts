@@ -188,10 +188,10 @@ export type {
 } from "./battle-handoff-issue.ts";
 export {
   admitCharacterSheetCompanionToBattle,
-  composeBattleCompanionRoster,
+  startBattleWithCompanionRoster,
   type CharacterSheetCompanionBattleAdmissionInput,
-  type BattleCompanionRosterComposition,
-  type BattleCompanionRosterIssue,
+  type BattleRosterStartResult,
+  type BattleRosterStartIssue,
   type BattleCompanionRosterOwner,
   type BattleCompanionRosterRequest,
 } from "./companion-handoff.ts";
