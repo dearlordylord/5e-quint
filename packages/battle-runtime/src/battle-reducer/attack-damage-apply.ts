@@ -386,7 +386,7 @@ export function zeroHitPointReplacementChoices(
   if (
     projection.currentHp <= 0 ||
     Number(projection.nextHp) > 0 ||
-    projection.massiveDamageKills ||
+    projection.hitPointMaximumDeathTestKills ||
     target.origin.kind !== "character"
   ) {
     return [];

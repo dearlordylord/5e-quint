@@ -388,5 +388,5 @@ export type HpDamageProjection = {
   readonly currentHp: number;
   readonly hpDamage: number;
   readonly nextHp: Hp;
-  readonly massiveDamageKills: boolean;
+  readonly hitPointMaximumDeathTestKills: boolean;
 };

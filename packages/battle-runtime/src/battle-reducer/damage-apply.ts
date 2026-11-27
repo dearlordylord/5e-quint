@@ -1226,7 +1226,7 @@ export function applyHpDamage(
   if (
     zeroHitPointReplacementProcedureRef !== undefined &&
     hpDamageProjectionAllowsKnockOut(projection) &&
-    !projection.massiveDamageKills &&
+    !projection.hitPointMaximumDeathTestKills &&
     combatant.origin.kind === "character"
   ) {
     const capability = zeroHitPointReplacementCapabilities(
@@ -1252,7 +1252,7 @@ export function applyHpDamage(
     }
   }
 
-  return projection.massiveDamageKills
+  return projection.hitPointMaximumDeathTestKills
     ? applyInstantDeath(damaged)
     : applyDropToZeroHpLifecycle(damaged);
 }
@@ -1266,11 +1266,9 @@ function applyDamageToZeroHitPointCreature(
 ): BattleCreatureState {
   // Damage at 0 Hit Points counts the whole hit, including any part that
   // Temporary Hit Points absorb (rule-core zero-hit-point-lifecycle.qnt,
-  // applyDamageToZeroHitPointCreature).
-  if (projection.effectiveDamage <= 0) {
-    return combatant;
-  }
-  return projection.massiveDamageKills
+  // applyDamageToZeroHitPointCreature). applyHpDamage has already returned
+  // for a hit of 0.
+  return projection.hitPointMaximumDeathTestKills
     ? applyInstantDeath(combatant)
     : applyDamageAtZeroHp(combatant, {
         ...context,
@@ -1297,7 +1295,7 @@ export function hpDamageProjection(
     currentHp,
     hpDamage,
     nextHp,
-    massiveDamageKills: hitPointMaximumDeathTestKills({
+    hitPointMaximumDeathTestKills: damageMeetsHitPointMaximumDeathTest({
       currentHp,
       effectiveDamage,
       hpDamage,
@@ -1309,7 +1307,7 @@ export function hpDamageProjection(
 // The Hit Point maximum death test. At 0 Hit Points it compares the whole hit
 // ("Damage at 0 Hit Points"); otherwise it compares what remains after the
 // creature drops to 0 ("Massive Damage").
-function hitPointMaximumDeathTestKills(input: {
+function damageMeetsHitPointMaximumDeathTest(input: {
   readonly currentHp: number;
   readonly effectiveDamage: number;
   readonly hpDamage: number;
