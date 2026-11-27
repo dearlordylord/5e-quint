@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
+
 import {
   currentActing,
   initiativeOrder,
@@ -14,22 +16,28 @@ export type ParticipantTurn =
   BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
 
 /**
+ * The next turn End Turn starts: the next participant alive, with the dead
+ * participants' turns passed on the way, in Initiative order.
+ */
+export type LivingTurnAdvance = {
+  readonly tag: "living";
+  readonly initiative: BattleState["initiative"];
+  readonly passedTurns: readonly ParticipantTurn[];
+};
+
+/**
  * Where End Turn moves the Initiative order. A dead creature takes no turn
  * (ASSUMPTIONS.md A71): End Turn passes over each dead participant, in order,
  * to the next one still alive, and the dead keep their places. When no
  * participant is alive, the order doesn't move and the battle waits for the
  * table.
  */
-export type NextLivingTurn =
-  | {
-      readonly tag: "living";
-      readonly initiative: BattleState["initiative"];
-      /** The dead participants' turns passed on the way, in Initiative order. */
-      readonly passedTurns: readonly ParticipantTurn[];
-    }
+export type EndTurnAdvance =
+  | LivingTurnAdvance
   | { readonly tag: "noLivingParticipant" };
 
-function participantIsDead(
+/** Whether the participant is dead, so its turns pass without being taken. */
+export function participantIsDead(
   state: BattleState,
   actorId: ParticipantTurn["actorId"],
 ): boolean {
@@ -37,8 +45,8 @@ function participantIsDead(
   return combatant !== undefined && zeroHpLifecycleIsTerminal(combatant);
 }
 
-/** The next turn End Turn starts, passing over dead participants. */
-export function nextLivingTurn(state: BattleState): NextLivingTurn {
+/** Where End Turn moves the Initiative order, passing over the dead. */
+export function endTurnAdvance(state: BattleState): EndTurnAdvance {
   const participantCount = initiativeOrder(state.initiative).length;
   const passedTurns: ParticipantTurn[] = [];
   let initiative = nextInitiative(state.initiative);

@@ -16,14 +16,24 @@ module battleRuntimeTurnAdvancement {
       | Goblin => combatantIsDead(state.goblin)
     }
 
+  // What ends at the start of the Fighter's turn besides its effects: Help it
+  // gave, and the spell or movement it readied.
+  pure def expireFighterStartOfTurnHelpAndReadied(state: BattleState): BattleState = {
+    ...state,
+    fighterHelpAttackGoblinForGoblin: false,
+    fighter: { ...state.fighter, readiedSpellHeld: false, readiedMovementHeld: false },
+  }
+
   // ASSUMPTIONS.md A71: a dead creature takes no turn. Its turn passes with
   // only what ends at its start and end, and nothing asked of it. `state` has
   // the Initiative order on the passed turn.
   pure def passDeadActorTurn(state: BattleState): BattleState = {
     val passedActor = currentActor(state)
-    expireFighterEndOfTurnOngoingFeatures(expireEndOfTurnSpellEffects(
-      expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(state, passedActor), passedActor)
-    ))
+    val startEnded = expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(state, passedActor), passedActor)
+    val helpAndReadiedEnded =
+      if (passedActor == Fighter) expireFighterStartOfTurnHelpAndReadied(startEnded)
+      else startEnded
+    expireFighterEndOfTurnOngoingFeatures(expireEndOfTurnSpellEffects(helpAndReadiedEnded))
   }
 
   // With nobody alive, the order stays where it is (A71).
@@ -35,8 +45,9 @@ module battleRuntimeTurnAdvancement {
     val outgoing = normalizeFighterEarlyEndedOngoingFeatures(expireFighterEndOfTurnOngoingFeatures(expireEndOfTurnSpellEffects(state)))
     val followingInitiative = nextInitiative(outgoing.initiative)
     // Two participants: when the following one is dead, the turn passes back
-    // to the one ending its turn.
-    val passesDeadTurn = actorIsDead(outgoing, followingInitiative.stillToAct.actor)
+    // to the one ending its turn. Who is dead is read before the outgoing
+    // turn's work, as End Turn's discovery reads it.
+    val passesDeadTurn = actorIsDead(state, followingInitiative.stillToAct.actor)
     val featureChecked =
       if (passesDeadTurn) passDeadActorTurn({ ...outgoing, initiative: followingInitiative }).with("initiative", outgoing.initiative)
       else outgoing
@@ -44,7 +55,12 @@ module battleRuntimeTurnAdvancement {
       if (passesDeadTurn) nextInitiative(followingInitiative)
       else followingInitiative
     val nextActor = advancedInitiative.stillToAct.actor
-    val featureAdvanced = applyStartOfTurnSpellEffects(expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(featureChecked, nextActor), nextActor), nextActor)
+    val startTimingsEnded = expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(featureChecked, nextActor), nextActor)
+    // A creature that died in its own outgoing turn, as the last one alive,
+    // has its turn come up with nothing applied to it (A71).
+    val featureAdvanced =
+      if (actorIsDead(featureChecked, nextActor)) startTimingsEnded
+      else applyStartOfTurnSpellEffects(startTimingsEnded, nextActor)
     val spellDurationAdvanced = if (advancedInitiative.round > featureChecked.initiative.round)
       tickRoundDurationSpellEffects(featureAdvanced)
     else

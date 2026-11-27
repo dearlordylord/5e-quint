@@ -144,4 +144,23 @@ module battleRuntimeTurnOrderTests {
       assert(endTurn(nobodyAlive) == nobodyAlive),
     }
   }
+
+  run test_a_dead_fighter_turn_passing_ends_its_help_and_readied_action = {
+    val goblinTurn = endTurn(initialState)
+    val deadFighter = {
+      ...goblinTurn,
+      fighterHelpAttackGoblinForGoblin: true,
+      fighter: { ...goblinTurn.fighter, hp: 0, deathFailures: 3, readiedSpellHeld: true, readiedMovementHeld: true },
+    }
+    val result = endTurn(deadFighter)
+    all {
+      assert(currentActor(goblinTurn) == Goblin),
+      assert(actorIsDead(deadFighter, Fighter)),
+      assert(currentActor(result) == Goblin),
+      assert(result.initiative.round == 2),
+      assert(not(result.fighterHelpAttackGoblinForGoblin)),
+      assert(not(result.fighter.readiedSpellHeld)),
+      assert(not(result.fighter.readiedMovementHeld)),
+    }
+  }
 }

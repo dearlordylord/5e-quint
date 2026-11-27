@@ -124,8 +124,9 @@ import {
 import { applyCompelledHaltAtTurnStart } from "./compelled-behavior-halt.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
-  nextLivingTurn,
-  type NextLivingTurn,
+  endTurnAdvance,
+  participantIsDead,
+  type LivingTurnAdvance,
   type ParticipantTurn,
 } from "./turn-order-advance.ts";
 import {
@@ -1384,7 +1385,7 @@ function passDeadParticipantTurn(
  */
 function advanceTurn(
   fills: OutgoingTurnFills,
-  nextTurn: Extract<NextLivingTurn, { readonly tag: "living" }>,
+  nextTurn: LivingTurnAdvance,
 ): BattleState {
   const endingActorId = currentActorId(fills.state);
   const outgoing = finishOutgoingTurn(fills);
@@ -1406,7 +1407,7 @@ function advanceTurn(
 
 function roundDurationCohort(
   state: BattleState,
-  nextTurn: Extract<NextLivingTurn, { readonly tag: "living" }>,
+  nextTurn: LivingTurnAdvance,
 ): BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"] {
   const wrapsRound =
     Number(nextTurn.initiative.round) > Number(state.initiative.round);
@@ -5263,21 +5264,43 @@ function resolveEndTurnForParent(
     });
   }
 
-  const nextTurn = nextLivingTurn(input.state);
-  if (nextTurn.tag === "noLivingParticipant") {
-    return {
-      tag: "resolved",
-      state: input.state,
-      snapshot: snapshotBattle(input.state),
-    };
+  return Match.value(endTurnAdvance(input.state)).pipe(
+    Match.when({ tag: "living" }, (nextTurn) =>
+      resolveEndTurnCommandForParent(input, parent, nextTurn),
+    ),
+    Match.when({ tag: "noLivingParticipant" }, () =>
+      resolveEndTurnWithNobodyAlive(input),
+    ),
+    Match.exhaustive,
+  );
+}
+
+/**
+ * End Turn with nobody alive to take the next turn (ASSUMPTIONS.md A71): it
+ * asks for nothing and changes nothing, so the order stays where it is and End
+ * Turn stays offered until the table ends the battle.
+ */
+function resolveEndTurnWithNobodyAlive(
+  input: EndTurnResolutionInput,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "End Turn with nobody alive asks for nothing, so it accepts no fills.",
+    );
   }
-  return resolveEndTurnCommandForParent(input, parent, nextTurn);
+  return {
+    tag: "resolved",
+    state: input.state,
+    snapshot: snapshotBattle(input.state),
+  };
 }
 
 function resolveEndTurnCommandForParent(
   input: EndTurnResolutionInput,
   parent: ReplayParentContinuation,
-  nextTurn: Extract<NextLivingTurn, { readonly tag: "living" }>,
+  nextTurn: LivingTurnAdvance,
 ): BattleResolutionResult {
   const initiative = nextTurn.initiative;
   const nextActorId = currentActing(initiative);
@@ -6060,6 +6083,16 @@ function resolveStartTurnOccurrences(input: {
   readonly fills: readonly BattleFill[];
   readonly parent: ReplayParentContinuation;
 }): StartedTurn {
+  if (participantIsDead(input.startingTurnState, input.sourceTurn.actorId)) {
+    // A dead creature's turn asks nothing of it (ASSUMPTIONS.md A71). End Turn
+    // reaches one only when the last creature alive dies in its own outgoing
+    // turn, and the order then stops on that turn.
+    return {
+      tag: "started",
+      state: input.startingTurnState,
+      acceptedHoleIds: new Set(input.cohort.orderHoleIds),
+    };
+  }
   const ordered = resolveOrderedStartTurnOccurrences({
     state: input.startingTurnState,
     subject: input.subject,
