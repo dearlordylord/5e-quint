@@ -111,7 +111,7 @@ describe("a Bardic Inspiration die on a weapon attack roll", () => {
       total: 14,
       naturalD20: 10,
       d20TestAddedDice: [bardicDie(2)],
-    };
+    } satisfies AttackRollValue;
     const damaged = requireResolved(
       attack.attempt(
         hitValue,
