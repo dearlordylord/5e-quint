@@ -13,7 +13,7 @@
 //   throws."
 // - .references/srd-5.2.1/rules-glossary.md#Advantage and #Disadvantage, with
 //   playing-the-game.md "D20 Tests": one source of each cancels, however many
-//   there are. d20TestCircumstanceCore owns that combination.
+//   there are. d20TestRollMode owns that combination.
 // - .references/srd-5.2.1/rules-glossary.md#Unarmed Strike: Grapple and
 //   Shove: "The target must succeed on a Strength or Dexterity saving throw
 //   (it chooses which)".
@@ -28,7 +28,7 @@
 // core takes each as a flag or number.
 
 module savingThrowModifierCollectorCore {
-  import d20TestCircumstanceCore.* from "./d20-test-circumstance-core"
+  import d20TestRollMode.* from "./d20-test-roll-mode"
 
   type SavingThrowAbility =
     | StrengthSave

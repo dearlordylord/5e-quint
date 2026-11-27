@@ -37,13 +37,15 @@
 //
 // Scope: which general sources reach an attack roll, by what it's made
 // against (a creature or an object). The condition, Prone and close-combat
-// rules and the combination are owned by d20TestCircumstanceCore. None of
-// these sources names the means, so the circumstances have no means field: a
-// weapon attack and a spell attack in the same circumstances have the same
+// rules are owned by d20TestCircumstanceCore; d20TestRollMode owns their
+// combination. None of these sources names the means, so the circumstances
+// have no means field: a weapon attack and a spell attack in the same
+// circumstances have the same
 // mode, which is what the runtime collector makes every route agree on.
 
 module attackRollModeCollectorCore {
   import d20TestCircumstanceCore.* from "./d20-test-circumstance-core"
+  import d20TestRollMode.* from "./d20-test-roll-mode"
 
   type AttackRollTargetKind =
     | CreatureAttackRollTarget

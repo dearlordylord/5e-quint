@@ -2,6 +2,7 @@
 
 module attackRollModeCollectorCoreExamples {
   import d20TestCircumstanceCore.* from "./d20-test-circumstance-core"
+  import d20TestRollMode.* from "./d20-test-roll-mode"
   import attackRollModeCollectorCore.* from "./attack-roll-mode-collector-core"
 
   pure val plainCircumstances: AttackRollCircumstances = {
