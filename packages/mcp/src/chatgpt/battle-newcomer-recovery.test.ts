@@ -15,6 +15,7 @@ import {
 import { createMcpPlaySessionRoot } from "../composition-root.ts";
 import { jsonContentPayload } from "../tool-content.ts";
 import { CHATGPT_EXECUTION_TOOLS } from "./tool-surface.ts";
+import { battleInputGuidance } from "./battle-input-guidance.ts";
 import { chatGptBattleGuidance } from "../../test-support/chatgpt-battle-guidance.ts";
 import {
   fireBoltUnitId,
@@ -454,13 +455,70 @@ describe("ChatGPT newcomer battle recovery", () => {
       objectId: "practice-object",
       disposition: { kind: "notFlammable" },
     };
+    const objectSight = {
+      kind: "spellObjectTargetSight",
+      casterId: request.casterId,
+      sourceProcedureRef: request.sourceProcedureRef,
+      objectId: "practice-object",
+      attackerCanSeeObject: true,
+    };
     const objectFill = {
       kind: objectHole.kind,
       holeId: objectHole.holeId,
       value: "practice-object",
-      spatialFacts: [objectFact, objectIgnition, qualification],
+      spatialFacts: [objectFact, objectIgnition, objectSight, qualification],
     };
     expect(validateObject(objectFill).valid).toBe(true);
+    // RAW: playing-the-game.md, "Unseen Attackers and Targets": the table says
+    // whether the caster can see the object.
+    expect(
+      validateObject({
+        ...objectFill,
+        spatialFacts: [objectFact, objectIgnition, qualification],
+      }).valid,
+    ).toBe(false);
+    // A spell attack against an object that isn't ranged asks for sight too.
+    if (
+      objectHole.kind !== "objectTargetChoice" ||
+      objectHole.spellObjectTargetSpatialFactRequest === undefined
+    )
+      throw new Error("Expected the object-target spatial request.");
+    const objectRequest = objectHole.spellObjectTargetSpatialFactRequest;
+    const [nonRangedInput] = battleInputGuidance({
+      ...objectHole,
+      spellObjectTargetSpatialFactRequest: {
+        casterId: objectRequest.casterId,
+        sourceProcedureRef: objectRequest.sourceProcedureRef,
+        rangeFeet: objectRequest.rangeFeet,
+        requiresAttackerSight: true,
+      },
+    });
+    if (nonRangedInput === undefined)
+      throw new Error("Expected the non-ranged object-target schema.");
+    const validateNonRanged = createDraft2020JsonSchemaValidator().getValidator(
+      requireJsonSchema(nonRangedInput.fillSchema, "non-ranged object fill"),
+    );
+    const nonRangedFill = {
+      kind: objectHole.kind,
+      holeId: objectHole.holeId,
+      value: "practice-object",
+      spatialFacts: [objectFact, objectSight],
+    };
+    expect(validateNonRanged(nonRangedFill).valid).toBe(true);
+    for (const spatialFacts of [
+      [objectFact],
+      [objectFact, objectSight, objectSight],
+      [objectFact, { ...objectSight, casterId: spellTargetId }],
+      [
+        objectFact,
+        { ...objectSight, sourceProcedureRef: "synthetic-foreign-spell" },
+      ],
+    ])
+      expect(validateNonRanged({ ...nonRangedFill, spatialFacts }).valid).toBe(
+        false,
+      );
+    const { spatialFacts: _omitted, ...withoutFacts } = nonRangedFill;
+    expect(validateNonRanged(withoutFacts).valid).toBe(false);
     for (const change of [
       { attackerId: spellTargetId },
       { procedureRef: "synthetic-foreign-spell" },

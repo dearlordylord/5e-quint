@@ -327,18 +327,76 @@ export function rangedSpellTargetSchema(
     ),
     Match.exhaustive,
   );
-  if (request?.requiresEnemyProximityQualification !== true) return member;
-  const properties = record(member.properties);
-  const spatial = resolveLocalSchemaReference(
-    record(properties.spatialFacts),
-    definitions,
-  );
+  if (request?.requiresEnemyProximityQualification !== true)
+    return hole.kind === "objectTargetChoice" && request !== undefined
+      ? withRequiredSpatialFacts(member, definitions, [
+          objectTargetSightConstraint(
+            targetFactMembers(member, definitions),
+            request,
+            definitions,
+          ),
+        ])
+      : member;
   const allowedKinds = rangedSpellFactKinds(hole);
   const facts = targetFactMembers(member, definitions).filter(
     (candidate) =>
       allowedKinds.some((kind) => hasKind(candidate, kind, definitions)) &&
       (hole.kind === "objectTargetChoice" ||
         !("objectId" in record(candidate.properties))),
+  );
+  return withRequiredSpatialFacts(
+    member,
+    definitions,
+    [
+      enemyProximityConstraint(facts, definitions, {
+        attackerId: request.casterId,
+        procedureRef: request.sourceProcedureRef,
+      }),
+      ...(hole.kind === "objectTargetChoice"
+        ? [
+            {
+              contains: {
+                anyOf: facts
+                  .filter((fact) =>
+                    hasKind(fact, "spellObjectTarget", definitions),
+                  )
+                  .map((fact) => ({
+                    ...pinFact(fact, {
+                      kind: "spellObjectTarget",
+                      casterId: request.casterId,
+                      sourceProcedureRef: request.sourceProcedureRef,
+                      rangeFeet: request.rangeFeet,
+                    }),
+                    allOf: [
+                      {
+                        properties: {
+                          distanceFeet: { maximum: request.rangeFeet },
+                        },
+                      },
+                    ],
+                  })),
+              },
+              maxContains: 1,
+            },
+            objectTargetSightConstraint(facts, request, definitions),
+          ]
+        : []),
+    ],
+    facts,
+  );
+}
+
+/** Requires the member's spatial facts and adds constraints to them. */
+function withRequiredSpatialFacts(
+  member: McpOutputSchema,
+  definitions: McpOutputSchema,
+  constraints: readonly McpOutputSchema[],
+  items?: readonly McpOutputSchema[],
+): McpOutputSchema {
+  const properties = record(member.properties);
+  const spatial = resolveLocalSchemaReference(
+    record(properties.spatialFacts),
+    definitions,
   );
   return {
     ...member,
@@ -352,43 +410,37 @@ export function rangedSpellTargetSchema(
       ...properties,
       spatialFacts: {
         ...spatial,
-        items: { anyOf: facts },
+        ...(items === undefined ? {} : { items: { anyOf: items } }),
         allOf: [
           ...(Array.isArray(spatial.allOf) ? spatial.allOf : []),
-          enemyProximityConstraint(facts, definitions, {
-            attackerId: request.casterId,
-            procedureRef: request.sourceProcedureRef,
-          }),
-          ...(hole.kind === "objectTargetChoice"
-            ? [
-                {
-                  contains: {
-                    anyOf: facts
-                      .filter((fact) =>
-                        hasKind(fact, "spellObjectTarget", definitions),
-                      )
-                      .map((fact) => ({
-                        ...pinFact(fact, {
-                          kind: "spellObjectTarget",
-                          casterId: request.casterId,
-                          sourceProcedureRef: request.sourceProcedureRef,
-                          rangeFeet: request.rangeFeet,
-                        }),
-                        allOf: [
-                          {
-                            properties: {
-                              distanceFeet: { maximum: request.rangeFeet },
-                            },
-                          },
-                        ],
-                      })),
-                  },
-                  maxContains: 1,
-                },
-              ]
-            : []),
+          ...constraints,
         ],
       },
     },
+  };
+}
+
+/**
+ * SRD "Unseen Attackers and Targets": every spell attack against an object
+ * carries exactly one table answer to whether the caster can see it.
+ */
+function objectTargetSightConstraint(
+  facts: readonly McpOutputSchema[],
+  request: { readonly casterId: string; readonly sourceProcedureRef: string },
+  definitions: McpOutputSchema,
+): McpOutputSchema {
+  return {
+    contains: {
+      anyOf: facts
+        .filter((fact) => hasKind(fact, "spellObjectTargetSight", definitions))
+        .map((fact) =>
+          pinFact(fact, {
+            kind: "spellObjectTargetSight",
+            casterId: request.casterId,
+            sourceProcedureRef: request.sourceProcedureRef,
+          }),
+        ),
+    },
+    maxContains: 1,
   };
 }

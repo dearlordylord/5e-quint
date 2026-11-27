@@ -10256,6 +10256,13 @@ describe("MCP server route", () => {
               damageDisposition: { kind: "hitPoints", hitPoints: 8 },
             },
             {
+              kind: "spellObjectTargetSight",
+              casterId: "fighter",
+              objectId: "dry-training-dummy",
+              sourceProcedureRef: act.subject.procedureRef,
+              attackerCanSeeObject: true,
+            },
+            {
               kind: "spellObjectIgnition",
               casterId: "fighter",
               objectId: "dry-training-dummy",
@@ -10828,6 +10835,13 @@ describe("MCP server route", () => {
               distanceFeet: 30,
               armorClass: 13,
               damageDisposition: { kind: "hitPoints", hitPoints: 5 },
+            },
+            {
+              kind: "spellObjectTargetSight",
+              casterId: "fighter",
+              objectId: "training-crystal",
+              sourceProcedureRef: act.subject.procedureRef,
+              attackerCanSeeObject: true,
             },
           ],
         },

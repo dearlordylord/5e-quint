@@ -48,7 +48,6 @@ import {
   attackRollModeMatches,
   consumeHelpAttackForAttackRoll,
   consumeSelfAttackRollEffects,
-  objectTargetAttackNeedsSightFact,
   recordAttackRollOngoingFeatures,
   requiredSpellObjectTargetAttackRollMode,
   requiredSpellAttackRollMode,
@@ -1113,8 +1112,8 @@ function resolveSpellAttackSequenceObjectPart(input: {
     input.target.objectId,
     input.invocation,
   );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: visible-object attacks require the sight fact requested alongside the selected object target. */
-  if (spellObjectPartSightFactMissing(input, sightFact)) {
+  /* v8 ignore start -- @preserve -- Malformed resolution input: every spell attack against an object asks the table whether the caster can see it. */
+  if (sightFact === null) {
     const partName = spellAttackSequencePartName();
     return invalidResult(
       input.input.state,
@@ -1344,16 +1343,6 @@ function spellObjectPartHasDuplicateHitInterceptionRoll(
   partFill: SpellAttackSequencePartFillSet,
 ): boolean {
   return partFill.duplicateHitInterceptionRoll !== undefined;
-}
-
-function spellObjectPartSightFactMissing(
-  input: Parameters<typeof resolveSpellAttackSequenceObjectPart>[0],
-  sightFact: ReturnType<typeof spellObjectTargetSightFact>,
-): boolean {
-  return (
-    sightFact === null &&
-    objectTargetAttackNeedsSightFact(input.state, input.target.objectId)
-  );
 }
 
 function validateSpellAttackSequencePartAttackRoll(

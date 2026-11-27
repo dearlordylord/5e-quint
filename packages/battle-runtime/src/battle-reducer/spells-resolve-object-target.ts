@@ -30,7 +30,6 @@ import {
 } from "./attack-roll-d20-test-rerolls.ts";
 import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 import {
-  objectTargetAttackNeedsSightFact,
   attackRollModeMatches,
   consumeSelfAttackRollEffects,
   requiredSpellObjectTargetAttackRollMode,
@@ -238,22 +237,15 @@ function resolveObjectTargetSpellAttackCore(
     input.fillSet.objectTarget.objectId,
     input.invocation,
   );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    sightFact === null &&
-    objectTargetAttackNeedsSightFact(
-      input.input.state,
-      input.fillSet.objectTarget.objectId,
-    )
-  ) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+  // Every spell attack against an object asks the table whether the caster
+  // can see it (SRD "Unseen Attackers and Targets").
+  if (sightFact === null) {
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Spell object target must include a matching table-supplied object sight fact.",
     );
   }
-  /* v8 ignore stop -- @preserve */
   const ignitionFact =
     input.invocation.procedure === "spellAttackDamage" &&
     input.invocation.objectHitEffect.kind === "igniteFlammableUnattended"
