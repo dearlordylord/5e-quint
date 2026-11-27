@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
 import { stateForSubjectContinuation } from "./subject-continuation-phase.ts";
 import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
@@ -208,6 +209,7 @@ export function resolveReplayContinuation(input: {
     fills: reconstructReplayContinuationFills(
       frame.continuation.fills,
       input.fills,
+      frame.continuation.attackRollReduction,
     ),
     execution: input.execution,
   });
@@ -215,16 +217,22 @@ export function resolveReplayContinuation(input: {
 
 /**
  * The fills a replay resumes with: the recorded fills, each roll the replay
- * asked again answered by its resubmission, then the submitted fills the
- * recording doesn't already hold.
+ * asked again answered by its resubmission (lowered by the attack roll
+ * reduction the replay kept), then the submitted fills the recording doesn't
+ * already hold.
  */
 export function reconstructReplayContinuationFills(
   recordedFills: readonly BattleFill[],
   submittedFills: readonly BattleFill[],
+  attackRollReduction: number | undefined,
 ): readonly BattleFill[] {
   const answeredAgain = new Set<BattleFill>();
   const decidedFills = recordedFills.map((recordedFill) => {
-    const answer = recordedRollAnswer(recordedFill, submittedFills);
+    const answer = recordedRollAnswer(
+      recordedFill,
+      submittedFills,
+      attackRollReduction,
+    );
     if (answer === null) return recordedFill;
     answeredAgain.add(answer.submitted);
     return answer.fill;
@@ -248,12 +256,17 @@ export function reconstructReplayContinuationFills(
 function recordedRollAnswer(
   recordedFill: BattleFill,
   submittedFills: readonly BattleFill[],
+  attackRollReduction: number | undefined,
 ): { readonly submitted: BattleFill; readonly fill: BattleFill } | null {
   for (const submitted of submittedFills) {
     if (replayContinuationRecordedFillMatches(recordedFill, submitted)) {
       return null;
     }
-    const fill = recordedRollAnsweredAgain(recordedFill, submitted);
+    const fill = recordedRollAnsweredAgain(
+      recordedFill,
+      submitted,
+      attackRollReduction,
+    );
     if (fill !== null) return { submitted, fill };
   }
   return null;

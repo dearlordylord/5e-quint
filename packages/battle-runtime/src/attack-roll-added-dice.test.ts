@@ -19,7 +19,11 @@ import { BARDIC_INSPIRATION_DIE_MESSAGES } from "./battle-reducer/bardic-inspira
 import { D20_TEST_ADDED_DIE_BEFORE_REROLLS_MESSAGE } from "./battle-reducer/d20-test-after-roll-decisions.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
+  attackInitialTargetHole,
   attackRollFill,
+  attackRollHoleAfterTarget,
+  attackTargetFill,
+  attackTargetSpatialFact,
   battleFrontierInterruptDecisionForState,
   battleResolutionHolesForTest,
   characterAttackSubjectForTest,
@@ -32,7 +36,9 @@ import {
   fighterId,
   goblinAttackSubject,
   goblinId,
+  greataxeWeaponMasterySelections,
   interruptDecisionFill,
+  masteryCleaveUnitRefs,
   movementFill,
   opportunityAttackProcedureSelectionForTest,
   reactionChoiceWithSubject,
@@ -42,11 +48,14 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
   rolledDiceGroup,
+  skeletonId,
   startBattleRight,
   startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
+  testGreataxeAttack,
   testShortswordAttack,
+  unitFeatureDecisionFill,
   withBardicInspirationDie,
   wizardSpellcasting,
   type BattleState,
@@ -383,6 +392,113 @@ describe("a Bardic Inspiration die on other attack rolls", () => {
   });
 });
 
+describe("a Bardic Inspiration die across the rolls of one subject", () => {
+  test("a Cleave attack roll that misses is offered the die", () => {
+    const cleave = greataxeCleave();
+    const fills = cleave.cleaveFills({ total: 15, naturalD20: 10 });
+
+    expect(
+      requireHole(
+        cleave.attempt([
+          ...fills,
+          cleave.cleaveRollFill({ total: 5, naturalD20: 3 }),
+        ]),
+        "attackRoll",
+      ),
+    ).toMatchObject({
+      label: "Cleave attack roll",
+      bardicInspirationDice: [
+        { effectKind: BARDIC_INSPIRATION_DIE_EFFECT_KIND, rollerId: fighterId },
+      ],
+    });
+  });
+
+  test("a die spent on the primary attack roll is not offered on the Cleave roll", () => {
+    const cleave = greataxeCleave();
+    const fills = cleave.cleaveFills({
+      total: 13,
+      naturalD20: 9,
+      d20TestAddedDice: [bardicDie(2)],
+    });
+    const missedCleave = cleave.attempt([
+      ...fills,
+      cleave.cleaveRollFill({ total: 5, naturalD20: 3 }),
+    ]);
+
+    expect(missedCleave.tag).toBe("resolved");
+    expect(
+      combatantHasBardicInspirationDie(stateAfter(missedCleave), fighterId),
+    ).toBe(false);
+    expect(
+      cleave.attempt([
+        ...fills,
+        cleave.cleaveRollFill({
+          total: 5,
+          naturalD20: 3,
+          d20TestAddedDice: [bardicDie(4)],
+        }),
+      ]).tag,
+    ).toBe("invalid");
+  });
+
+  test("a die spent on one ray of a Spell Attack sequence is not offered on the next", () => {
+    const scorchingRay = spellRecord("scorching_ray");
+    const session = spellBattle({
+      preparedSpells: [scorchingRay],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const state = withBardicInspirationDie(session.state, spellCasterId);
+    const act = spellAct({ session, spellId: scorchingRay.id, slotLevel: 2 });
+    const targetSelections = act.initialHoles.flatMap((hole) =>
+      hole.kind === "targetChoice"
+        ? [spellTargetFill(hole, scorchingRay.id, spellCasterId, spellTargetId)]
+        : [],
+    );
+    const resolve = (fills: readonly BattleFill[]) =>
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [...targetSelections, ...fills],
+      });
+    const firstRay = requireHole(resolve([]), "attackRoll");
+    expect(
+      requireHole(
+        resolve([attackRollFill(firstRay, { total: 4, naturalD20: 2 })]),
+        "attackRoll",
+      ),
+    ).toMatchObject({ holeId: firstRay.holeId, bardicInspirationDice: [{}] });
+    const firstRayWithDie = attackRollFill(firstRay, {
+      total: 4,
+      naturalD20: 2,
+      d20TestAddedDice: [bardicDie(1)],
+    });
+    const secondRay = requireHole(resolve([firstRayWithDie]), "attackRoll");
+    expect(secondRay.holeId).not.toBe(firstRay.holeId);
+
+    const afterSecondMiss = requireHole(
+      resolve([
+        firstRayWithDie,
+        attackRollFill(secondRay, { total: 4, naturalD20: 2 }),
+      ]),
+      "attackRoll",
+    );
+    expect(afterSecondMiss.holeId).not.toBe(secondRay.holeId);
+    expect(afterSecondMiss).not.toHaveProperty("bardicInspirationDice");
+    expect(
+      resolve([
+        firstRayWithDie,
+        attackRollFill(secondRay, {
+          total: 4,
+          naturalD20: 2,
+          d20TestAddedDice: [bardicDie(1)],
+        }),
+      ]).tag,
+    ).toBe("invalid");
+  });
+});
+
 describe("a Bardic Inspiration die after a Reaction turns the hit into a miss", () => {
   test("after Shield, the attacker is offered the die against the raised Armor Class", () => {
     const rayOfFrost = spellRecord("ray_of_frost");
@@ -628,6 +744,88 @@ function longswordAttack(
         fills: [targetSelection, attackRollFill(roll, value), ...later],
       }),
   };
+}
+
+function greataxeCleave() {
+  const state = withBardicInspirationDie(
+    startBattleRight({
+      battleId: battleId("bardic-die-cleave"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          characterUnitRefs: masteryCleaveUnitRefs(),
+          weaponMasteries: greataxeWeaponMasterySelections(),
+          attack: testGreataxeAttack(),
+        }),
+        statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
+        characterSeed({
+          combatantId: skeletonId,
+          displayName: "Table-Chosen Second Target",
+          initiative: 9,
+          currentHp: 10,
+          maxHp: 10,
+          attack: null,
+        }),
+      ],
+    }),
+    fighterId,
+  );
+  const subject = fighterAttackSubject(state, "Greataxe");
+  const attempt = (fills: readonly BattleFill[]) =>
+    resolveBattleSubject({ state, subject, fills });
+  const primaryTarget = attackInitialTargetHole(state, subject);
+  const targetSelection = attackTargetFill(
+    primaryTarget,
+    fighterId,
+    goblinId,
+    attackExecutionSelectionForSubjectForTest(subject),
+  );
+  const primaryRoll = attackRollHoleAfterTarget(
+    state,
+    primaryTarget,
+    subject,
+    goblinId,
+  );
+  let cleaveRoll: BattleHole | null = null;
+  /** The fills up to the Cleave attack roll, after a primary roll that hits. */
+  const cleaveFills = (primary: AttackRollValue): readonly BattleFill[] => {
+    const primaryFills = [
+      targetSelection,
+      attackRollFill(primaryRoll, primary),
+    ];
+    const damaged = [
+      ...primaryFills,
+      damageRollFill(requireHole(attempt(primaryFills), "rolledDice"), 1),
+    ];
+    const decision = requireHole(attempt(damaged), "unitFeatureDecision");
+    const withCleave = [...damaged, unitFeatureDecisionFill(decision, "use")];
+    const target = requireHole(attempt(withCleave), "targetChoice");
+    const fills = [
+      ...withCleave,
+      targetFill(target, skeletonId, [
+        attackTargetSpatialFact(
+          fighterId,
+          skeletonId,
+          attackExecutionSelectionForSubjectForTest(subject),
+        ),
+        {
+          kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
+          attackerId: fighterId,
+          firstTargetId: goblinId,
+          secondTargetId: skeletonId,
+        },
+      ]),
+    ];
+    cleaveRoll = requireHole(attempt(fills), "attackRoll");
+    return fills;
+  };
+  const cleaveRollFill = (value: AttackRollValue) => {
+    if (cleaveRoll?.kind !== "attackRoll") {
+      throw new Error("Expected the Cleave attack roll hole.");
+    }
+    return attackRollFill(cleaveRoll, value);
+  };
+  return { state, attempt, cleaveFills, cleaveRollFill };
 }
 
 function startOpportunityAttack(state: BattleState, attackName: string) {

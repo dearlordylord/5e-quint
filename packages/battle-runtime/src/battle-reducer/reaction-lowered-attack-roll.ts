@@ -1,8 +1,11 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bardic-inspiration-failed-d20-test
 // An attack roll that a Reaction lowered (attackRollReduction): the interrupted
-// attack replays with its recorded fill lowered by the reduction, and a roll
-// the replay asks again (a hit turned into a miss is offered its added dice,
-// ASSUMPTIONS.md A67) is answered with the roll as it was submitted. Both
-// sides of that lowering live here, so they can't disagree.
+// attack replays with its recorded fill lowered by the reduction, which the
+// replay keeps (attackRollReduction on the continuation), and a roll the replay
+// asks again (a hit turned into a miss is offered its added dice, ASSUMPTIONS.md
+// A69) is answered with the roll as it was submitted, lowered by that same
+// kept reduction. Both sides of that lowering live here.
 
 import { Match } from "effect";
 import { map as mapArray } from "effect/Array";
@@ -72,14 +75,14 @@ function attackRollRerollDecisionLoweredBy(
 
 /**
  * The fill a replay meets for a recorded roll that it asked again: the
- * submitted fill, lowered as the recorded fill was, when it keeps the recorded
- * fill and only adds later after-roll decisions; null for any other fill.
- * Only an attack roll is lowered by a Reaction, by what its submitted total
- * exceeds the recorded one.
+ * submitted fill, lowered by the reduction the replay kept, when it keeps the
+ * recorded fill and only adds later after-roll decisions; null for any other
+ * fill. Only an attack roll is lowered by a Reaction.
  */
 export function recordedRollAnsweredAgain(
   recorded: BattleFill,
   submitted: BattleFill,
+  attackRollReduction: number | undefined,
 ): BattleFill | null {
   if (
     !isBattleRerollDecisionFill(submitted) ||
@@ -88,15 +91,10 @@ export function recordedRollAnsweredAgain(
     return null;
   }
   const answer =
-    submitted.kind === "attackRoll" &&
-    recorded.kind === "attackRoll" &&
-    submitted.value.total > recorded.value.total
+    submitted.kind === "attackRoll" && attackRollReduction !== undefined
       ? {
           ...submitted,
-          value: attackRollLoweredBy(
-            submitted.value,
-            submitted.value.total - recorded.value.total,
-          ),
+          value: attackRollLoweredBy(submitted.value, attackRollReduction),
         }
       : submitted;
   return battleResubmittedFillKeepsAcceptedFill(recorded, answer)

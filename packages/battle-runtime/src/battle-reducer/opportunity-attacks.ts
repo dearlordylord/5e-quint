@@ -209,6 +209,9 @@ type ReactionAttackRollPreparation =
   | {
       readonly tag: "ready";
       readonly effectiveAttackRoll: BattleAttackRollResult;
+      /** Whether the roll as it stands hits: the judgement its added-die offer was made against. */
+      readonly hits: boolean;
+      readonly criticalThreshold: ReturnType<typeof criticalThresholdForAttack>;
       readonly afterRollUses: AttackRollAfterRollUses;
       readonly hiddenBeforeAttack: BattleHiddenState | null;
       readonly attackRollRelationshipFacts: Exclude<
@@ -333,7 +336,10 @@ function reactionAttackAfterRollResult(input: {
   >;
 }):
   | { readonly tag: "result"; readonly result: BattleResolutionResult }
-  | Extract<AttackRollAfterRoll, { readonly tag: "resolved" }> {
+  | (Extract<AttackRollAfterRoll, { readonly tag: "resolved" }> & {
+      readonly hits: boolean;
+      readonly criticalThreshold: ReturnType<typeof criticalThresholdForAttack>;
+    }) {
   const criticalThreshold = criticalThresholdForAttack(
     input.reactor,
     input.context.attack,
@@ -343,6 +349,12 @@ function reactionAttackAfterRollResult(input: {
     input.context.target,
     input.context.targetCover,
   );
+  const hits = (roll: BattleAttackRollResult) =>
+    attackRollHitsWithCriticalThreshold(
+      roll,
+      targetArmorClass,
+      criticalThreshold,
+    );
   const afterRoll = attackRollAfterRollDecisions({
     state: input.context.input.state,
     subject: input.context.input.subject,
@@ -350,12 +362,7 @@ function reactionAttackAfterRollResult(input: {
     attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll: input.attackRoll,
     requiredRollMode: input.requiredRollMode,
-    misses: (roll) =>
-      !attackRollHitsWithCriticalThreshold(
-        roll,
-        targetArmorClass,
-        criticalThreshold,
-      ),
+    misses: (roll) => !hits(roll),
   });
   if (afterRoll.tag === "decisionsRequired") {
     return {
@@ -388,7 +395,7 @@ function reactionAttackAfterRollResult(input: {
           afterRoll.issue,
         ),
       }
-    : afterRoll;
+    : { ...afterRoll, hits: hits(afterRoll.roll), criticalThreshold };
 }
 
 function prepareReactionAttackRoll(
@@ -465,6 +472,8 @@ function prepareReactionAttackRoll(
   return {
     tag: "ready",
     effectiveAttackRoll: rerollResult.roll,
+    hits: rerollResult.hits,
+    criticalThreshold: rerollResult.criticalThreshold,
     afterRollUses: rerollResult.uses,
     hiddenBeforeAttack:
       input.input.state.combatants.get(input.input.subject.reactorId)?.hidden ??
@@ -796,20 +805,7 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
   } = afterRollInput.rollPreparation;
   const { pendingAttackDamageReductions } = afterRollInput;
   const input = resolutionInput;
-  const criticalThreshold = criticalThresholdForAttack(
-    input.state.combatants.get(subject.reactorId),
-    attack,
-  );
-  const targetArmorClass = armorClassAgainstAttack(
-    input.state,
-    target,
-    afterRollInput.context.targetCover,
-  );
-  const hit = attackRollHitsWithCriticalThreshold(
-    effectiveAttackRoll,
-    targetArmorClass,
-    criticalThreshold,
-  );
+  const { hits: hit, criticalThreshold } = afterRollInput.rollPreparation;
   let attackRolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
       revealHidden(

@@ -914,6 +914,8 @@ export type BattleInterruptedProcedure = BattleAcceptedSubjectReplayEvidence &
         readonly fills: readonly BattleFill[];
         readonly parentPosition?: never;
         readonly glyphStoredSpellReleaseReplay?: never;
+        /** What Reactions (attackRollReduction) took off the recorded attack roll: a roll the replay asks again is lowered by exactly this. */
+        readonly attackRollReduction?: number;
         readonly attackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
         readonly attackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
         readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
@@ -925,6 +927,8 @@ export type BattleInterruptedProcedure = BattleAcceptedSubjectReplayEvidence &
         readonly fills: readonly BattleFill[];
         readonly parentPosition: BattleStartTurnOccurrenceSequenceCheckpoint;
         readonly glyphStoredSpellReleaseReplay?: never;
+        /** What Reactions (attackRollReduction) took off the recorded attack roll: a roll the replay asks again is lowered by exactly this. */
+        readonly attackRollReduction?: number;
         readonly attackDamageReductions?: never;
         readonly attackDamageAdditions?: never;
         readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
@@ -939,6 +943,8 @@ export type BattleInterruptedProcedure = BattleAcceptedSubjectReplayEvidence &
         readonly fills: readonly BattleFill[];
         readonly parentPosition?: never;
         readonly glyphStoredSpellReleaseReplay: GlyphStoredSpellReleaseReplayContext;
+        /** What Reactions (attackRollReduction) took off the recorded attack roll: a roll the replay asks again is lowered by exactly this. */
+        readonly attackRollReduction?: number;
         readonly attackDamageReductions?: never;
         readonly attackDamageAdditions?: never;
         readonly objectOutcomes?: BattleObjectOutcomeAccumulation;

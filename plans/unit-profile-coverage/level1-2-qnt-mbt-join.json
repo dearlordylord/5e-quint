@@ -848,7 +848,7 @@
       "joinStatus": "covered",
       "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
       "obligationStatus": "covered",
-      "obligationTitle": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails",
+      "obligationTitle": "A creature that fails a D20 Test can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails",
       "parityWitnesses": [
         {
           "kind": "contract-test",
@@ -3676,7 +3676,7 @@
       "joinStatus": "covered",
       "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
       "obligationStatus": "covered",
-      "obligationTitle": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails",
+      "obligationTitle": "A creature that fails a D20 Test can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails",
       "parityWitnesses": [
         {
           "kind": "contract-test",

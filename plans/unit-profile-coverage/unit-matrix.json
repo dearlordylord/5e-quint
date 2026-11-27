@@ -648,11 +648,11 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/unit-features.ts",
         "packages/battle-runtime/src/battle-reducer/bardic-inspiration-failed-d20-test.ts",
         "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-roll-after-roll-decisions.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-roll-after-roll-decisions.ts",
+        "packages/battle-runtime/src/battle-reducer/reaction-lowered-attack-roll.ts"
       ],
       "sourceBoundary": "On attack rolls, ability checks, saving throws and rolled Death Saving Throws the die is offered on the battle's D20 Test holes once the test's rerolls are decided and while the test as it stands fails, and expended when rolled; an attack roll that a Reaction turns into a miss is offered the die when the attack replays.",
       "taskRefs": [
@@ -665,16 +665,16 @@
           "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
         },
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime.test-support.ts"
-        },
-        {
           "kind": "qnt-proof",
           "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt"
         },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/attack-roll-added-dice.test.ts"
         }
       ]
     },
@@ -8653,7 +8653,7 @@
             "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
             "runtime": "battle",
             "status": "covered",
-            "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+            "title": "A creature that fails a D20 Test can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
           },
           {
             "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
@@ -8725,7 +8725,7 @@
             "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
             "runtime": "battle",
             "status": "covered",
-            "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+            "title": "A creature that fails a D20 Test can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
           },
           {
             "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
@@ -12801,7 +12801,7 @@
                   "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+                  "title": "A creature that fails a D20 Test can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
                 },
                 {
                   "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
@@ -14509,7 +14509,7 @@
                   "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+                  "title": "A creature that fails a D20 Test can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
                 },
                 {
                   "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
@@ -26486,11 +26486,11 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/unit-features.ts",
             "packages/battle-runtime/src/battle-reducer/bardic-inspiration-failed-d20-test.ts",
             "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts",
             "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
-            "packages/battle-runtime/src/battle-reducer/attack-roll-after-roll-decisions.ts"
+            "packages/battle-runtime/src/battle-reducer/attack-roll-after-roll-decisions.ts",
+            "packages/battle-runtime/src/battle-reducer/reaction-lowered-attack-roll.ts"
           ],
           "sourceBoundary": "On attack rolls, ability checks, saving throws and rolled Death Saving Throws the die is offered on the battle's D20 Test holes once the test's rerolls are decided and while the test as it stands fails, and expended when rolled; an attack roll that a Reaction turns into a miss is offered the die when the attack replays.",
           "taskRefs": [
@@ -26503,16 +26503,16 @@
               "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
             },
             {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/battle-runtime.test-support.ts"
-            },
-            {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt"
             },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/attack-roll-added-dice.test.ts"
             }
           ]
         }

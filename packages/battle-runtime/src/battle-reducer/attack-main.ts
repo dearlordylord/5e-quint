@@ -4414,6 +4414,10 @@ type AdditionalWeaponAttackRollResolution =
       readonly tag: "ok";
       readonly fill: AdditionalWeaponAttackRollFill;
       readonly attackRoll: BattleAttackRollResult;
+      /** Whether the roll as it stands after its after-roll decisions hits: the judgement its added-die offer was made against. */
+      readonly hits: boolean;
+      /** The critical threshold the roll was judged by. */
+      readonly criticalThreshold: ReturnType<typeof criticalThresholdForAttack>;
       readonly afterRollUses: AttackRollAfterRollUses;
     };
 
@@ -4488,6 +4492,12 @@ function resolveAdditionalWeaponAttackRoll(input: {
     input.state.combatants.get(input.subject.actorId),
     input.attack,
   );
+  const hits = (roll: BattleAttackRollResult) =>
+    attackRollHitsWithCriticalThreshold(
+      roll,
+      targetArmorClass,
+      criticalThreshold,
+    );
   const afterRoll = attackRollAfterRollDecisions({
     state: input.state,
     subject: input.subject,
@@ -4495,12 +4505,7 @@ function resolveAdditionalWeaponAttackRoll(input: {
     attackRollHoleId: input.attackRollHole.holeId,
     attackRoll: attackRoll.value,
     requiredRollMode,
-    misses: (roll) =>
-      !attackRollHitsWithCriticalThreshold(
-        roll,
-        targetArmorClass,
-        criticalThreshold,
-      ),
+    misses: (roll) => !hits(roll),
   });
   if (afterRoll.tag === "decisionsRequired") {
     return {
@@ -4522,6 +4527,8 @@ function resolveAdditionalWeaponAttackRoll(input: {
     tag: "ok",
     fill: attackRoll,
     attackRoll: afterRoll.roll,
+    hits: hits(afterRoll.roll),
+    criticalThreshold,
     afterRollUses: afterRoll.uses,
   };
 }
@@ -4760,20 +4767,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     secondTarget,
   } = preparation;
   const effectiveCleaveAttackRoll = cleaveAttackRoll.attackRoll;
-  const cleaveCriticalThreshold = criticalThresholdForAttack(
-    input.state.combatants.get(input.subject.actorId),
-    cleaveAttack,
-  );
-  const cleaveTargetArmorClass = armorClassAgainstAttack(
-    input.state,
-    secondTarget,
-    preparation.targetCover,
-  );
-  const ordinaryCleaveHit = attackRollHitsWithCriticalThreshold(
-    effectiveCleaveAttackRoll,
-    cleaveTargetArmorClass,
-    cleaveCriticalThreshold,
-  );
+  const ordinaryCleaveHit = cleaveAttackRoll.hits;
   const cleaveMissToHitReplacement = selectedAttackRollMissToHitReplacement({
     state: input.state,
     subject: input.subject,
@@ -4830,7 +4824,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
   );
   const cleaveCritical = attackRollHitIsCritical({
     roll: effectiveCleaveAttackRoll,
-    criticalThreshold: cleaveCriticalThreshold,
+    criticalThreshold: cleaveAttackRoll.criticalThreshold,
     hit: cleaveHit,
     attackerId: input.subject.actorId,
     target: secondTarget,
@@ -5540,20 +5534,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     secondTarget,
   } = preparation;
   const effectiveHordeBreakerAttackRoll = hordeBreakerAttackRoll.attackRoll;
-  const criticalThreshold = criticalThresholdForAttack(
-    input.state.combatants.get(input.subject.actorId),
-    hordeBreakerAttack,
-  );
-  const hordeBreakerTargetArmorClass = armorClassAgainstAttack(
-    input.state,
-    secondTarget,
-    preparation.targetCover,
-  );
-  const hit = attackRollHitsWithCriticalThreshold(
-    effectiveHordeBreakerAttackRoll,
-    hordeBreakerTargetArmorClass,
-    criticalThreshold,
-  );
+  const hit = hordeBreakerAttackRoll.hits;
   const rolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
       revealHidden(
@@ -5574,7 +5555,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   );
   const critical = attackRollHitIsCritical({
     roll: effectiveHordeBreakerAttackRoll,
-    criticalThreshold,
+    criticalThreshold: hordeBreakerAttackRoll.criticalThreshold,
     hit,
     attackerId: input.subject.actorId,
     target: secondTarget,

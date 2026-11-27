@@ -494,6 +494,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
   /* v8 ignore stop -- @preserve */
+  const targetArmorClass = armorClassAgainstAttack(input.state, target, cover);
   const afterRoll = attackRollAfterRollDecisions({
     state: input.state,
     subject: input.input.subject,
@@ -504,11 +505,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     ),
     attackRoll: input.partFill.attackRoll,
     requiredRollMode,
-    misses: (roll) =>
-      !attackRollHits(
-        roll,
-        armorClassAgainstAttack(input.state, target, cover),
-      ),
+    misses: (roll) => !attackRollHits(roll, targetArmorClass),
   });
   if (afterRoll.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.input.subject, [
@@ -529,7 +526,6 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   }
   /* v8 ignore stop -- @preserve */
   const effectiveAttackRoll = afterRoll.roll;
-  const targetArmorClass = armorClassAgainstAttack(input.state, target, cover);
   const ordinaryHit = attackRollHits(effectiveAttackRoll, targetArmorClass);
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
     state: input.state,
@@ -1151,6 +1147,10 @@ function resolveSpellAttackSequenceObjectPart(input: {
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
   /* v8 ignore stop -- @preserve */
+  const objectArmorClass = armorClassBehindCover(
+    objectFact.armorClass,
+    objectFact.cover,
+  );
   const afterRoll = attackRollAfterRollDecisions({
     state: input.state,
     subject: input.input.subject,
@@ -1161,11 +1161,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     ),
     attackRoll: attackRoll,
     requiredRollMode,
-    misses: (roll) =>
-      !attackRollHits(
-        roll,
-        armorClassBehindCover(objectFact.armorClass, objectFact.cover),
-      ),
+    misses: (roll) => !attackRollHits(roll, objectArmorClass),
   });
   if (afterRoll.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.input.subject, [
@@ -1199,10 +1195,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
   }
   /* v8 ignore stop -- @preserve */
   const effectiveAttackRoll = afterRoll.roll;
-  const hit = attackRollHits(
-    effectiveAttackRoll,
-    armorClassBehindCover(objectFact.armorClass, objectFact.cover),
-  );
+  const hit = attackRollHits(effectiveAttackRoll, objectArmorClass);
   const critical = attackRollIsCriticalHit(effectiveAttackRoll);
   const spentState = battleStateAfterAttackRollAfterRollUses(
     input.state,

@@ -998,13 +998,7 @@ function interruptCheckpointAfterModifier(
       },
       continuation:
         frame.continuation.kind === "replay"
-          ? {
-              ...frame.continuation,
-              fills: reactionModifiedAttackRollFills(
-                frame.continuation.fills,
-                reduction,
-              ),
-            }
+          ? reactionLoweredReplay(frame.continuation, reduction)
           : frame.continuation,
     };
     copyInterruptCheckpointIdentity(frame, modifiedFrame);
@@ -1062,6 +1056,25 @@ function interruptCheckpointAfterModifier(
     return modifiedFrame;
   }
   return frame;
+}
+
+/**
+ * The interrupted attack's replay after a Reaction lowered its roll: its fills
+ * lowered, and the reduction kept with them so that a roll the replay asks
+ * again is lowered by the same amount.
+ */
+function reactionLoweredReplay(
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "replay" }
+  >,
+  reduction: number,
+): Extract<BattleInterruptedProcedure, { readonly kind: "replay" }> {
+  return {
+    ...continuation,
+    fills: reactionModifiedAttackRollFills(continuation.fills, reduction),
+    attackRollReduction: (continuation.attackRollReduction ?? 0) + reduction,
+  };
 }
 
 /**

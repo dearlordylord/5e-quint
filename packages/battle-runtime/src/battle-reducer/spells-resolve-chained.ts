@@ -550,6 +550,11 @@ export function resolveChainedSpellAttackDamageAct(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
+    const targetArmorClass = armorClassAgainstAttack(
+      replayState,
+      target,
+      targetAdmission.cover,
+    );
     const afterRoll = attackRollAfterRollDecisions({
       state: replayState,
       subject: input.input.subject,
@@ -560,11 +565,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       ),
       attackRoll: attackRoll.value,
       requiredRollMode,
-      misses: (roll) =>
-        !attackRollHits(
-          roll,
-          armorClassAgainstAttack(replayState, target, targetAdmission.cover),
-        ),
+      misses: (roll) => !attackRollHits(roll, targetArmorClass),
     });
     if (afterRoll.tag === "decisionsRequired") {
       return needsHolesResult(input.input.state, input.input.subject, [
@@ -588,10 +589,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     /* v8 ignore stop -- @preserve */
     const effectiveAttackRoll = afterRoll.roll;
 
-    const ordinaryHit = attackRollHits(
-      effectiveAttackRoll,
-      armorClassAgainstAttack(replayState, target, targetAdmission.cover),
-    );
+    const ordinaryHit = attackRollHits(effectiveAttackRoll, targetArmorClass);
     const missToHitReplacement = selectedAttackRollMissToHitReplacement({
       state: replayState,
       subject: input.input.subject,
