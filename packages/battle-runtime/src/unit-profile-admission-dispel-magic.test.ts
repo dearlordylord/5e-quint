@@ -1,6 +1,6 @@
 import { spellProcedureExecution } from "./character-execution-admission.ts";
 import {
-  abilityCheckFill,
+  abilityCheckFill as rolledAbilityCheckFill,
   battleResolutionHolesForTest,
   combatantHasBardicInspirationDie,
   goblinId,
@@ -865,7 +865,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         activeEffects: [...caster.activeEffects, grantedDie],
       }),
     };
-    const failedCheck = abilityCheckFill(checkHole, {
+    const failedCheck = rolledAbilityCheckFill(checkHole, {
       total: 13,
       naturalD20: 10,
     });
@@ -909,7 +909,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toBe(false);
     expect(
       succeededWithDie.lightEmitters.some(
-        (effect) => effect.sourceEffectId === emitter.sourceEffectId,
+        (effect) =>
+          effect.kind === "spellLightEmitter" &&
+          effect.sourceEffectId === emitter.sourceEffectId,
       ),
     ).toBe(false);
 

@@ -1,5 +1,8 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.DIE_MINIMUM BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
-import { HEROIC_INSPIRATION_AVAILABLE } from "@dnd/shared/game-facts";
+import {
+  HEROIC_INSPIRATION_AVAILABLE,
+  NO_HEROIC_INSPIRATION,
+} from "@dnd/shared/game-facts";
 import { classLevel, DieRollResult, difficultyClass } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
@@ -10,7 +13,6 @@ import {
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
   type BattleD20TestDieMinimumDecision,
   type BattleFill,
-  type BattleSubject,
 } from "./battle-state-execution.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
@@ -33,6 +35,7 @@ import {
   supportedBattleUnitRef,
   targetFill,
   unitLibrary,
+  type BattleSubject,
 } from "./battle-runtime.test-support.ts";
 
 const search = {
@@ -181,7 +184,7 @@ describe("one minimum decision through rerolls and added dice", () => {
       });
       if (offered.tag !== "needsHoles")
         throw new Error("Expected an added-die continuation.");
-      const boostOnly = {
+      const boostOnly: AbilityFill = {
         ...rerolled,
         value: { ...rerolled.value, d20TestAddedDice: [boost(boostFace)] },
       };
@@ -197,7 +200,7 @@ describe("one minimum decision through rerolls and added dice", () => {
       });
       if (waitingForBardic.tag !== "needsHoles")
         throw new Error("Expected the remaining Bardic decision.");
-      const filled = {
+      const filled: AbilityFill = {
         ...rerolled,
         value: {
           ...rerolled.value,
@@ -217,9 +220,10 @@ describe("one minimum decision through rerolls and added dice", () => {
         resourceCount(1),
       ]);
       expect(combatantHasBardicInspirationDie(resolved, fighterId)).toBe(false);
-      expect(resolved.combatants.get(fighterId)?.heroicInspiration).not.toEqual(
-        HEROIC_INSPIRATION_AVAILABLE,
-      );
+      const actor = resolved.combatants.get(fighterId);
+      if (actor?.origin.kind !== "character")
+        throw new Error("Expected the Search check's character.");
+      expect(actor.origin.heroicInspiration).toEqual(NO_HEROIC_INSPIRATION);
     },
   );
 
