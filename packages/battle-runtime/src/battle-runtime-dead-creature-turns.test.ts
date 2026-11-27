@@ -1,4 +1,3 @@
-import { Hp } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import type { BattleState } from "./battle-state-execution.ts";
 import {
@@ -13,6 +12,8 @@ import {
   statBlockCreatureInit,
 } from "./battle-runtime.test-support.ts";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
+import { zeroHpLifecycleIsTerminal } from "./battle-reducer/creature-state-leaves.ts";
+import { applyHpDamage } from "./battle-reducer/damage-apply.ts";
 
 const allyId = combatantId("ally");
 
@@ -41,17 +42,15 @@ function withDeadCombatant(
   if (combatant === undefined) {
     throw new Error("Expected the combatant.");
   }
-  const dead =
-    combatant.zeroHpLifecycle.policy === "diesAtZeroHp"
-      ? { ...combatant, hp: Hp(0) }
-      : {
-          ...combatant,
-          hp: Hp(0),
-          zeroHpLifecycle: {
-            ...combatant.zeroHpLifecycle,
-            deathSaves: { tag: "dead" as const },
-          },
-        };
+  // Damage at least the current Hit Points plus the maximum kills outright.
+  const dead = applyHpDamage(
+    combatant,
+    Number(combatant.hp) + Number(combatant.maxHp),
+    { deathFailuresAtZeroHp: 1 },
+  );
+  if (!zeroHpLifecycleIsTerminal(dead)) {
+    throw new Error("Expected the combatant to be dead.");
+  }
   return {
     ...state,
     combatants: new Map(state.combatants).set(id, dead),
