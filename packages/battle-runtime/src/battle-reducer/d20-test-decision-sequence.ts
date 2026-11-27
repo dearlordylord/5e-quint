@@ -8,7 +8,7 @@
 // sequential rerolls from different sources.
 //
 // A roll takes two such sequences: its rerolls, and then the dice added to
-// the roll the rerolls leave (ASSUMPTIONS.md A67).
+// the roll the rerolls leave (ASSUMPTIONS.md A68).
 
 /** Every source that may reroll a D20 Test's d20. */
 export const D20_TEST_REROLL_SOURCES = [

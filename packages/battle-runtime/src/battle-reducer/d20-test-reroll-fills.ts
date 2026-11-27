@@ -349,7 +349,7 @@ function abilityCheckRollChecks(
         value: fill.value,
         requiredRollMode: abilityCheckHole?.rollMode,
         dieMinimum: dieMinimum.countedMinimum,
-        dc: abilityCheckHole?.dc,
+        dc: hole?.dc,
       }),
       {
         fillIndex: input.fillIndex,

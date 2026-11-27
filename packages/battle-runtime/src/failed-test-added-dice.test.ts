@@ -4,7 +4,7 @@
 // die on ability checks and saving throws, and the failed ability check
 // resource boost (Fighter, Tactical Mind) on ability checks. The dice come
 // after the test's rerolls, each while the test still fails, and the boost's
-// use is spent only when the check then succeeds (ASSUMPTIONS.md A67).
+// use is spent only when the check then succeeds (ASSUMPTIONS.md A68).
 import { HEROIC_INSPIRATION_AVAILABLE } from "@dnd/shared/game-facts";
 import { classLevel, DieRollResult, difficultyClass } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
