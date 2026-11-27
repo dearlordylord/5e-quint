@@ -438,19 +438,18 @@ export function startBattleWithCompanionRoster(input: {
 }): BattleRosterStartResult {
   const indexed = indexBattleCompanionRosterOwners({ owners: input.owners });
   const admitted =
-    input.battle === undefined ? undefined : admitBattle(input.battle);
+    input.battle === undefined
+      ? Result.succeed(undefined)
+      : admitBattle(input.battle);
   const session = admitBattleCompanionRosterRequests({
-    session:
-      admitted !== undefined && Result.isSuccess(admitted)
-        ? admitted.success
-        : undefined,
+    session: Result.isSuccess(admitted) ? admitted.success : undefined,
     indexes: indexed.indexes,
     issues: indexed.issues,
     requests: input.requests,
     unitLibrary: input.unitLibrary,
     statBlockCatalog: input.statBlockCatalog,
   });
-  if (admitted !== undefined && Result.isFailure(admitted)) {
+  if (Result.isFailure(admitted)) {
     return {
       tag: "rejected",
       issues: [
