@@ -58,7 +58,7 @@ type HitPointDamageProjection = RuleCoreComponentRoutedProjection & {
   readonly unconscious: boolean;
   readonly damageToHitPoints: number;
   readonly remainingDamageAtZero: number;
-  readonly deathSavingThrowFailuresAdded: number;
+  readonly deathSavingThrowFailureCountChange: number;
   readonly replayIndex: number;
 };
 
@@ -92,7 +92,7 @@ const initialProjection: HitPointDamageProjection = withRuleCoreComponentRoute(
     unconscious: false,
     damageToHitPoints: 0,
     remainingDamageAtZero: 0,
-    deathSavingThrowFailuresAdded: 0,
+    deathSavingThrowFailureCountChange: 0,
     replayIndex: 0,
   },
 );
@@ -313,7 +313,8 @@ function projectHitPointDamage(
       0,
       projection.hpDamage - projection.currentHp,
     ),
-    deathSavingThrowFailuresAdded:
+    // After minus before, as the QNT side records it; death counts 3.
+    deathSavingThrowFailureCountChange:
       projection.currentHp > 0
         ? 0
         : deathSavingThrowFailures(after) - deathSavingThrowFailures(before),
@@ -390,9 +391,9 @@ function normalizeHitPointDamageQuintState(
       state["qRemainingDamageAtZero"],
       "qRemainingDamageAtZero",
     ),
-    deathSavingThrowFailuresAdded: numberFromQuintInt(
-      state["qDeathSavingThrowFailuresAdded"],
-      "qDeathSavingThrowFailuresAdded",
+    deathSavingThrowFailureCountChange: numberFromQuintInt(
+      state["qDeathSavingThrowFailureCountChange"],
+      "qDeathSavingThrowFailureCountChange",
     ),
     replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
   };

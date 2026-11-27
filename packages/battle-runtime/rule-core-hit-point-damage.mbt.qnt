@@ -14,7 +14,7 @@ module ruleCoreHitPointDamageMbt {
   var qDamageToHitPoints: int
   var qRemainingDamageAtZero: int
   // Death Saving Throw failures that damage at 0 Hit Points adds.
-  var qDeathSavingThrowFailuresAdded: int
+  var qDeathSavingThrowFailureCountChange: int
   var qReplayIndex: int
   var qComponentRoute: List[RuleCoreComponentRouteEvent]
 
@@ -36,7 +36,7 @@ module ruleCoreHitPointDamageMbt {
     qUnconscious' = result.vitals.unconscious,
     qDamageToHitPoints' = result.damageToHitPoints,
     qRemainingDamageAtZero' = result.remainingDamageAtZero,
-    qDeathSavingThrowFailuresAdded' = 0,
+    qDeathSavingThrowFailureCountChange' = 0,
     qReplayIndex' = nextReplayIndex,
     qComponentRoute' = componentRouteEvidence,
   }
@@ -50,7 +50,7 @@ module ruleCoreHitPointDamageMbt {
     qUnconscious' = false,
     qDamageToHitPoints' = 0,
     qRemainingDamageAtZero' = 0,
-    qDeathSavingThrowFailuresAdded' = 0,
+    qDeathSavingThrowFailureCountChange' = 0,
     qReplayIndex' = 0,
     qComponentRoute' = componentRouteEvidence,
   }
@@ -103,7 +103,14 @@ module ruleCoreHitPointDamageMbt {
     }, 18), 4),
   }
 
-  action recordZeroHpDamageResult(scenario: str, result: ZeroHitPointLifecycleResult, nextReplayIndex: int): bool = all {
+  // The failure count after the damage minus the count before it. A creature
+  // that dies counts 3, so the change is capped at the failures still missing.
+  action recordZeroHpDamageResult(
+    scenario: str,
+    before: DeathSavingThrowLifecycle,
+    result: ZeroHitPointLifecycleResult,
+    nextReplayIndex: int
+  ): bool = all {
     qLastScenario' = scenario,
     qHitPoints' = result.vitals.hitPoints,
     qHitPointMaximum' = result.vitals.hitPointMaximum,
@@ -112,7 +119,8 @@ module ruleCoreHitPointDamageMbt {
     qUnconscious' = result.vitals.unconscious,
     qDamageToHitPoints' = 0,
     qRemainingDamageAtZero' = 0,
-    qDeathSavingThrowFailuresAdded' = result.deathSavingThrowFailuresAdded,
+    qDeathSavingThrowFailureCountChange' =
+      deathSavingThrowFailures(result.deathSavingThrows) - deathSavingThrowFailures(before),
     qReplayIndex' = nextReplayIndex,
     qComponentRoute' = componentRouteEvidence,
   }
@@ -121,6 +129,7 @@ module ruleCoreHitPointDamageMbt {
     qReplayIndex == 4,
     recordZeroHpDamageResult(
       playerCharacterTempHpFullyAbsorbsAtZero,
+      resetDeathSavingThrowLifecycle,
       applyDamageToZeroHitPointCreature(
         {
           kind: PlayerCharacter,
