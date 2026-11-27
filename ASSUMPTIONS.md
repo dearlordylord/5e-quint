@@ -564,7 +564,7 @@ rerolls first. The SRD also doesn't say whether Tactical Mind's "still fails"
 reads the check before or after another added die; the model judges the check
 once with every added die.
 
-## A70: Damage that Temporary Hit Points absorb at 0 Hit Points
+## A72: Damage that Temporary Hit Points absorb at 0 Hit Points
 
 **Assumption:** A creature at 0 Hit Points that takes damage suffers the Death
 Saving Throw failure (two for a Critical Hit) even when its Temporary Hit
