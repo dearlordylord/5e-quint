@@ -4645,6 +4645,11 @@ describe("MCP server route", () => {
       }),
     );
 
+    // The opening turn starts once the companion has joined, so it is the
+    // familiar's turn that starts, not the Wizard's.
+    expect(root.sessionStore.battleSession?.state.currentTurnStart).toBe(
+      "started",
+    );
     expect(started.envelope.checkpoint).toMatchObject({
       currentActorId: "wizard-familiar",
       turnOrder: ["wizard-familiar", "wizard"],
@@ -10251,6 +10256,13 @@ describe("MCP server route", () => {
               damageDisposition: { kind: "hitPoints", hitPoints: 8 },
             },
             {
+              kind: "spellObjectTargetSight",
+              casterId: "fighter",
+              objectId: "dry-training-dummy",
+              sourceProcedureRef: act.subject.procedureRef,
+              attackerCanSeeObject: true,
+            },
+            {
               kind: "spellObjectIgnition",
               casterId: "fighter",
               objectId: "dry-training-dummy",
@@ -10823,6 +10835,13 @@ describe("MCP server route", () => {
               distanceFeet: 30,
               armorClass: 13,
               damageDisposition: { kind: "hitPoints", hitPoints: 5 },
+            },
+            {
+              kind: "spellObjectTargetSight",
+              casterId: "fighter",
+              objectId: "training-crystal",
+              sourceProcedureRef: act.subject.procedureRef,
+              attackerCanSeeObject: true,
             },
           ],
         },

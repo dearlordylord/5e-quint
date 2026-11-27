@@ -635,18 +635,23 @@ export {
 } from "./battle-snapshot-presentation.ts";
 export {
   addBattleRuntimeCombatant,
+  createInitialInitiativeForCombatants,
   applyInitiativeSwap,
   battleInitializationIssueFactFields,
   battleInitializationIssueLeaves,
   battleInitializationIssueMessage,
-  finishInitialInitiativeSetup,
   removeBattleRuntimeCombatants,
   requiredInitiativeRollModeForCombatant,
-  startBattle,
   startBattleWithInitialInitiativeSetup,
   type InitialInitiativeSetup,
   type InitiativeSwapCandidateWitness,
 } from "./battle-reducer/api-lifecycle.ts";
+export {
+  admitBattle,
+  finishInitialInitiativeSetup,
+  startBattle,
+  startBattleOpeningTurn,
+} from "./battle-start.ts";
 export {
   activeFallingCreatureMitigationDescentRateCapFeetPerRound,
   activeSelfTransformationModeEffect,

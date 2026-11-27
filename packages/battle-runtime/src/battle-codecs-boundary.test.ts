@@ -3618,6 +3618,52 @@ describe("battle codec act ownership boundaries", () => {
       },
     });
   });
+  test("round-trips the opening turn-start procedure and binds its actor", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("codec-turn-start-procedure-binding"),
+      combatants: [
+        characterSeed({ initiative: 20, currentHp: 0 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const pending = resolveBattleRuntimeSubject({
+      session,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "startTurn",
+      },
+      fills: [],
+    });
+    if (pending.tag !== "needsHoles") {
+      throw new Error("Expected the opening turn-start Hole frontier.");
+    }
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      pending.envelope,
+    );
+    if (
+      encoded.frontier.kind !== "holes" ||
+      encoded.frontier.pendingProcedure.kind !== "turnStart"
+    ) {
+      throw new Error("Expected a turn-start procedure projection.");
+    }
+    expect(
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(encoded),
+    ).toEqual(pending.envelope);
+    expectEnvelopeDecodeFailure({
+      ...encoded,
+      frontier: {
+        ...encoded.frontier,
+        pendingProcedure: {
+          ...encoded.frontier.pendingProcedure,
+          sourceTurn: {
+            ...encoded.frontier.pendingProcedure.sourceTurn,
+            actorId: combatantId("codec-unknown-source-actor"),
+          },
+        },
+      },
+    });
+  });
   test("rejects an action spell act with an unknown owner", () => {
     const malformed = replaceActOwner(
       fixture.envelope,
@@ -3910,4 +3956,36 @@ describe("battle codec act ownership boundaries", () => {
     );
     expectEnvelopeDecodeFailure(malformed);
   });
+});
+
+test("object spell requests correlate exact distance with enemy proximity", () => {
+  const request = {
+    casterId: wizardId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      "object-sight-request",
+    ),
+    rangeFeet: movementFeet(120),
+    requiresAttackerSight: true,
+  };
+  const decode = (requirements: object) =>
+    Schema.decodeUnknownResult(BattleHoleSchema)({
+      ...baseHole("spell-object-requirements"),
+      kind: "objectTargetChoice",
+      sourceProcedureRef: request.sourceProcedureRef,
+      requiresTableSpatialFact: true,
+      spellObjectTargetSpatialFactRequest: { ...request, ...requirements },
+    });
+  expect(Result.isSuccess(decode({}))).toBe(true);
+  expect(
+    Result.isSuccess(
+      decode({
+        requiresExactDistance: true,
+        requiresEnemyProximityQualification: true,
+      }),
+    ),
+  ).toBe(true);
+  expect(Result.isFailure(decode({ requiresExactDistance: true }))).toBe(true);
+  expect(
+    Result.isFailure(decode({ requiresEnemyProximityQualification: true })),
+  ).toBe(true);
 });

@@ -426,13 +426,16 @@ const BattlePendingStartTurnOccurrenceSchema = Schema.Struct({
   occurrenceId: BattleStartTurnOccurrenceId,
   kind: Schema.Literals(BATTLE_START_TURN_OCCURRENCE_KINDS),
 });
-const BattlePendingTurnBoundaryRequestSchema = Schema.Union([
-  Schema.Struct({ kind: Schema.Literal("outgoingEndTurn") }),
+const BattlePendingTurnStartRequestMemberSchemas = [
   Schema.Struct({ kind: Schema.Literal("startTurnOccurrenceOrder") }),
   Schema.Struct({
     kind: Schema.Literal("startTurnOccurrence"),
     occurrence: BattlePendingStartTurnOccurrenceSchema,
   }),
+] as const;
+const BattlePendingTurnBoundaryRequestSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("outgoingEndTurn") }),
+  ...BattlePendingTurnStartRequestMemberSchemas,
 ]);
 export const BattlePendingProcedureSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("subjectResolution") }),
@@ -441,6 +444,11 @@ export const BattlePendingProcedureSchema = Schema.Union([
     endingActorId: CombatantId,
     sourceTurn: BattleStartTurnSourceTurnSchema,
     request: BattlePendingTurnBoundaryRequestSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("turnStart"),
+    sourceTurn: BattleStartTurnSourceTurnSchema,
+    request: Schema.Union(BattlePendingTurnStartRequestMemberSchemas),
   }),
 ]).annotate({ identifier: "BattlePendingProcedure" }) satisfies Schema.Codec<
   BattlePendingProcedure,
@@ -2454,6 +2462,13 @@ const BattleSpellSaveCoverSchema = Schema.Union([
   }),
 ]);
 
+const SpellObjectTargetSpatialFactRequestFields = {
+  casterId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  rangeFeet: MovementFeet,
+  requiresAttackerSight: Schema.Literal(true),
+};
+
 const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
   ...BattleHoleBaseFieldsSchema,
   kind: Schema.Literal("savingThrowOutcome"),
@@ -2615,13 +2630,18 @@ const BattleHolePayloadMembers = [
     sourceProcedureRef: BattleProcedureExecutionRef,
     requiresTableSpatialFact: Schema.Literal(true),
     spellObjectTargetSpatialFactRequest: Schema.optionalKey(
-      Schema.Struct({
-        casterId: CombatantId,
-        sourceProcedureRef: BattleProcedureExecutionRef,
-        rangeFeet: MovementFeet,
-        requiresExactDistance: Schema.Literal(true),
-        requiresEnemyProximityQualification: Schema.Literal(true),
-      }),
+      Schema.Union([
+        Schema.Struct({
+          ...SpellObjectTargetSpatialFactRequestFields,
+          requiresExactDistance: Schema.optionalKey(Schema.Never),
+          requiresEnemyProximityQualification: Schema.optionalKey(Schema.Never),
+        }),
+        Schema.Struct({
+          ...SpellObjectTargetSpatialFactRequestFields,
+          requiresExactDistance: Schema.Literal(true),
+          requiresEnemyProximityQualification: Schema.Literal(true),
+        }),
+      ]),
     ),
   }),
   pairedBattleHoleMember({
@@ -9251,6 +9271,7 @@ function serializedRuntimeCommandReferencePolicy(
       endConcentration: actorOwned,
       startSpellCasting: actorOwned,
       continueSpellCasting: actorOwned,
+      startTurn: actorOwned,
       endTurn: actorOwned,
       persistentAreaSaveConditionSave: actorOwned,
       directionalPersistentAreaDirectionChange: actorOwned,
@@ -9860,6 +9881,10 @@ function serializedPendingProcedureMatchesCheckpoint(input: {
           liveCombatantIds.has(sourceTurn.actorId)
         );
       },
+      turnStart: ({ sourceTurn }) =>
+        input.checkpoint.combatants.some(
+          (combatant) => combatant.combatantId === sourceTurn.actorId,
+        ),
     }),
   );
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Result } from "effect";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
-import { startBattle } from "./battle-reducer/api-lifecycle.ts";
+import { startBattle } from "./battle-start.ts";
 import {
   battleId,
   statBlockCreatureInit,

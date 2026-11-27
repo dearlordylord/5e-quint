@@ -105,6 +105,7 @@ export type McpBattleStateTransitionIssue =
       readonly to: McpBattleState["tag"];
     }
   | { readonly tag: "initialInitiativeSwapRejected"; readonly message: string }
+  | { readonly tag: "openingTurnStartRejected"; readonly message: string }
   | {
       readonly tag: "battleStateBattleOwnershipConflict";
       readonly expectedBattleId: BattleId;

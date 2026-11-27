@@ -21,6 +21,7 @@ import type {
   BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole,
   BattleTranslatingPersistentAreaSaveDamageTrigger,
   BattleStartTurnOccurrenceSequenceCheckpoint,
+  BattleTurnStartEntry,
   BattleConcentrationSavingThrowHole,
   BattleCreatureState,
   BattleFill,
@@ -169,7 +170,7 @@ export type TranslatingPersistentAreaMovementSaveDamageSequenceResult =
 type TranslatingPersistentAreaMovementReplayPlan =
   | {
       readonly kind: "turnBoundaryReplay";
-      readonly endingActorId: CombatantId;
+      readonly entry: BattleTurnStartEntry;
       readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
       readonly sequence: BattleStartTurnOccurrenceSequenceCheckpoint["sequence"];
       readonly completedPrefixHoleIds: BattleStartTurnOccurrenceSequenceCheckpoint["completedPrefixHoleIds"];
@@ -542,7 +543,7 @@ function sameTranslatingPersistentAreaMovementSaveDamagePosition(
 ): boolean {
   return (
     left.kind === right.kind &&
-    left.endingActorId === right.endingActorId &&
+    sameTurnStartEntry(left.entry, right.entry) &&
     sameStartTurnOccurrenceSequence(left.sequence, right.sequence) &&
     sameStartTurnSourceTurn(left.sourceTurn, right.sourceTurn) &&
     sameTranslatingPersistentAreaMovementChild(left.child, right.child) &&
@@ -552,6 +553,15 @@ function sameTranslatingPersistentAreaMovementSaveDamagePosition(
     ) &&
     sameRoundDurationCohort(left.roundDurationCohort, right.roundDurationCohort)
   );
+}
+
+function sameTurnStartEntry(
+  left: BattleTurnStartEntry,
+  right: BattleTurnStartEntry,
+): boolean {
+  return left.kind === "endTurn"
+    ? right.kind === "endTurn" && left.endingActorId === right.endingActorId
+    : right.kind === left.kind;
 }
 
 function sameReadonlyArray<T>(
@@ -1271,21 +1281,21 @@ function persistentAreaSourceTurnTranslationReplaySourceTurn(
   );
 }
 
-function persistentAreaSourceTurnTranslationReplayEndingActorId(
+function persistentAreaSourceTurnTranslationReplayEntry(
   replayPlan: TranslatingPersistentAreaMovementReplayPlan,
-): CombatantId {
+): BattleTurnStartEntry {
   return Match.value(replayPlan).pipe(
     byTranslatingPersistentAreaMovementReplayPlanKind(
       "turnBoundaryReplay",
-      ({ endingActorId }) => endingActorId,
+      ({ entry }) => entry,
     ),
     byTranslatingPersistentAreaMovementReplayPlanKind(
       "advancedPrefixAtCheckpoint",
-      ({ checkpoint }) => checkpoint.endingActorId,
+      ({ checkpoint }) => checkpoint.entry,
     ),
     byTranslatingPersistentAreaMovementReplayPlanKind(
       "advancedPrefixAfterCheckpoint",
-      ({ checkpoint }) => checkpoint.endingActorId,
+      ({ checkpoint }) => checkpoint.entry,
     ),
     Match.exhaustive,
   );
@@ -1323,9 +1333,7 @@ function persistentAreaNeedsHolesResult<
     kind: "incomingStartTurnOccurrence",
     state,
     subject,
-    endingActorId: persistentAreaSourceTurnTranslationReplayEndingActorId(
-      context.replayPlan,
-    ),
+    entry: persistentAreaSourceTurnTranslationReplayEntry(context.replayPlan),
     sourceTurn: persistentAreaSourceTurnTranslationReplaySourceTurn(
       context.replayPlan,
     ),
@@ -1347,13 +1355,13 @@ function persistentAreaReplayPosition(
             "turnBoundaryReplay",
             ({
               completedPrefixHoleIds,
-              endingActorId,
+              entry,
               roundDurationCohort,
               sequence,
               sourceTurn,
             }) => ({
               kind: "startTurnOccurrenceSequence" as const,
-              endingActorId,
+              entry,
               sequence,
               completedPrefixHoleIds,
               roundDurationCohort,

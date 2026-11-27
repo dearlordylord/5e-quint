@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 190,
-    "covered": 179,
+    "total": 191,
+    "covered": 180,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 150,
+      "battle": 151,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 179,
+      "covered": 180,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -6808,7 +6808,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core.qnt"
       ],
-      "reason": "The QNT owner offers the grant only to a creature with the feature that starts its turn in combat without Heroic Inspiration; giving it sets Heroic Inspiration and declining leaves it. turn-start-heroic-inspiration finds the feature's support procedure, builds the choice hole and applies the choice on the battle creature, whose Heroic Inspiration settlement writes back; the turn boundary offers it as a start-turn occurrence the player orders with the others. Known gap: startBattle begins the opening turn without any turn-boundary start-turn occurrences (Death Saving Throw, Recharge and the rest included), so a Heroic Warrior who takes the first turn of a battle is not offered the grant at the start of that turn, though RAW says whenever it starts its turn.",
+      "reason": "The QNT owner offers the grant only to a creature with the feature that starts its turn in combat without Heroic Inspiration; giving it sets Heroic Inspiration and declining leaves it. turn-start-heroic-inspiration finds the feature's support procedure, builds the choice hole and applies the choice on the battle creature, whose Heroic Inspiration settlement writes back; the turn boundary offers it as a start-turn occurrence the player orders with the others. The battle's opening turn starts through the same turn-start procedure, so a Heroic Warrior who takes the first turn gets the offer as well.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/turn-start-heroic-inspiration.ts"
@@ -6820,6 +6820,39 @@
         ".references/srd-5.2.1/rules-glossary.md#Heroic-Inspiration"
       ],
       "title": "A creature whose feature lets it give itself Heroic Inspiration in combat can do so when it starts its turn without it, in the order the player chooses among start-of-turn effects"
+    },
+    {
+      "id": "BATTLE.COMPOSITION.SHARED_TURN_START",
+      "kind": "composition",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/combat-turn-start-heroic-inspiration.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/turn-start-lifecycle-core.qnt"
+      ],
+      "reason": "The QNT owner runs the same starting-turn steps (prepare the starting turn, then resolve its start-turn occurrences) for both entries; End Turn first finishes the outgoing turn and advances to the next participant, and ticks round durations only when the round wraps. A pending turn start admits only the Start Turn subject. turn-boundary-lifecycle shares prepareStartingTurn and the start-turn occurrence cohort between End Turn and the startTurn runtime command; battle-start starts the opening turn once Initiative is final, leaving it pending when its start needs a roll or choice. The contract tests cover the opening Heroic Warrior offer, its order with a Death Saving Throw, the refusal of other subjects while pending, and an Initiative Swap that changes the first participant. Character Battle startup admits the complete initial companion roster and finalizes its Initiative before calling the same opening owner. The public startup contract witnesses cover a companion taking the first turn and ordinary later companion admission preserving the published actor, round, resources and pending opening question.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-start.ts",
+        "packages/character-battle-runtime/src/companion-handoff.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/playing-the-game.md#Combat",
+        ".references/srd-5.2.1/playing-the-game.md#Death-Saving-Throws",
+        ".references/srd-5.2.1/classes.md#Level-10-Heroic-Warrior",
+        ".references/srd-5.2.1/rules-glossary.md#Simultaneous-Effects"
+      ],
+      "title": "Every turn starts through one turn-start procedure, whether the battle's opening or End Turn reaches it; only End Turn finishes an outgoing turn and ticks round durations when the round wraps"
     },
     {
       "id": "BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE",
@@ -13986,6 +14019,18 @@
       "role": "proof-only"
     },
     {
+      "evidence": "Owns which steps a turn boundary runs for each turn-start entry (the battle's opening or End Turn), and which subjects a pending turn start admits, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.COMPOSITION.SHARED_TURN_START"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/turn-start-lifecycle-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover the opening running only the shared turn start, End Turn reaching the same turn start, the round-duration tick only on a wrapping End Turn, and subject admission while a turn start is pending.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/turn-start-lifecycle-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "Owns when a creature can change how it holds its weapon between one and two hands, independently of battle or authored identity.",
       "obligationIds": ["BATTLE.EQUIPMENT.WEAPON_GRIP_CHANGE"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-grip-change-core.qnt",
@@ -16074,6 +16119,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/turn-start-lifecycle-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/turn-start-lifecycle-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -21727,6 +21782,29 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "constant-def",
+        "list",
+        "bool",
+        "if-expression",
+        "comparison",
+        "pattern-match"
+      ],
+      "obligationId": "BATTLE.COMPOSITION.SHARED_TURN_START",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/turn-start-lifecycle-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/turn-start-lifecycle-core.qnt"
       ],
       "status": "generation-subset-clean"
     },

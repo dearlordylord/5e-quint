@@ -128,6 +128,7 @@ export const BATTLE_SUBJECT_EXPOSURE = {
   "runtimeCommand.reportReadyTrigger": tool("report_ready_trigger"),
   "runtimeCommand.retaliationAttack": tool("attack"),
   "runtimeCommand.standFromProne": tool("stand_up"),
+  "runtimeCommand.startTurn": tool("start_turn"),
   spawnedCompanionSharedSenses: tool("share_companion_senses"),
   "spawnedCompanionTouchSpellProxy.cast": tool("cast_spell_through_companion"),
   unitFeature: refineOperations(

@@ -25,8 +25,8 @@ import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts"
 import {
   addBattleRuntimeCombatant,
   battleInitializationIssueMessage,
-  startBattle,
 } from "./battle-reducer/api-lifecycle.ts";
+import { startBattle } from "./battle-start.ts";
 import {
   unitLibrary,
   characterSeed,

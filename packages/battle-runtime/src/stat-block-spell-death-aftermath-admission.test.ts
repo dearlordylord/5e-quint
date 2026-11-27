@@ -4,7 +4,7 @@ import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Option, Result } from "effect";
 import { expect, it } from "vitest";
-import { startBattle } from "./battle-reducer/api-lifecycle.ts";
+import { startBattle } from "./battle-start.ts";
 import {
   battleId,
   statBlockCreatureInit,

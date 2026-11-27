@@ -246,4 +246,9 @@ export const CHATGPT_BATTLE_TOOLS = {
     description:
       "Retain the existing start_battle operation and its current input contract.",
   },
+  start_turn: {
+    family: "battleActions",
+    description:
+      "Use when the battle's only act is Start Turn. Resolve the active combatant's start-of-turn effects, such as a Death Saving Throw or a choice to gain Heroic Inspiration, and request their rolls or choices.",
+  },
 } as const;

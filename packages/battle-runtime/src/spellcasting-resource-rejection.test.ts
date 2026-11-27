@@ -4,7 +4,7 @@ import { PositiveInteger } from "@dnd/shared/types";
 import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
 import { Result, Schema } from "effect";
 import { expect, test } from "vitest";
-import { startBattle } from "./battle-reducer/api-lifecycle.ts";
+import { startBattle } from "./battle-start.ts";
 import {
   spendSpellCastResources,
   spendStatBlockSpellInvocationResource,

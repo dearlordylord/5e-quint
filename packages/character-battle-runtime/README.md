@@ -18,18 +18,20 @@ Owned boundary functions:
 - `composeBattleRoster` admits a non-empty arbitrary roster in caller order,
   retaining whether each successful entry originated from a Character Sheet or
   Stat Block and accumulating identity, source, and projection issues without
-  exposing partial battle state. `composeBattleCompanionRoster` performs the
-  dependent companion admissions against the resulting runtime session and
-  likewise retains each indexed issue until the owning tool decides whether to
-  commit.
+  exposing partial battle state. `startBattleWithCompanionRoster` performs the
+  dependent companion admissions from `BattleStartInput` and opens the first
+  turn only after the complete roster establishes Initiative. It returns no
+  partial session on failure. A running session cannot be supplied as an initial
+  roster. Individual companion admission during battle preserves the current
+  actor, round and turn resources through the canonical Initiative insertion.
 - `characterSheetBattleInit` projects an existing Character Sheet plus caller
   battle facts into battle-runtime creature initialization. Canonical
   class-spell-list selections without an installed Spell Definition remain on
   the Character Sheet but are omitted from the battle spellcasting projection;
   unknown identities outside that source spell list are rejected.
 - Callers inspect the `composeBattleRoster` admissions and issues, then pass the
-  admitted combatants to `@dnd/battle-runtime` `startBattle`; this package does
-  not retain a second battle-start wrapper or session registry.
+  admitted combatants to Battle. Initial companion composition owns completing
+  that roster before Battle starts its opening turn; no session registry is kept.
 - `battleCreatureInitFromCharacterBuild` accepts an `armorClassBaseChoice` when
   the build has multiple available class-feature AC formulas; the choice is
   forwarded to Character Sheet AC projection before battle state is created.
