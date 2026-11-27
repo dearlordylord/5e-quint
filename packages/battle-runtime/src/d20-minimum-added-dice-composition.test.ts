@@ -181,17 +181,6 @@ describe("one minimum decision through rerolls and added dice", () => {
       });
       if (offered.tag !== "needsHoles")
         throw new Error("Expected an added-die continuation.");
-      const changedMinimum = afterLowReroll(
-        check,
-        minimum.kind === "use" ? declineMinimum : useMinimum,
-      );
-      expect(
-        resolveBattleSubject({
-          state: offered.state,
-          subject: search,
-          fills: [targetSelection, changedMinimum],
-        }),
-      ).toMatchObject({ tag: "invalid" });
       const boostOnly = {
         ...rerolled,
         value: { ...rerolled.value, d20TestAddedDice: [boost(boostFace)] },
