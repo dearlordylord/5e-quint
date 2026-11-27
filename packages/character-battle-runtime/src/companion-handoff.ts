@@ -487,7 +487,7 @@ function openInitialBattleRoster(
     initialCombatantOrder,
     emptyRosterMessage: "Battle startup requires combatants.",
   });
-  if (Result.isFailure(initiative)) return initiative;
+  if (Result.isFailure(initiative)) return Result.fail(initiative.failure);
   return startBattleOpeningTurn(
     restoreBattleRuntimeSession({
       ...retainBattleRuntimeSession(session),
