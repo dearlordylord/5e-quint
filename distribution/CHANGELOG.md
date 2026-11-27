@@ -2,6 +2,14 @@
 
 ## 0.2.0 — unreleased
 
+- Start the battle's opening turn like every other turn, so the first
+  participant gets its start-of-turn effects, such as a Death Saving Throw at
+  0 Hit Points or Heroic Warrior's Heroic Inspiration. When that start needs a
+  roll or choice, the battle opens with Start Turn as its only Act and a
+  `turnStart` pending procedure; MCP exposes it as `start_turn`. Hosts that
+  admit initial companions use `startBattleWithCompanionRoster`, replacing
+  `composeBattleCompanionRoster`; it completes the roster before opening the turn. `finishInitialInitiativeSetup` now returns a `Result`.
+
 - Expose the required spell-area input shape and explicit object facts in Battle
   requests. Retain invalid requests for correction, and add safe cancellation of
   unanswered action selections without reverting committed effects.

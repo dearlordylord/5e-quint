@@ -169,6 +169,8 @@ const qntOwnerRoles = new Set([
 const qntRegistryExemptionCategoryDescriptions = {
   "leaf-type-vocabulary":
     "A leaf QNT module that carries shared type/tag vocabulary or constants and is intentionally not an obligation owner.",
+  "pure-algebra-leaf":
+    "A leaf QNT module that defines a reusable, identity-independent pure algebra primitive consumed by registered semantic-core owners without owning the surrounding rule slice.",
   "proof-only-example":
     "A proof, example, invariant, or inductive QNT companion that is not a direct rules-kernel owner row.",
   "retired-test-companion":
@@ -182,6 +184,13 @@ const qntRegistryExemptionCategories = new Set(
 );
 
 const qntRegistryExemptions = [
+  {
+    ownerPath:
+      "packages/shared-algebras/proofs/rule-core/d20-test-roll-mode.qnt",
+    category: "pure-algebra-leaf",
+    evidence:
+      "Shared D20 roll-mode vocabulary and pure source reduction imported by registered attack and D20 circumstance owners; range and circumstance sources remain owned by those resolvers.",
+  },
   {
     ownerPath:
       "packages/battle-runtime/battle-runtime-feature-bridge-examples.qnt",

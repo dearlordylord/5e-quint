@@ -57,6 +57,7 @@ function unknownSubjectKind(tag, discriminatorValue) {
 
 function runtimeCommandSubjectKind(discriminatorValue) {
   switch (discriminatorValue) {
+    case "startTurn":
     case "endTurn":
       return "runtimeTurnBoundary";
     case "move":

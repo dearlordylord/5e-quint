@@ -1,5 +1,10 @@
-// KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.SETTLEMENT CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
+// KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.SETTLEMENT CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS BATTLE.COMPOSITION.SHARED_TURN_START
 import {
+  admitBattle,
+  createInitialInitiativeForCombatants,
+  retainBattleRuntimeSession,
+  restoreBattleRuntimeSession,
+  startBattleOpeningTurn,
   admitCompanionToBattle,
   admitCompanionToBattleRuntime,
   spawnedCompanionEntryForOwner,
@@ -14,6 +19,8 @@ import {
   type CompanionBattleStoredAdmissionManifestation,
   type BattleState,
   type BattleRuntimeSession,
+  type BattleStartInput,
+  type BattleInitializationIssue,
   type RetainedCompanionBattleSelection,
   type BattleTablePositionId,
   type CombatantId,
@@ -65,7 +72,6 @@ export type CharacterSheetCompanionBattleAdmissionInput = {
     BattleCompanionPlacement,
     { readonly kind: "unoccupiedSpaceWithinSpellRange" }
   >;
-  readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
   readonly statBlockCatalog: StatBlockCatalog;
 };
 
@@ -92,7 +98,11 @@ export type BattleCompanionRosterRequest = {
   readonly positionId?: BattleTablePositionId;
 };
 
-export type BattleCompanionRosterIssue =
+export type BattleRosterStartIssue =
+  | {
+      readonly kind: "battleInitialization";
+      readonly issue: BattleInitializationIssue;
+    }
   | {
       readonly kind: "duplicateCompanionOwnerSource";
       readonly reason: "duplicateOwnerSource";
@@ -134,28 +144,33 @@ export type BattleCompanionRosterIssue =
 type CharacterSheetBattleHandoffIssues =
   ReadonlyNonEmptyArray<CharacterSheetBattleHandoffIssue>;
 
-type BattleCompanionRosterDependentIssue = Exclude<
+type BattleCompanionRosterIssue = Exclude<
+  BattleRosterStartIssue,
+  { readonly kind: "battleInitialization" }
+>;
+
+type BattleRosterStartDependentIssue = Exclude<
   BattleCompanionRosterIssue,
   { readonly kind: "companionAdmission" }
 >;
 
-export type BattleCompanionRosterComposition =
+export type BattleRosterStartResult =
   | {
       readonly tag: "admitted";
       readonly session: BattleRuntimeSession;
     }
   | {
       readonly tag: "rejected";
-      readonly issues: ReadonlyNonEmptyArray<BattleCompanionRosterIssue>;
+      readonly issues: ReadonlyNonEmptyArray<BattleRosterStartIssue>;
     }
   | {
       readonly tag: "dependentUnavailable";
-      readonly issues: readonly BattleCompanionRosterDependentIssue[];
+      readonly issues: readonly BattleRosterStartDependentIssue[];
     };
 
-type BattleCompanionRosterIssueCollection = {
+type BattleRosterStartIssueCollection = {
   readonly issues: BattleCompanionRosterIssue[];
-  readonly dependentIssues: BattleCompanionRosterDependentIssue[];
+  readonly dependentIssues: BattleRosterStartDependentIssue[];
 };
 
 type BattleCompanionRosterIndexes = {
@@ -181,15 +196,12 @@ type BattleCompanionRosterRequestAdmission =
   | {
       readonly tag: "rejected";
       readonly issues: ReadonlyNonEmptyArray<
-        Extract<
-          BattleCompanionRosterIssue,
-          { readonly kind: "companionAdmission" }
-        >
+        Extract<BattleRosterStartIssue, { readonly kind: "companionAdmission" }>
       >;
     };
 
-function appendBattleCompanionRosterIssue(
-  collection: BattleCompanionRosterIssueCollection,
+function appendBattleRosterStartIssue(
+  collection: BattleRosterStartIssueCollection,
   issue: BattleCompanionRosterIssue,
 ): void {
   collection.issues.push(issue);
@@ -202,13 +214,13 @@ function indexBattleCompanionRosterOwners(input: {
   readonly owners: readonly BattleCompanionRosterOwner[];
 }): {
   readonly indexes: BattleCompanionRosterIndexes;
-  readonly issues: BattleCompanionRosterIssueCollection;
+  readonly issues: BattleRosterStartIssueCollection;
 } {
   const owners = new Map<
     CharacterSheet["characterId"],
     BattleCompanionRosterOwner
   >();
-  const issues: BattleCompanionRosterIssueCollection = {
+  const issues: BattleRosterStartIssueCollection = {
     issues: [],
     dependentIssues: [],
   };
@@ -218,7 +230,7 @@ function indexBattleCompanionRosterOwners(input: {
       owners.set(owner.characterId, owner);
       continue;
     }
-    appendBattleCompanionRosterIssue(issues, {
+    appendBattleRosterStartIssue(issues, {
       kind: "duplicateCompanionOwnerSource",
       reason: "duplicateOwnerSource",
       ownerIndex: owner.index,
@@ -240,11 +252,11 @@ function registerBattleCompanionRosterOwner(
   index: number,
   request: BattleCompanionRosterRequest,
   indexes: BattleCompanionRosterIndexes,
-  issues: BattleCompanionRosterIssueCollection,
+  issues: BattleRosterStartIssueCollection,
 ): boolean {
   const firstOwnerIndex = indexes.ownerIndexes.get(request.ownerCharacterId);
   if (firstOwnerIndex !== undefined) {
-    appendBattleCompanionRosterIssue(issues, {
+    appendBattleRosterStartIssue(issues, {
       kind: "duplicateCompanionOwner",
       reason: "duplicateOwner",
       index,
@@ -261,14 +273,14 @@ function registerBattleCompanionRosterCombatant(
   index: number,
   request: BattleCompanionRosterRequest,
   indexes: BattleCompanionRosterIndexes,
-  issues: BattleCompanionRosterIssueCollection,
+  issues: BattleRosterStartIssueCollection,
 ): boolean {
   const companionCombatantId = request.companionCombatantId;
   if (companionCombatantId === undefined) return false;
   const firstCompanionIndex =
     indexes.companionIndexes.get(companionCombatantId);
   if (firstCompanionIndex !== undefined) {
-    appendBattleCompanionRosterIssue(issues, {
+    appendBattleRosterStartIssue(issues, {
       kind: "duplicateCompanionCombatantId",
       reason: "duplicateCombatantId",
       index,
@@ -285,7 +297,7 @@ function registerBattleCompanionRosterRequest(input: {
   readonly index: number;
   readonly request: BattleCompanionRosterRequest;
   readonly indexes: BattleCompanionRosterIndexes;
-  readonly issues: BattleCompanionRosterIssueCollection;
+  readonly issues: BattleRosterStartIssueCollection;
 }): BattleCompanionRosterRequestRegistration {
   const duplicateOwner = registerBattleCompanionRosterOwner(
     input.index,
@@ -301,7 +313,7 @@ function registerBattleCompanionRosterRequest(input: {
   );
   const owner = input.indexes.owners.get(input.request.ownerCharacterId);
   if (owner === undefined) {
-    appendBattleCompanionRosterIssue(input.issues, {
+    appendBattleRosterStartIssue(input.issues, {
       kind: "companionOwnerUnavailable",
       reason: "ownerNotInRoster",
       index: input.index,
@@ -329,7 +341,6 @@ function admitBattleCompanionRosterRequest(input: {
   readonly owner: BattleCompanionRosterOwner;
   readonly request: BattleCompanionRosterRequest;
   readonly unitLibrary: UnitCatalog;
-  readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
   readonly statBlockCatalog: StatBlockCatalog;
   readonly index: number;
 }): BattleCompanionRosterRequestAdmission {
@@ -352,7 +363,6 @@ function admitBattleCompanionRosterRequest(input: {
             kind: "unoccupiedSpaceWithinSpellRange" as const,
             positionId: input.request.positionId,
           },
-    initialCombatantOrder: input.initialCombatantOrder,
     statBlockCatalog: input.statBlockCatalog,
   });
   if (Result.isSuccess(admitted)) {
@@ -380,10 +390,9 @@ function admitBattleCompanionRosterRequest(input: {
 function admitBattleCompanionRosterRequests(input: {
   readonly session: BattleRuntimeSession | undefined;
   readonly indexes: BattleCompanionRosterIndexes;
-  readonly issues: BattleCompanionRosterIssueCollection;
+  readonly issues: BattleRosterStartIssueCollection;
   readonly requests: readonly BattleCompanionRosterRequest[];
   readonly unitLibrary: UnitCatalog;
-  readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
   readonly statBlockCatalog: StatBlockCatalog;
 }): BattleRuntimeSession | undefined {
   let session = input.session;
@@ -401,13 +410,12 @@ function admitBattleCompanionRosterRequests(input: {
       owner: registration.owner,
       request,
       unitLibrary: input.unitLibrary,
-      initialCombatantOrder: input.initialCombatantOrder,
       statBlockCatalog: input.statBlockCatalog,
       index,
     });
     if (admitted.tag === "rejected") {
       for (const issue of admitted.issues) {
-        appendBattleCompanionRosterIssue(input.issues, issue);
+        appendBattleRosterStartIssue(input.issues, issue);
       }
       continue;
     }
@@ -416,34 +424,75 @@ function admitBattleCompanionRosterRequests(input: {
   return session;
 }
 
-export function composeBattleCompanionRoster(input: {
-  readonly session: BattleRuntimeSession | undefined;
+/**
+ * Admit the complete initial roster before starting its opening turn. Accept
+ * initialization inputs, so an already-started session cannot enter this path.
+ */
+export function startBattleWithCompanionRoster(input: {
+  readonly battle: BattleStartInput | undefined;
+  readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
   readonly owners: readonly BattleCompanionRosterOwner[];
   readonly requests: readonly BattleCompanionRosterRequest[];
   readonly unitLibrary: UnitCatalog;
-  readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
   readonly statBlockCatalog: StatBlockCatalog;
-}): BattleCompanionRosterComposition {
+}): BattleRosterStartResult {
   const indexed = indexBattleCompanionRosterOwners({ owners: input.owners });
+  const admitted =
+    input.battle === undefined
+      ? Result.succeed(undefined)
+      : admitBattle(input.battle);
   const session = admitBattleCompanionRosterRequests({
-    session: input.session,
+    session: Result.isSuccess(admitted) ? admitted.success : undefined,
     indexes: indexed.indexes,
     issues: indexed.issues,
     requests: input.requests,
     unitLibrary: input.unitLibrary,
-    initialCombatantOrder: input.initialCombatantOrder,
     statBlockCatalog: input.statBlockCatalog,
   });
+  if (Result.isFailure(admitted)) {
+    return {
+      tag: "rejected",
+      issues: [
+        { kind: "battleInitialization", issue: admitted.failure },
+        ...indexed.issues.issues,
+      ],
+    };
+  }
   if (session === undefined) {
     return {
       tag: "dependentUnavailable",
       issues: indexed.issues.dependentIssues,
     };
   }
-  if (!isReadonlyArrayNonEmpty(indexed.issues.issues)) {
-    return { tag: "admitted", session };
+  if (isReadonlyArrayNonEmpty(indexed.issues.issues)) {
+    return { tag: "rejected", issues: indexed.issues.issues };
   }
-  return { tag: "rejected", issues: indexed.issues.issues };
+  const opened = openInitialBattleRoster(session, input.initialCombatantOrder);
+  return Result.isFailure(opened)
+    ? {
+        tag: "rejected",
+        issues: [{ kind: "battleInitialization", issue: opened.failure }],
+      }
+    : { tag: "admitted", session: opened.success };
+}
+
+/** The unpublished roster is complete; now its table order can be established. */
+function openInitialBattleRoster(
+  session: BattleRuntimeSession,
+  initialCombatantOrder: ReadonlyMap<CombatantId, number>,
+): Result.Result<BattleRuntimeSession, BattleInitializationIssue> {
+  const initiative = createInitialInitiativeForCombatants({
+    combatants: [...session.state.combatants.values()],
+    initialCombatantOrder,
+    emptyRosterMessage: "Battle startup requires combatants.",
+  });
+  if (Result.isFailure(initiative)) return Result.fail(initiative.failure);
+  return startBattleOpeningTurn(
+    restoreBattleRuntimeSession({
+      ...retainBattleRuntimeSession(session),
+      state: { ...session.state, initiative: initiative.success },
+    }),
+  );
 }
 
 export function admitCharacterSheetCompanionToBattle(
@@ -520,7 +569,6 @@ function admitCharacterSheetCompanionToBattleWithIssues(
     protocol: sheetCompanion.companion.protocol,
     catalog: input.statBlockCatalog,
     formEligibility: manifestation.success.formEligibility,
-    initialCombatantOrder: input.initialCombatantOrder,
   };
   if (manifestation.success.tag === "embodiedOutsideBattle") {
     return admitProjectedCharacterSheetCompanion(input, {

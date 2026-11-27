@@ -669,3 +669,5 @@
 {"unitId":"species_gnome_gnomish_cunning","evidence":{"tag":"deterministic-admission-projection","taskId":"GNOME-GNOMISH-CUNNING","ownerPath":"packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"}}
 {"unitId":"mastery_graze","evidence":{"tag":"deterministic-admission-projection","taskId":"GH530-WEAPON-MASTERY-GRAZE","ownerPath":"packages/battle-runtime/src/battle-runtime-weapon-mastery-graze.test.ts"}}
 {"unitId":"mastery_graze","evidence":{"tag":"selected-identity-replay","taskId":"GH530-WEAPON-MASTERY-GRAZE","ownerPath":"packages/battle-runtime/src/weapon-mastery-graze-selected-identity.test.ts"}}
+{"unitId":"rogue_reliable_talent","evidence":{"tag":"deterministic-admission-projection","taskId":"GH695-D20-TEST-DIE-MINIMUM","ownerPath":"packages/character-battle-runtime/src/rogue-reliable-talent-sdk-handoff.test.ts"}}
+{"unitId":"rogue_reliable_talent","evidence":{"tag":"selected-identity-replay","taskId":"GH695-D20-TEST-DIE-MINIMUM","ownerPath":"packages/character-battle-runtime/src/rogue-reliable-talent-sdk-handoff.test.ts"}}

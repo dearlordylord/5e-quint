@@ -49,6 +49,7 @@ export const CHATGPT_BATTLE_EXECUTION_TOOLS = {
   shake_awake: defineChatGptBattleTool("shake_awake"),
   shove: defineChatGptBattleTool("shove"),
   stand_up: defineChatGptBattleTool("stand_up"),
+  start_turn: defineChatGptBattleTool("start_turn"),
   adjust_spell_altitude: defineChatGptBattleTool("adjust_spell_altitude"),
   allocate_ongoing_spell_damage: defineChatGptBattleTool(
     "allocate_ongoing_spell_damage",

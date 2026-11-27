@@ -1,12 +1,13 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
 // Every decision a D20 Test other than an attack roll takes after its roll:
 // its rerolls (d20-test-outcome-rerolls.ts), then the dice added to the roll
-// the rerolls leave (d20-test-added-dice.ts, ASSUMPTIONS.md A67). A roller
+// the rerolls leave (d20-test-added-dice.ts, ASSUMPTIONS.md A68). A roller
 // with a reroll source to decide on is asked for that first; the hole asks
 // for the added dice only once every reroll is decided. Each owner that
 // checks a saving throw or an ability check before it resolves goes through
 // here, so the two stages can't be taken out of order.
 
+import type { D20TestDieMinimumFace } from "./d20-test-die-minimum.ts";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { DifficultyClass } from "@dnd/shared/types";
 
@@ -162,6 +163,7 @@ export function abilityCheckAfterRollDecisions(
   input: D20TestAfterRollContext & {
     readonly value: D20TestAbilityCheckValue;
     readonly requiredRollMode: AttackRollMode | undefined;
+    readonly dieMinimum: D20TestDieMinimumFace | undefined;
     /** The DC the discovered hole states; undefined without one. */
     readonly dc: DifficultyClass | undefined;
   },

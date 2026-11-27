@@ -7,6 +7,7 @@ module attackDamageCompositionExamples {
   import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
   import hitPointRecovery.* from "./hit-point-recovery"
   import damageComponentAdjustments.* from "./damage-component-adjustments"
+  import d20TestRollMode.* from "./d20-test-roll-mode"
   import attackRollDamageDiceCore.* from "./attack-roll-damage-dice-core"
   import attackDamageComposition.* from "./attack-damage-composition"
 
@@ -43,6 +44,65 @@ module attackDamageCompositionExamples {
     assert(weaponGripHandsHeld(OneHandedGrip) == 1),
     assert(weaponGripHandsHeld(TwoHandedGrip) == 2),
   }
+
+  pure val noAttackRollModeSources: D20TestRollModeSources = {
+    advantage: false,
+    disadvantage: false,
+  }
+
+  pure val advantageAttackRollModeSources: D20TestRollModeSources = {
+    advantage: true,
+    disadvantage: false,
+  }
+
+  pure def meleeTargetRangeFacts(distanceFeet: int): AttackTargetRangeFacts = {
+    capability: MeleeReachRangeCapability({ reachFeet: 5 }),
+    distanceFeet: distanceFeet,
+  }
+
+  pure def rangedTargetRangeFacts(distanceFeet: int): AttackTargetRangeFacts = {
+    capability: NormalAndLongRangedRangeCapability({
+      normalRangeFeet: 30,
+      longRangeFeet: 120,
+    }),
+    distanceFeet: distanceFeet,
+  }
+
+  pure def rangedAttackWithRangeFacts(
+    targetRangeFacts: AttackTargetRangeFacts,
+    rollModeSources: D20TestRollModeSources,
+  ): AttackProcedureResult =
+    resolveAttackProcedure(
+      ActionAvailable,
+      targetRangeFacts,
+      { naturalD20: 12, total: 17, armorClass: 15, criticalThreshold: 20 },
+      rollModeSources,
+      {
+        kind: PlayerCharacter,
+        hitPoints: 10,
+        hitPointMaximum: 12,
+        temporaryHitPoints: 0,
+        dead: false,
+        unconscious: false,
+      },
+      {
+        attackKind: RangedAttack,
+        damageType: PiercingDamage,
+        rolledDamage: 4,
+        damageModifier: 0,
+        targetAdjustments: noDamageAdjustmentFacts,
+        disposition: OrdinaryAttackDamage,
+      }
+    )
+
+  pure def rangedAttackAtDistance(
+    distanceFeet: int,
+    rollModeSources: D20TestRollModeSources,
+  ): AttackProcedureResult =
+    rangedAttackWithRangeFacts(
+      rangedTargetRangeFacts(distanceFeet),
+      rollModeSources,
+    )
 
   run test_natural_one_misses_regardless_of_total = {
     val outcome = resolveAttackRoll({
@@ -268,9 +328,9 @@ module attackDamageCompositionExamples {
   run test_ordinary_attack_damage_composes_adjustments_and_hp_damage = {
     val result = resolveAttackProcedure(
       ActionAvailable,
-      WithinMeleeReach,
-      5,
+      meleeTargetRangeFacts(5),
       { naturalD20: 12, total: 17, armorClass: 15, criticalThreshold: 20 },
+      noAttackRollModeSources,
       {
         kind: PlayerCharacter,
         hitPoints: 10,
@@ -304,9 +364,9 @@ module attackDamageCompositionExamples {
   run test_adjacent_unconscious_ordinary_attack_hit_is_critical = {
     val result = resolveAttackProcedure(
       ActionAvailable,
-      WithinMeleeReach,
-      5,
+      meleeTargetRangeFacts(5),
       { naturalD20: 10, total: 17, armorClass: 15, criticalThreshold: 20 },
+      noAttackRollModeSources,
       {
         kind: PlayerCharacter,
         hitPoints: 6,
@@ -341,9 +401,9 @@ module attackDamageCompositionExamples {
     }
     val result = resolveAttackProcedure(
       ActionAvailable,
-      WithinMeleeReach,
-      5,
+      meleeTargetRangeFacts(5),
       { naturalD20: 2, total: 8, armorClass: 15, criticalThreshold: 20 },
+      noAttackRollModeSources,
       vitals,
       {
         attackKind: MeleeAttack,
@@ -364,9 +424,9 @@ module attackDamageCompositionExamples {
   run test_out_of_range_attack_does_not_spend_action = {
     val result = resolveAttackProcedure(
       ActionAvailable,
-      BeyondRange,
-      100,
+      meleeTargetRangeFacts(100),
       { naturalD20: 12, total: 17, armorClass: 15, criticalThreshold: 20 },
+      noAttackRollModeSources,
       {
         kind: PlayerCharacter,
         hitPoints: 10,
@@ -390,9 +450,9 @@ module attackDamageCompositionExamples {
   run test_melee_knock_out_disposition_composes_qcore3 = {
     val result = resolveAttackProcedure(
       ActionAvailable,
-      WithinMeleeReach,
-      5,
+      meleeTargetRangeFacts(5),
       { naturalD20: 12, total: 17, armorClass: 15, criticalThreshold: 20 },
+      noAttackRollModeSources,
       {
         kind: MonsterCreature,
         hitPoints: 4,
@@ -436,5 +496,76 @@ module attackDamageCompositionExamples {
       disposition: KnockOutAttackDamage,
     }
     assert(not(attackDamageDispositionIsLegal(vitals, damageAmountBeforeHitPoints(facts), facts)))
+  }
+
+  run test_attack_at_normal_range_endpoint_has_normal_roll_mode = {
+    val rangeResolution = resolveAttackRangeFacts(
+      RangedAttack,
+      rangedTargetRangeFacts(30),
+    )
+    val result = rangedAttackAtDistance(30, noAttackRollModeSources)
+    all {
+      assert(rangeResolution == AttackRangeResolved({ band: WithinNormalRange })),
+      assert(result.attackRollMode == NormalD20TestRoll),
+      assert(result.actionQuota == ActionSpent),
+    }
+  }
+
+  run test_single_ranged_capability_admits_its_endpoint_without_disadvantage = {
+    val rangeFacts: AttackTargetRangeFacts = {
+      capability: SingleRangedRangeCapability({ rangeFeet: 30 }),
+      distanceFeet: 30,
+    }
+    val rangeResolution = resolveAttackRangeFacts(RangedAttack, rangeFacts)
+    val result = rangedAttackWithRangeFacts(rangeFacts, noAttackRollModeSources)
+    all {
+      assert(rangeResolution == AttackRangeResolved({ band: WithinSingleRange })),
+      assert(result.attackRollMode == NormalD20TestRoll),
+      assert(result.actionQuota == ActionSpent),
+    }
+  }
+
+  run test_attack_beyond_normal_range_has_disadvantage = {
+    val rangeResolution = resolveAttackRangeFacts(
+      RangedAttack,
+      rangedTargetRangeFacts(60),
+    )
+    val result = rangedAttackAtDistance(60, noAttackRollModeSources)
+    all {
+      assert(rangeResolution == AttackRangeResolved({ band: WithinLongRange })),
+      assert(result.attackRollMode == DisadvantageD20TestRoll),
+      assert(result.actionQuota == ActionSpent),
+    }
+  }
+
+  run test_attack_at_long_range_endpoint_has_disadvantage = {
+    val rangeResolution = resolveAttackRangeFacts(
+      RangedAttack,
+      rangedTargetRangeFacts(120),
+    )
+    val result = rangedAttackAtDistance(120, noAttackRollModeSources)
+    all {
+      assert(rangeResolution == AttackRangeResolved({ band: WithinLongRange })),
+      assert(result.attackRollMode == DisadvantageD20TestRoll),
+      assert(result.actionQuota == ActionSpent),
+    }
+  }
+
+  run test_attack_beyond_long_range_is_not_admitted = {
+    val rangeResolution = resolveAttackRangeFacts(
+      RangedAttack,
+      rangedTargetRangeFacts(121),
+    )
+    val result = rangedAttackAtDistance(121, noAttackRollModeSources)
+    all {
+      assert(rangeResolution == AttackRangeResolved({ band: BeyondRange })),
+      assert(not(legalAttackTargetFact(RangedAttack, rangeResolution))),
+      assert(result.actionQuota == ActionAvailable),
+    }
+  }
+
+  run test_long_range_disadvantage_cancels_with_advantage = {
+    val result = rangedAttackAtDistance(60, advantageAttackRollModeSources)
+    assert(result.attackRollMode == NormalD20TestRoll)
   }
 }

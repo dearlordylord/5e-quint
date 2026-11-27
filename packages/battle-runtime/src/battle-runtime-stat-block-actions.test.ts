@@ -3729,6 +3729,7 @@ describe("battle runtime: Stat Block actions", () => {
         currentActorId: goblinId,
         turn: { actionResources: [] },
         combatants: [
+          { combatantId: goblinId, hp: 10 },
           {
             combatantId: fighterId,
             hp: 0,
@@ -3741,7 +3742,6 @@ describe("battle runtime: Stat Block actions", () => {
             },
             conditions: expect.arrayContaining(["unconscious", "prone"]),
           },
-          { combatantId: goblinId, hp: 10 },
         ],
       },
     });

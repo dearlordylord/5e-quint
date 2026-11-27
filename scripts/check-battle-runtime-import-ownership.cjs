@@ -63,6 +63,7 @@ const MIXED_SURFACE_EXECUTION_SAFE_SYMBOLS = new Map([
       "AbilitySchema",
       "ActionRestrictionSchema",
       "CUNNING_STRIKE_OPTION_SELECTION_IDS",
+      "D20_TEST_DIE_MINIMUM_FACE",
       "ClassNameSchema",
       "CastingTimeSchema",
       "DamageTypeSchema",

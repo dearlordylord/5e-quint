@@ -36,6 +36,8 @@ import {
   type D20TestSpendScope,
 } from "./d20-test-source-spend.ts";
 
+import type { D20TestDieMinimumFace } from "./d20-test-die-minimum.ts";
+
 const HEROIC_INSPIRATION_SPEND_RECORD =
   "acceptedHeroicInspirationRerolls" satisfies D20TestSpendRecord;
 
@@ -203,6 +205,8 @@ export function heroicInspirationRerollRollIssue(input: {
   readonly originalD20TestRoll: BattleD20TestRoll | undefined;
   readonly decision: BattleHeroicInspirationRerollDecision;
   readonly requiredRollMode?: AttackRollMode | undefined;
+  /** The d20 minimum the roll's totals count, when its roller uses one. */
+  readonly dieMinimum?: D20TestDieMinimumFace | undefined;
 }): string | null {
   const decision = input.decision;
   const gate = d20TestSpendGate({
@@ -217,6 +221,7 @@ export function heroicInspirationRerollRollIssue(input: {
   const facts = {
     total: input.total,
     d20TestRoll: input.originalD20TestRoll,
+    dieMinimum: input.dieMinimum,
   };
   return Match.value(decision).pipe(
     Match.discriminatorsExhaustive("kind")({

@@ -25,14 +25,16 @@ import {
   battleInitializationIssueFactFields,
   battleInitializationIssueLeaves,
   createInitialInitiativeForCombatants,
-  finishInitialInitiativeSetup as finishInitialInitiativeSetupFromApi,
   removeBattleRuntimeCombatants,
   retainInitialInitiativeSetup,
   restoreInitialInitiativeSetup,
   requiredInitiativeRollModeForCombatant,
-  startBattle,
   startBattleWithInitialInitiativeSetup as startBattleWithInitialInitiativeSetupFromApi,
 } from "./api-lifecycle.ts";
+import {
+  finishInitialInitiativeSetup as finishInitialInitiativeSetupFromApi,
+  startBattle,
+} from "../battle-start.ts";
 import {
   retainBattleRuntimeContinuation,
   restoreBattleRuntimeContinuation,
@@ -472,6 +474,8 @@ describe("battle lifecycle admission issue aggregation", () => {
     if (Result.isFailure(incompleteOrder)) {
       expect(incompleteOrder.failure).toEqual({
         tag: "battleStateInitIssue",
+        kind: "initialCombatantOrderMissing",
+        combatantId: combatant.combatantId,
         message: "Initial combatant order must include every combatant.",
       });
     }
@@ -484,6 +488,8 @@ describe("battle lifecycle admission issue aggregation", () => {
     if (Result.isFailure(empty)) {
       expect(empty.failure).toEqual({
         tag: "battleStateInitIssue",
+        kind: "initialInitiativeInvalid",
+        initializationReason: "emptyRoster",
         message: "synthetic empty roster",
       });
     }
@@ -984,12 +990,18 @@ describe("battle lifecycle admission issue aggregation", () => {
       },
     });
 
-    const finished = finishInitialInitiativeSetupFromApi(setup);
-    expect(finished.state).toBe(setup.state);
+    expect(setup.state.currentTurnStart).toBe("pending");
+    const finished = Result.getOrThrow(
+      finishInitialInitiativeSetupFromApi(setup),
+    );
+    expect(finished.state.currentTurnStart).toBe("started");
     const closedSetup = restoreInitialInitiativeSetup(
       structuredClone(retainInitialInitiativeSetup(setup)),
     );
-    expect(closedSetup.state).toEqual(finished.state);
+    expect(closedSetup.state).toEqual(setup.state);
+    expect(
+      Result.getOrThrow(finishInitialInitiativeSetupFromApi(closedSetup)).state,
+    ).toEqual(finished.state);
     expect(
       applyInitiativeSwap({
         setup: closedSetup,

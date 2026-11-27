@@ -14,13 +14,17 @@ export type BattlePendingStartTurnOccurrence = Pick<
   "kind" | "occurrenceId"
 >;
 
-export type BattlePendingTurnBoundaryRequest =
-  | { readonly kind: "outgoingEndTurn" }
+/** A request made while a turn starts: ordering its occurrences, or one of them. */
+export type BattlePendingTurnStartRequest =
   | { readonly kind: "startTurnOccurrenceOrder" }
   | {
       readonly kind: "startTurnOccurrence";
       readonly occurrence: BattlePendingStartTurnOccurrence;
     };
+
+export type BattlePendingTurnBoundaryRequest =
+  | { readonly kind: "outgoingEndTurn" }
+  | BattlePendingTurnStartRequest;
 
 /**
  * The procedure that owns an ordinary Hole frontier. This is an ephemeral
@@ -30,8 +34,15 @@ export type BattlePendingTurnBoundaryRequest =
 export type BattlePendingProcedure =
   | { readonly kind: "subjectResolution" }
   | {
+      /** End Turn: the ending actor's outgoing work, then the next turn's start. */
       readonly kind: "turnBoundary";
       readonly endingActorId: CombatantId;
       readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
       readonly request: BattlePendingTurnBoundaryRequest;
+    }
+  | {
+      /** The battle's opening turn start, reached with no earlier actor. */
+      readonly kind: "turnStart";
+      readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+      readonly request: BattlePendingTurnStartRequest;
     };

@@ -2,7 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bardic-inspiration-failed-d20-test
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.failed-ability-check-resource-boost
 // The dice added to a D20 Test that stands failed once its rerolls are
-// decided (ASSUMPTIONS.md A67): a Bardic Inspiration die on an ability check
+// decided (ASSUMPTIONS.md A68): a Bardic Inspiration die on an ability check
 // or a saving throw, and a failed ability check resource boost on an ability
 // check. Each source is offered while the test as it stands fails, in the
 // order the roller chooses, and every added die counts before the test is

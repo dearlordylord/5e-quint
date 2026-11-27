@@ -1,9 +1,16 @@
 import { spellProcedureExecution } from "./character-execution-admission.ts";
-import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
+import {
+  abilityCheckFill as rolledAbilityCheckFill,
+  battleResolutionHolesForTest,
+  combatantHasBardicInspirationDie,
+  goblinId,
+  grantBardicInspirationToGoblin,
+  requireResolved,
+} from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING dispel_magic
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ongoing-spell-ending
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
 // RAW: .references/srd-5.2.1/spells.md#Dispel-Magic
 import {
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
@@ -51,6 +58,7 @@ import type {
   BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
 import {
+  BARDIC_INSPIRATION_DIE_EFFECT_KIND,
   battleSpellExecutionSourceFromAdmission,
   type BattleStoredLightEmitterTemplate,
 } from "./battle-state-execution.ts";
@@ -89,6 +97,7 @@ import {
   battleTablePositionId,
   canSpendAction,
   classLevel,
+  DieRollResult,
   movementFeet,
   resolveBattleSubject,
   snapshotBattle,
@@ -838,6 +847,74 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       fills: [targetFill],
     });
     const checkHole = requireResultHole(needsCheck, "spellcastingAbilityCheck");
+    // This DC-bearing spellcasting check has no skill-proficiency minimum.
+    // It must still reach the common failed-check added-die window.
+    expect(checkHole).not.toHaveProperty("d20TestDieMinimum");
+    const grantedDie = grantBardicInspirationToGoblin()
+      .combatants.get(goblinId)
+      ?.activeEffects.find((effect) => effect.kind === "bardicInspirationDie");
+    const caster = state.state.combatants.get(spellCasterId);
+    if (grantedDie === undefined || caster === undefined)
+      throw new Error(
+        "Expected a granted die and the spellcasting test's caster.",
+      );
+    const inspired = {
+      ...state.state,
+      combatants: new Map(state.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [...caster.activeEffects, grantedDie],
+      }),
+    };
+    const failedCheck = rolledAbilityCheckFill(checkHole, {
+      total: 13,
+      naturalD20: 10,
+    });
+    const offeredDie = requireResultHole(
+      resolveBattleSubject({
+        state: inspired,
+        subject: act.subject,
+        fills: [targetFill, failedCheck],
+      }),
+      "spellcastingAbilityCheck",
+    );
+    expect(offeredDie).toMatchObject({
+      bardicInspirationDice: [
+        { effectKind: BARDIC_INSPIRATION_DIE_EFFECT_KIND },
+      ],
+    });
+    const succeededWithDie = requireResolved(
+      resolveBattleSubject({
+        state: inspired,
+        subject: act.subject,
+        fills: [
+          targetFill,
+          {
+            ...failedCheck,
+            value: {
+              ...failedCheck.value,
+              d20TestAddedDice: [
+                {
+                  kind: "addDie",
+                  effectKind: BARDIC_INSPIRATION_DIE_EFFECT_KIND,
+                  dieRoll: DieRollResult(1),
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    ).state;
+    expect(
+      combatantHasBardicInspirationDie(succeededWithDie, spellCasterId),
+    ).toBe(false);
+    expect(
+      succeededWithDie.lightEmitters.some(
+        (effect) =>
+          effect.kind === "spellLightEmitter" &&
+          effect.sourceEffectId === emitter.sourceEffectId,
+      ),
+    ).toBe(false);
+
     const allocatedEmitter = state.state.lightEmitters.find(
       (candidate) =>
         candidate.kind === "spellLightEmitter" &&

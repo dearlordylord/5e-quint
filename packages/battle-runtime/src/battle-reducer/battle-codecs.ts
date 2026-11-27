@@ -28,6 +28,7 @@ import { registeredSpellProcedureDeclarations } from "./spell-procedure-profiles
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.brutal-strike
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-die-minimum
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
@@ -80,6 +81,7 @@ import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import {
   CreatureAttackRollMechanicsSchema,
   CreatureRechargeMinimumRollSchema,
+  D20_TEST_DIE_MINIMUM_FACE,
   DiceExprSchema,
   StatBlockProcedureOrdinalSchema,
   UnitRecordSchema,
@@ -236,6 +238,8 @@ import {
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
   FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+  D20_TEST_DIE_MINIMUM_DECISION_KINDS,
+  D20_TEST_DIE_MINIMUM_EFFECT_KIND,
 } from "../battle-state-execution.ts";
 import type {
   BattleCreatureOriginSnapshot,
@@ -428,13 +432,16 @@ const BattlePendingStartTurnOccurrenceSchema = Schema.Struct({
   occurrenceId: BattleStartTurnOccurrenceId,
   kind: Schema.Literals(BATTLE_START_TURN_OCCURRENCE_KINDS),
 });
-const BattlePendingTurnBoundaryRequestSchema = Schema.Union([
-  Schema.Struct({ kind: Schema.Literal("outgoingEndTurn") }),
+const BattlePendingTurnStartRequestMemberSchemas = [
   Schema.Struct({ kind: Schema.Literal("startTurnOccurrenceOrder") }),
   Schema.Struct({
     kind: Schema.Literal("startTurnOccurrence"),
     occurrence: BattlePendingStartTurnOccurrenceSchema,
   }),
+] as const;
+const BattlePendingTurnBoundaryRequestSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("outgoingEndTurn") }),
+  ...BattlePendingTurnStartRequestMemberSchemas,
 ]);
 export const BattlePendingProcedureSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("subjectResolution") }),
@@ -443,6 +450,11 @@ export const BattlePendingProcedureSchema = Schema.Union([
     endingActorId: CombatantId,
     sourceTurn: BattleStartTurnSourceTurnSchema,
     request: BattlePendingTurnBoundaryRequestSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("turnStart"),
+    sourceTurn: BattleStartTurnSourceTurnSchema,
+    request: Schema.Union(BattlePendingTurnStartRequestMemberSchemas),
   }),
 ]).annotate({ identifier: "BattlePendingProcedure" }) satisfies Schema.Codec<
   BattlePendingProcedure,
@@ -1816,6 +1828,18 @@ const HeroicInspirationRerollHoleOptionsFields = (() => {
   };
 })();
 
+/** The d20 minimum an ability check hole offers its roller. */
+const D20TestDieMinimumHoleOptionFields = (() => {
+  const member = pairedBattleHoleNestedMember({
+    effectKind: Schema.Literal(D20_TEST_DIE_MINIMUM_EFFECT_KIND),
+    minimumDieFace: Schema.Literal(D20_TEST_DIE_MINIMUM_FACE),
+  });
+  return {
+    labeled: { d20TestDieMinimum: Schema.optionalKey(member.labeled) },
+    mechanical: { d20TestDieMinimum: Schema.optionalKey(member.mechanical) },
+  };
+})();
+
 /** Every reroll a D20 Test hole can offer, outside attack-only sources. */
 const D20TestRerollHoleOptionsFields = mergeBattleHoleFieldPairs(
   D20TestNaturalOneRerollHoleOptionsFields,
@@ -2565,6 +2589,13 @@ const BattleSpellSaveCoverSchema = Schema.Union([
   }),
 ]);
 
+const SpellObjectTargetSpatialFactRequestFields = {
+  casterId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  rangeFeet: MovementFeet,
+  requiresAttackerSight: Schema.Literal(true),
+};
+
 const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
   ...BattleHoleBaseFieldsSchema,
   kind: Schema.Literal("savingThrowOutcome"),
@@ -2726,13 +2757,18 @@ const BattleHolePayloadMembers = [
     sourceProcedureRef: BattleProcedureExecutionRef,
     requiresTableSpatialFact: Schema.Literal(true),
     spellObjectTargetSpatialFactRequest: Schema.optionalKey(
-      Schema.Struct({
-        casterId: CombatantId,
-        sourceProcedureRef: BattleProcedureExecutionRef,
-        rangeFeet: MovementFeet,
-        requiresExactDistance: Schema.Literal(true),
-        requiresEnemyProximityQualification: Schema.Literal(true),
-      }),
+      Schema.Union([
+        Schema.Struct({
+          ...SpellObjectTargetSpatialFactRequestFields,
+          requiresExactDistance: Schema.optionalKey(Schema.Never),
+          requiresEnemyProximityQualification: Schema.optionalKey(Schema.Never),
+        }),
+        Schema.Struct({
+          ...SpellObjectTargetSpatialFactRequestFields,
+          requiresExactDistance: Schema.Literal(true),
+          requiresEnemyProximityQualification: Schema.Literal(true),
+        }),
+      ]),
     ),
   }),
   pairedBattleHoleMember({
@@ -3852,7 +3888,10 @@ const BattleHolePayloadMembers = [
       dc: DifficultyClass,
       rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
     },
-    AbilityCheckAfterRollHoleOptionsFields,
+    mergeBattleHoleFieldPairs(
+      D20TestDieMinimumHoleOptionFields,
+      AbilityCheckAfterRollHoleOptionsFields,
+    ),
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -6527,6 +6566,12 @@ export const BattleFillSchema: Schema.Codec<
       value: Schema.Struct({
         total: Schema.Number.pipe(Schema.check(Schema.isInt())),
         d20TestRoll: Schema.optionalKey(BattleD20TestRollSchema),
+        d20TestDieMinimum: Schema.optionalKey(
+          Schema.Struct({
+            kind: Schema.Literals(D20_TEST_DIE_MINIMUM_DECISION_KINDS),
+            effectKind: Schema.Literal(D20_TEST_DIE_MINIMUM_EFFECT_KIND),
+          }),
+        ),
         d20TestRerolls: Schema.optionalKey(
           BattleAbilityCheckD20TestRerollDecisionsSchema,
         ),
@@ -9420,6 +9465,7 @@ function serializedRuntimeCommandReferencePolicy(
       endConcentration: actorOwned,
       startSpellCasting: actorOwned,
       continueSpellCasting: actorOwned,
+      startTurn: actorOwned,
       endTurn: actorOwned,
       persistentAreaSaveConditionSave: actorOwned,
       directionalPersistentAreaDirectionChange: actorOwned,
@@ -10029,6 +10075,10 @@ function serializedPendingProcedureMatchesCheckpoint(input: {
           liveCombatantIds.has(sourceTurn.actorId)
         );
       },
+      turnStart: ({ sourceTurn }) =>
+        input.checkpoint.combatants.some(
+          (combatant) => combatant.combatantId === sourceTurn.actorId,
+        ),
     }),
   );
 }
