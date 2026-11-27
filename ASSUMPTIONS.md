@@ -542,3 +542,24 @@ let a reroll replace the d20. The SRD doesn't say whether the minimum applies
 before or after a reroll. A rerolled d20 is still the d20 roll of the check,
 so the model applies the minimum to the d20 that stands. The QNT owner is
 `unit-feature-d20-test-die-minimum-core.qnt`.
+
+## A68: Dice added to a failed D20 Test come after its rerolls
+
+**Assumption:** A D20 Test's rerolls are decided before any die is added to
+it. Once every reroll source has decided, a source that adds a die to a failed
+test may add it to the roll that stands, in the order the roller chooses,
+while the test still fails. Every added die counts before the test is judged,
+so a cost that depends on the result (Tactical Mind's use of Second Wind)
+follows the result with all the dice added.
+
+**Rules basis / gap:** `.references/srd-5.2.1/classes.md`, "Bardic
+Inspiration": "when the creature fails a D20 Test, the creature can roll the
+Bardic Inspiration die and add the number rolled to the d20". "Tactical Mind":
+"When you fail an ability check, you can expend a use of your Second Wind ...
+roll 1d10 and add the number rolled to the ability check ... If the check
+still fails, this use of Second Wind isn't expended." Both answer a failure,
+and a reroll replaces the d20 that an added die would add to, so the SRD
+doesn't say what an added die does to a later reroll. The model takes the
+rerolls first. The SRD also doesn't say whether Tactical Mind's "still fails"
+reads the check before or after another added die; the model judges the check
+once with every added die.

@@ -22,7 +22,6 @@ import {
   type BattleCreatureState,
   type BattleD20TestRoll,
   type BattleFill,
-  type BattleHidePrerequisite,
   type BattleHole,
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
@@ -274,7 +273,9 @@ export function battleSessionFromSheets(input: {
   readonly battleIdText: string;
   readonly characters: readonly SheetFixture[];
   readonly monsters: readonly AuthoredStatBlockBattleInitInput[];
-  readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
+  readonly hidePrerequisites?: Parameters<
+    typeof startBattle
+  >[0]["hidePrerequisites"];
 }): BattleRuntimeSession {
   const characterInits = input.characters.map((character) =>
     requireSuccess(

@@ -518,7 +518,6 @@
       "module/binding:resolveAttackActionAreaSaveDamageReplacementUnitFeature": 12,
       "module/binding:resolveBardicInspirationGrantUnitFeature": 17,
       "module/binding:resolveDruidWildShapeUnitFeature": 15,
-      "module/binding:resolveFailedAbilityCheckResourceBoost": 12,
       "module/binding:resolveMagicActionAreaSaveDamageHealingUnitFeature": 12,
       "module/binding:resolveMagicActionHealingPoolUnitFeature": 9,
       "module/binding:resolveMagicActionSaveGatedConditionUnitFeature": 10,

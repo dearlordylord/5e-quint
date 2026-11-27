@@ -13,9 +13,7 @@ import {
 import { DieRollResult } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
-import grantedAreaSaveDamageActionInput from "../../surface/content/dragons_breath.json";
 import {
-  endTurn,
   requireResolved,
   resolveBattleSubject,
   type BattleState,
@@ -24,8 +22,6 @@ import {
   FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
   type BattleD20TestRoll,
-  type BattleHole,
-  type BattleRolledSavingThrowOutcome,
 } from "./battle-state-execution.ts";
 import {
   FAILED_SAVING_THROW_REROLL_MODE_MESSAGE,
@@ -34,7 +30,6 @@ import {
   failedSavingThrowRerollOutcomeIssue,
 } from "./battle-reducer/failed-saving-throw-reroll.ts";
 import {
-  dragonsBreathUnitId,
   fighterIndomitableUnitId,
   viciousMockeryUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -44,25 +39,23 @@ import {
   requireHole,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import {
+  exhaleOnConcentratingCaster,
+  exhaleSaveFill,
+} from "./dragons-breath-exhale.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  bonusSpellAct,
-  damageTypeChoiceFill,
-  knownWillingSpellTargetListFill,
   savingThrowOutcomeFill,
   spellAct,
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
-  decodeUnitRecordSync,
-  discoverBattleActCandidates,
   spellCasterId,
   spellTargetId,
   unitLibrary,
   type BattleFill,
   type CombatantId,
-  type SpellRecord,
 } from "./unit-profile-admission.test-support.ts";
 
 describe("Indomitable on a failed saving throw", () => {
@@ -481,7 +474,16 @@ describe("Indomitable alongside Heroic Inspiration (A55)", () => {
 
 describe("Indomitable on a Concentration save", () => {
   test("a failed Concentration save is asked again with the reroll, which keeps Concentration", () => {
-    const exhale = exhaleOnIndomitableCaster();
+    const indomitable = unitLibrary.requireUnit(fighterIndomitableUnitId);
+    const exhale = exhaleOnConcentratingCaster({
+      casterClassLevels: [
+        { className: "wizard", level: 3 },
+        { className: "fighter", level: 9 },
+      ],
+      casterSpellcastingSourceClassName: "wizard",
+      casterUnitRefs: [{ unit: indomitable, supportProfiles: [] }],
+      casterResources: [{ unit: indomitable }],
+    });
     const save = exhaleSaveFill(exhale.saveHole, {
       succeeded: true,
       d20TestRoll: single(15),
@@ -557,86 +559,6 @@ describe("Indomitable on a Concentration save", () => {
     expect(indomitableUses(kept.state, spellCasterId)).toBe(0);
   });
 });
-
-function exhaleOnIndomitableCaster() {
-  const indomitable = unitLibrary.requireUnit(fighterIndomitableUnitId);
-  const session = spellBattle({
-    preparedSpells: [dragonsBreathSpell()],
-    spellSlots: [{ spellLevel: 2, count: 1 }],
-    casterClassLevels: [
-      { className: "wizard", level: 3 },
-      { className: "fighter", level: 9 },
-    ],
-    casterSpellcastingSourceClassName: "wizard",
-    casterUnitRefs: [{ unit: indomitable, supportProfiles: [] }],
-    casterResources: [{ unit: indomitable }],
-  });
-  const act = bonusSpellAct({
-    session,
-    spellId: dragonsBreathUnitId,
-    slotLevel: 2,
-  });
-  const cast = requireResolved(
-    resolveBattleSubject({
-      state: session.state,
-      subject: act.subject,
-      fills: [
-        knownWillingSpellTargetListFill(
-          requireHole(act.initialHoles, "spellTargetList"),
-          spellCasterId,
-          dragonsBreathUnitId,
-          [spellTargetId],
-        ),
-        damageTypeChoiceFill(
-          requireHole(act.initialHoles, "damageTypeChoice"),
-          "lightning",
-        ),
-      ],
-    }),
-  ).state;
-  const ended = endTurn({ state: cast, actorId: spellCasterId });
-  if (ended.tag !== "resolved") {
-    throw new Error("Expected caster End Turn to resolve.");
-  }
-  const exhaleAct = discoverBattleActCandidates(ended.state).find(
-    (candidate) =>
-      candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "grantedAreaSaveDamageAction",
-  );
-  if (exhaleAct === undefined) {
-    throw new Error("Expected Dragon's Breath exhale action.");
-  }
-  return {
-    state: ended.state,
-    subject: exhaleAct.subject,
-    saveHole: requireHole(exhaleAct.initialHoles, "savingThrowOutcome"),
-  };
-}
-
-function dragonsBreathSpell(): SpellRecord {
-  const unit = decodeUnitRecordSync(grantedAreaSaveDamageActionInput);
-  if (unit.kind !== "spell") {
-    throw new Error("Expected Dragon's Breath fixture to decode as a spell.");
-  }
-  return unit;
-}
-
-function exhaleSaveFill(
-  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
-  outcome: Omit<BattleRolledSavingThrowOutcome, "targetId">,
-): BattleFill {
-  return {
-    kind: "savingThrowOutcome",
-    holeId: hole.holeId,
-    value: {
-      area: {
-        originAnchorId: spellTargetId,
-        affectedTargetIds: [spellCasterId],
-      },
-      outcomes: [{ targetId: spellCasterId, ...outcome }],
-    },
-  };
-}
 
 function viciousMockerySave(
   input: {

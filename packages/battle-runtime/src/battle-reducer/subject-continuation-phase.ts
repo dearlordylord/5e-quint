@@ -1,6 +1,6 @@
 import { copyInterruptCheckpointIdentity } from "./interrupt-checkpoint-identity.ts";
 import { Match } from "effect";
-// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE BATTLE.ATTACK.THROWN_WEAPON_ATTACK
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE BATTLE.ATTACK.THROWN_WEAPON_ATTACK
 import type {
   BattleAcceptedSubjectReplayEvidence,
   BattleInterruptCheckpoint,
@@ -47,6 +47,14 @@ export function acceptedSubjectReplayEvidence(
       source.acceptedFailedSavingThrowRerolls,
     ),
     ...optionalProperty(
+      "acceptedBardicInspirationDice",
+      source.acceptedBardicInspirationDice,
+    ),
+    ...optionalProperty(
+      "acceptedFailedAbilityCheckResourceBoosts",
+      source.acceptedFailedAbilityCheckResourceBoosts,
+    ),
+    ...optionalProperty(
       "acceptedAttackAmmunitionSpend",
       source.acceptedAttackAmmunitionSpend,
     ),
@@ -87,6 +95,9 @@ export function stateForSubjectContinuation(
   const {
     acceptedHeroicInspirationRerolls: _previousHeroicInspiration,
     acceptedFailedSavingThrowRerolls: _previousFailedSavingThrowRerolls,
+    acceptedBardicInspirationDice: _previousBardicInspirationDice,
+    acceptedFailedAbilityCheckResourceBoosts:
+      _previousFailedAbilityCheckResourceBoosts,
     acceptedAttackAmmunitionSpend: _previousAmmunition,
     acceptedThrownWeaponRelease: _previousThrow,
     ...phase

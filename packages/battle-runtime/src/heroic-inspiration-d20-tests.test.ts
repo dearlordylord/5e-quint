@@ -13,7 +13,6 @@ import { combatantId } from "./identity.ts";
 import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 
-import grantedAreaSaveDamageActionInput from "../../surface/content/dragons_breath.json";
 import {
   abilityCheckFill,
   characterBattleFeatureInitForTest,
@@ -38,8 +37,6 @@ import {
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
   type BattleD20TestRoll,
-  type BattleHole,
-  type BattleRolledSavingThrowOutcome,
 } from "./battle-state-execution.ts";
 import { HEROIC_INSPIRATION_REROLL_UNAVAILABLE_MESSAGE } from "./battle-reducer/heroic-inspiration-reroll.ts";
 import {
@@ -49,7 +46,6 @@ import {
 import { requireActorAdmittedSpellActForTest } from "./spell-effect-fixture.test-support.ts";
 import {
   baneUnitId,
-  dragonsBreathUnitId,
   viciousMockeryUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
@@ -58,11 +54,12 @@ import {
   requireHole,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import {
+  exhaleOnConcentratingCaster,
+  exhaleSaveFill,
+} from "./dragons-breath-exhale.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  bonusSpellAct,
-  damageTypeChoiceFill,
-  knownWillingSpellTargetListFill,
   savingThrowOutcomeFill,
   spellAct,
   spellTargetListFill,
@@ -72,17 +69,13 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import {
   battleId,
   battleUnitRefWithSupportProfiles,
-  decodeUnitRecordSync,
-  discoverBattleActCandidates,
   speciesHalflingLuckUnitId,
   spellCasterId,
   spellSlotInvocationRef,
   spellTargetId,
   unitLibrary,
   type BattleFill,
-  type BattleRuntimeSession,
   type CombatantId,
-  type SpellRecord,
 } from "./unit-profile-admission.test-support.ts";
 
 describe("Heroic Inspiration on saving throws", () => {
@@ -306,7 +299,7 @@ describe("Heroic Inspiration on a save several targets make", () => {
 
 describe("Heroic Inspiration on an area save, its damage and Concentration", () => {
   test("a rerolled exhale save halves the damage, and the Concentration save is not offered a spent reroll", () => {
-    const exhale = exhaleSave({
+    const exhale = exhaleOnConcentratingCaster({
       casterHeroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
     });
     const save = exhaleSaveFill(exhale.saveHole, {
@@ -358,7 +351,7 @@ describe("Heroic Inspiration on an area save, its damage and Concentration", () 
   });
 
   test("a Concentration save rerolled with Heroic Inspiration keeps Concentration", () => {
-    const exhale = exhaleSave({
+    const exhale = exhaleOnConcentratingCaster({
       casterHeroicInspiration: HEROIC_INSPIRATION_AVAILABLE,
     });
     const save = exhaleSaveFill(exhale.saveHole, {
@@ -448,7 +441,7 @@ describe("Heroic Inspiration on an area save, its damage and Concentration", () 
       unit,
     });
     if (Result.isFailure(unitRef)) throw new Error(unitRef.failure.message);
-    const exhale = exhaleSave({
+    const exhale = exhaleOnConcentratingCaster({
       casterUnitRefs: [unitRef.success],
       casterUnitFeatures: [characterBattleFeatureInitForTest(unit)],
     });
@@ -840,90 +833,6 @@ function viciousMockerySave(targetHeroicInspiration: HeroicInspiration) {
     "savingThrowOutcome",
   );
   return { state, subject: act.subject, targetSelection, savingThrow };
-}
-
-function exhaleSave(
-  caster: Pick<
-    Parameters<typeof spellBattle>[0],
-    "casterHeroicInspiration" | "casterUnitRefs" | "casterUnitFeatures"
-  >,
-) {
-  const session = spellBattle({
-    preparedSpells: [grantedAreaSaveDamageActionSpell()],
-    spellSlots: [{ spellLevel: 2, count: 1 }],
-    ...caster,
-  });
-  const ended = endTurn({
-    state: castDragonsBreath(session),
-    actorId: spellCasterId,
-  });
-  if (ended.tag !== "resolved") {
-    throw new Error("Expected caster End Turn to resolve.");
-  }
-  const exhaleAct = discoverBattleActCandidates(ended.state).find(
-    (act) =>
-      act.subject.tag === "runtimeCommand" &&
-      act.subject.command === "grantedAreaSaveDamageAction",
-  );
-  if (exhaleAct === undefined) {
-    throw new Error("Expected Dragon's Breath exhale action.");
-  }
-  return {
-    state: ended.state,
-    subject: exhaleAct.subject,
-    saveHole: requireHole(exhaleAct.initialHoles, "savingThrowOutcome"),
-  };
-}
-
-function castDragonsBreath(session: BattleRuntimeSession): BattleState {
-  const act = bonusSpellAct({
-    session,
-    spellId: dragonsBreathUnitId,
-    slotLevel: 2,
-  });
-  return requireResolved(
-    resolveBattleSubject({
-      state: session.state,
-      subject: act.subject,
-      fills: [
-        knownWillingSpellTargetListFill(
-          requireHole(act.initialHoles, "spellTargetList"),
-          spellCasterId,
-          dragonsBreathUnitId,
-          [spellTargetId],
-        ),
-        damageTypeChoiceFill(
-          requireHole(act.initialHoles, "damageTypeChoice"),
-          "lightning",
-        ),
-      ],
-    }),
-  ).state;
-}
-
-function grantedAreaSaveDamageActionSpell(): SpellRecord {
-  const unit = decodeUnitRecordSync(grantedAreaSaveDamageActionInput);
-  if (unit.kind !== "spell") {
-    throw new Error("Expected Dragon's Breath fixture to decode as a spell.");
-  }
-  return unit;
-}
-
-function exhaleSaveFill(
-  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
-  outcome: Omit<BattleRolledSavingThrowOutcome, "targetId">,
-): BattleFill {
-  return {
-    kind: "savingThrowOutcome",
-    holeId: hole.holeId,
-    value: {
-      area: {
-        originAnchorId: spellTargetId,
-        affectedTargetIds: [spellCasterId],
-      },
-      outcomes: [{ targetId: spellCasterId, ...outcome }],
-    },
-  };
 }
 
 function hideCheck(

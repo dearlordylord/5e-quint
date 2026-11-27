@@ -8273,6 +8273,12 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+              },
+              {
                 "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
@@ -8282,7 +8288,8 @@
             "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
             "profileKind": "resource",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
+              "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
             ]
           }
         ],
@@ -9524,6 +9531,12 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+              },
+              {
                 "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
@@ -9533,7 +9546,7 @@
             "profileId": "unit-feature.failed-ability-check-resource-boost",
             "profileKind": "resource",
             "qntOwners": [
-              "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+              "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
             ]
           }
         ],

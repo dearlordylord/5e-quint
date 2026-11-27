@@ -307,11 +307,10 @@ import {
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   parseSupportedUnitFeatureProfile,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
-  resolveBardicInspirationFailedD20Test,
+  resolveBardicInspirationFailedAttackRoll,
   resolveBattleConcentrationDamage,
   resolveBattleInterrupt,
   resolveBattleSubject as resolveBattleSubjectRuntime,
-  resolveFailedAbilityCheckResourceBoost,
   resolveSuccessfulAbilityCheckReactionReduction,
   sameBattleSubject,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
@@ -1230,10 +1229,10 @@ export function requireResolved(
   return result;
 }
 
-export function requireBardicInspirationD20TestResolved(
-  result: ReturnType<typeof resolveBardicInspirationFailedD20Test>,
+export function requireBardicInspirationAttackRollResolved(
+  result: ReturnType<typeof resolveBardicInspirationFailedAttackRoll>,
 ): Extract<
-  ReturnType<typeof resolveBardicInspirationFailedD20Test>,
+  ReturnType<typeof resolveBardicInspirationFailedAttackRoll>,
   { readonly tag: "resolved" }
 > {
   if (result.tag !== "resolved") {
@@ -6992,11 +6991,10 @@ export {
   pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
   removeCondition,
   requiredAbilityCheckRollMode,
-  resolveBardicInspirationFailedD20Test,
+  resolveBardicInspirationFailedAttackRoll,
   resolveBattleConcentrationDamage,
   resolveBattleInterrupt,
   resolveBattleSubject,
-  resolveFailedAbilityCheckResourceBoost,
   resolveSpawnedCompanionForm,
   resolvePactOfTheChainSpawnedCompanionForm,
   resolveSuccessfulAbilityCheckReactionReduction,

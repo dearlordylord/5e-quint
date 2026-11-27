@@ -469,7 +469,7 @@ export {
   type BattleAcrobaticMovementPath,
   type BattleAttackRollHole,
   type BattleAttackRollResult,
-  type BattleBardicInspirationFailedD20TestFacts,
+  type BattleBardicInspirationFailedAttackRollFacts,
   type BattleConcentration,
   type BattleConcentrationSavingThrowHole,
   type BattleCreatureSnapshot,
@@ -482,7 +482,6 @@ export {
   type BattleDamageRelationshipDecision,
   type BattleDamageRelationshipDecisionFill,
   type BattleDamageRelationshipDecisions,
-  type BattleFailedAbilityCheckFacts,
   type BattleFallDamageLandingResult,
   type BattleFallingCreatureMitigationLandingResult,
   type BattleGrappleLink,
@@ -591,10 +590,8 @@ export {
   type BattleUnitFeatureRollHole,
   type BattleWildShapeEquipmentDispositionHole,
   type EndedFlySpeedGrant,
-  type BardicInspirationFailedD20TestResolutionInput,
-  type BardicInspirationFailedD20TestResolutionResult,
-  type FailedAbilityCheckResourceBoostResolutionInput,
-  type FailedAbilityCheckResourceBoostResolutionResult,
+  type BardicInspirationFailedAttackRollResolutionInput,
+  type BardicInspirationFailedAttackRollResolutionResult,
   type LegendaryActionWindow,
   type OngoingFeatureExpiration,
   type OngoingFeatureSourceKey,
@@ -715,9 +712,8 @@ export {
   snapshotBattle,
 } from "./battle-execution-composition.ts";
 export {
-  resolveFailedAbilityCheckResourceBoost,
   resolveSuccessfulAbilityCheckReactionReduction,
-  resolveBardicInspirationFailedD20Test,
+  resolveBardicInspirationFailedAttackRoll,
 } from "./battle-reducer/unit-features.ts";
 export {
   PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET,
@@ -805,6 +801,15 @@ export {
   FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
   type BattleFailedSavingThrowRerollDecision,
   type BattleFailedSavingThrowRerollOption,
+} from "./battle-state-execution.ts";
+
+export {
+  BARDIC_INSPIRATION_DIE_EFFECT_KIND,
+  FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
+  type BattleAbilityCheckAddedDieDecision,
+  type BattleBardicInspirationDieOption,
+  type BattleFailedAbilityCheckResourceBoostOption,
+  type BattleRolledOutcomeAddedDieDecision,
 } from "./battle-state-execution.ts";
 
 export {

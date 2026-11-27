@@ -18,9 +18,9 @@
       "denominatorRule": "supported Unit unit-feature profile facts in the scoped level-support report",
       "metrics": {
         "evidenceRows": {
-          "denominator": 7,
-          "numerator": 5,
-          "percent": "71.4%"
+          "denominator": 8,
+          "numerator": 6,
+          "percent": "75%"
         },
         "featureProcedureProfiles": {
           "denominator": 7,
@@ -28,9 +28,9 @@
           "percent": "100%"
         },
         "openGapRows": {
-          "denominator": 7,
+          "denominator": 8,
           "numerator": 2,
-          "percent": "28.6%"
+          "percent": "25%"
         },
         "supportedFeatureUnits": {
           "denominator": 6,
@@ -43,168 +43,23 @@
           "evidenceStatus": "gap",
           "gaps": [
             {
-              "detail": "Unit profile owner evidence has no semantic-core QNT owner; bridge and proof owners are traceability evidence only.",
-              "kind": "missing-semantic-core-qnt-owner"
+              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
+              "kind": "missing-qnt-mbt-witness"
             }
           ],
           "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
-          "obligationQntMbtWitnesses": [
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
-              "stepAction": "stepSpendAllSlots"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
-              "stepAction": "step"
-            }
-          ],
+          "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+          "obligationQntMbtWitnesses": [],
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "obligationTitle": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails",
           "parityWitnesses": [
             {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
-              "stepAction": "stepSpendAllSlots"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
-              "stepAction": "step"
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
             },
             {
               "kind": "contract-test",
-              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
-            },
-            {
-              "kind": "contract-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
+              "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -213,6 +68,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
               "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -580,10 +439,44 @@
           "evidenceStatus": "gap",
           "gaps": [
             {
-              "detail": "Unit profile owner evidence has no semantic-core QNT owner; bridge and proof owners are traceability evidence only.",
-              "kind": "missing-semantic-core-qnt-owner"
+              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
+              "kind": "missing-qnt-mbt-witness"
             }
           ],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+          "obligationQntMbtWitnesses": [],
+          "obligationStatus": "covered",
+          "obligationTitle": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails",
+          "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
+            }
+          ],
+          "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
+          "profileKind": "resource",
+          "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationQntMbtWitnesses": [
@@ -750,6 +643,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
               "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -1649,9 +1546,9 @@
       "denominatorRule": "supported Unit unit-feature profile facts in the scoped level-support report",
       "metrics": {
         "evidenceRows": {
-          "denominator": 13,
-          "numerator": 11,
-          "percent": "84.6%"
+          "denominator": 15,
+          "numerator": 12,
+          "percent": "80%"
         },
         "featureProcedureProfiles": {
           "denominator": 13,
@@ -1659,9 +1556,9 @@
           "percent": "100%"
         },
         "openGapRows": {
-          "denominator": 13,
-          "numerator": 2,
-          "percent": "15.4%"
+          "denominator": 15,
+          "numerator": 3,
+          "percent": "20%"
         },
         "supportedFeatureUnits": {
           "denominator": 12,
@@ -1674,168 +1571,23 @@
           "evidenceStatus": "gap",
           "gaps": [
             {
-              "detail": "Unit profile owner evidence has no semantic-core QNT owner; bridge and proof owners are traceability evidence only.",
-              "kind": "missing-semantic-core-qnt-owner"
+              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
+              "kind": "missing-qnt-mbt-witness"
             }
           ],
           "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
-          "obligationQntMbtWitnesses": [
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
-              "stepAction": "stepSpendAllSlots"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
-              "stepAction": "step"
-            }
-          ],
+          "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+          "obligationQntMbtWitnesses": [],
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "obligationTitle": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails",
           "parityWitnesses": [
             {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
-              "stepAction": "stepSpendAllSlots"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
-              "stepAction": "step"
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
             },
             {
               "kind": "contract-test",
-              "ownerPath": "packages/character-battle-runtime/src/barbarian-level7-sdk-handoff.test.ts"
-            },
-            {
-              "kind": "contract-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gnomish-cunning.test.ts"
+              "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -1844,6 +1596,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
               "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -2029,6 +1785,41 @@
           "runtime": "battle",
           "tag": "obligation-evidence",
           "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "evidenceStatus": "gap",
+          "gaps": [
+            {
+              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
+              "kind": "missing-qnt-mbt-witness"
+            }
+          ],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+          "obligationQntMbtWitnesses": [],
+          "obligationStatus": "covered",
+          "obligationTitle": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails",
+          "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
+            }
+          ],
+          "profileId": "unit-feature.failed-ability-check-resource-boost",
+          "profileKind": "resource",
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "fighter_tactical_mind"
         }
       ],
       "rows": [
@@ -2561,10 +2352,44 @@
           "evidenceStatus": "gap",
           "gaps": [
             {
-              "detail": "Unit profile owner evidence has no semantic-core QNT owner; bridge and proof owners are traceability evidence only.",
-              "kind": "missing-semantic-core-qnt-owner"
+              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
+              "kind": "missing-qnt-mbt-witness"
             }
           ],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+          "obligationQntMbtWitnesses": [],
+          "obligationStatus": "covered",
+          "obligationTitle": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails",
+          "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
+            }
+          ],
+          "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
+          "profileKind": "resource",
+          "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationQntMbtWitnesses": [
@@ -2731,6 +2556,10 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
               "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -3268,6 +3097,41 @@
           "unitId": "fighter_second_wind"
         },
         {
+          "evidenceStatus": "gap",
+          "gaps": [
+            {
+              "detail": "Rules-kernel obligation has parity witnesses, but none are focused-mbt or deterministic-qnt-replay evidence.",
+              "kind": "missing-qnt-mbt-witness"
+            }
+          ],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+          "obligationQntMbtWitnesses": [],
+          "obligationStatus": "covered",
+          "obligationTitle": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails",
+          "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
+            }
+          ],
+          "profileId": "unit-feature.failed-ability-check-resource-boost",
+          "profileKind": "resource",
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "fighter_tactical_mind"
+        },
+        {
           "evidenceStatus": "evidence-present",
           "gaps": [],
           "joinStatus": "covered",
@@ -3434,7 +3298,7 @@
           "profileKind": "resource",
           "qntOwners": [
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
               "role": "semantic-core"
             }
           ],

@@ -1,17 +1,24 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
 // The rolls that stand: each D20 Test roll after the reroll decisions its
-// fill reports (ASSUMPTIONS.md A55). Every owner that reads a D20 Test reads
-// it through one of these, after d20-test-outcome-rerolls.ts checked the
-// decisions. A leaf, so that any owner can read a roll without importing the
-// reroll checks.
+// fill reports (ASSUMPTIONS.md A55), then the dice added to it (A67). Every
+// owner that reads a D20 Test reads it through one of these, after
+// d20-test-after-roll-decisions.ts checked the decisions. A leaf, so that any
+// owner can read a roll without importing the decision checks.
 
 import type {
+  BattleAbilityCheckAddedDieDecision,
   BattleD20TestRoll,
   BattleD20TestOutcome,
   BattleFill,
+  BattleRolledOutcomeAddedDieDecision,
   BattleRolledOutcomeD20TestRerollDecision,
   BattleSavingThrowOutcome,
 } from "../battle-state-execution.ts";
-import { d20TestRollAfterRerolls } from "./d20-test-reroll-sequence.ts";
+import {
+  abilityCheckAfterAddedDie,
+  rolledOutcomeAfterAddedDie,
+} from "./d20-test-added-die-roll.ts";
+import { d20TestRollAfterDecisions } from "./d20-test-decision-sequence.ts";
 import {
   d20TestOutcomeAfterReroll,
   d20TestRollAfterReroll,
@@ -29,12 +36,12 @@ export type D20TestAbilityCheckValue = Extract<
   { readonly kind: "abilityCheck" }
 >["value"];
 
-/** A rolled saving throw's outcome after its reroll decisions. */
+/** A rolled saving throw's outcome after its reroll decisions and added dice. */
 export function d20TestOutcomeThatStands<T extends BattleD20TestOutcome>(
   outcome: T,
 ): T {
   if (outcome.withoutRoll === true) return outcome;
-  const stands = d20TestRollAfterRerolls<
+  const rerolled = d20TestRollAfterDecisions<
     D20TestRolledOutcome,
     BattleRolledOutcomeD20TestRerollDecision
   >(
@@ -42,6 +49,10 @@ export function d20TestOutcomeThatStands<T extends BattleD20TestOutcome>(
     outcome.d20TestRerolls ?? [],
     d20TestOutcomeAfterReroll,
   );
+  const stands = d20TestRollAfterDecisions<
+    D20TestRolledOutcome,
+    BattleRolledOutcomeAddedDieDecision
+  >(rerolled, outcome.d20TestAddedDice ?? [], rolledOutcomeAfterAddedDie);
   return {
     ...outcome,
     succeeded: stands.succeeded,
@@ -49,7 +60,7 @@ export function d20TestOutcomeThatStands<T extends BattleD20TestOutcome>(
   };
 }
 
-/** Every target's saving throw outcome after its reroll decisions. */
+/** Every target's saving throw outcome after its reroll decisions and added dice. */
 export function savingThrowOutcomesThatStand<
   T extends { readonly outcomes: readonly BattleSavingThrowOutcome[] },
 >(value: T): T {
@@ -73,13 +84,20 @@ export function concentrationSavingThrowFillThatStands<
   return { ...fill, value: d20TestOutcomeThatStands(fill.value) };
 }
 
-/** An ability check's value after its reroll decisions: the total that stands. */
+/**
+ * An ability check's value after its reroll decisions and added dice: the
+ * total that stands.
+ */
 export function abilityCheckValueThatStands<T extends D20TestAbilityCheckValue>(
   value: T,
 ): T {
-  return d20TestRollAfterRerolls(
-    value,
-    value.d20TestRerolls ?? [],
-    d20TestRollAfterReroll,
+  return d20TestRollAfterDecisions<T, BattleAbilityCheckAddedDieDecision>(
+    d20TestRollAfterDecisions(
+      value,
+      value.d20TestRerolls ?? [],
+      d20TestRollAfterReroll,
+    ),
+    value.d20TestAddedDice ?? [],
+    abilityCheckAfterAddedDie,
   );
 }

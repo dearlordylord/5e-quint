@@ -33,17 +33,17 @@ import {
   type D20TestRollRerollMessages,
 } from "./d20-test-roll-reroll.ts";
 import {
-  battleStateWithD20TestRerollPaid,
-  d20TestRerollPaidOnRoll,
-  d20TestRerollSpendAvailability,
-  d20TestRerollSpendGate,
-  type D20TestRerollSpendAvailability,
-  type D20TestRerollSpendRecord,
-  type D20TestRerollSpendScope,
-} from "./d20-test-reroll-spend.ts";
+  battleStateWithD20TestSourceTaken,
+  d20TestSourceTakenOnRoll,
+  d20TestSpendAvailability,
+  d20TestSpendGate,
+  type D20TestSpendAvailability,
+  type D20TestSpendRecord,
+  type D20TestSpendScope,
+} from "./d20-test-source-spend.ts";
 
 const FAILED_SAVING_THROW_REROLL_SPEND_RECORD =
-  "acceptedFailedSavingThrowRerolls" satisfies D20TestRerollSpendRecord;
+  "acceptedFailedSavingThrowRerolls" satisfies D20TestSpendRecord;
 
 export const FAILED_SAVING_THROW_REROLL_UNAVAILABLE_MESSAGE =
   "Failed saving throw reroll needs a roller with a use of the feature left.";
@@ -110,10 +110,10 @@ function payableFailedSavingThrowReroll(
 /** Where the roller's failed saving throw reroll stands for this roll. */
 export function failedSavingThrowRerollAvailabilityForRoll(
   state: BattleState,
-  scope: D20TestRerollSpendScope,
+  scope: D20TestSpendScope,
   roll: BattleD20TestRollKey,
-): D20TestRerollSpendAvailability {
-  return d20TestRerollSpendAvailability({
+): D20TestSpendAvailability {
+  return d20TestSpendAvailability({
     state,
     scope,
     record: FAILED_SAVING_THROW_REROLL_SPEND_RECORD,
@@ -150,7 +150,7 @@ export function failedSavingThrowRerollOption(
  * stands failed and the roller can pay.
  */
 export function failedSavingThrowRerollOffered(input: {
-  readonly availability: D20TestRerollSpendAvailability;
+  readonly availability: D20TestSpendAvailability;
   readonly succeeded: boolean;
 }): boolean {
   return input.availability === "available" && !input.succeeded;
@@ -164,7 +164,7 @@ export function failedSavingThrowRerollOffered(input: {
  * the table's ruling with the bonus.
  */
 export function failedSavingThrowRerollOutcomeIssue(input: {
-  readonly availability: D20TestRerollSpendAvailability;
+  readonly availability: D20TestSpendAvailability;
   /** The roll as it stands: the original roll, or another source's reroll of it. */
   readonly roll: {
     readonly succeeded: boolean;
@@ -177,7 +177,7 @@ export function failedSavingThrowRerollOutcomeIssue(input: {
   // a save that stands succeeded, a decline too, answers no offer.
   if (input.roll.succeeded)
     return FAILED_SAVING_THROW_REROLL_NOT_FAILED_MESSAGE;
-  const gate = d20TestRerollSpendGate({
+  const gate = d20TestSpendGate({
     availability: input.availability,
     decision,
     unavailableMessage: FAILED_SAVING_THROW_REROLL_UNAVAILABLE_MESSAGE,
@@ -206,7 +206,7 @@ export type FailedSavingThrowRerollUse = Brand.Branded<
   | { readonly spends: false }
   | {
       readonly spends: true;
-      readonly scope: D20TestRerollSpendScope;
+      readonly scope: D20TestSpendScope;
       readonly roll: BattleD20TestRollKey;
     },
   "FailedSavingThrowRerollUse"
@@ -224,12 +224,12 @@ export const NO_FAILED_SAVING_THROW_REROLL_USE: FailedSavingThrowRerollUse =
  */
 export function failedSavingThrowRerollUseForRoll(input: {
   readonly state: BattleState;
-  readonly scope: D20TestRerollSpendScope;
+  readonly scope: D20TestSpendScope;
   readonly roll: BattleD20TestRollKey;
   readonly rerolled: boolean;
 }): FailedSavingThrowRerollUse {
   return input.rerolled &&
-    !d20TestRerollPaidOnRoll({
+    !d20TestSourceTakenOnRoll({
       ...input,
       record: FAILED_SAVING_THROW_REROLL_SPEND_RECORD,
     })
@@ -253,7 +253,7 @@ export function battleStateAfterFailedSavingThrowReroll(
 ): BattleState {
   if (
     !use.spends ||
-    d20TestRerollPaidOnRoll({
+    d20TestSourceTakenOnRoll({
       state,
       scope: use.scope,
       record: FAILED_SAVING_THROW_REROLL_SPEND_RECORD,
@@ -282,11 +282,11 @@ export function battleStateAfterFailedSavingThrowReroll(
       },
     }),
   };
-  return battleStateWithD20TestRerollPaid({
+  return battleStateWithD20TestSourceTaken({
     state: spent,
     scope: use.scope,
     record: FAILED_SAVING_THROW_REROLL_SPEND_RECORD,
-    roll: use.roll,
+    taken: use.roll,
   });
 }
 
