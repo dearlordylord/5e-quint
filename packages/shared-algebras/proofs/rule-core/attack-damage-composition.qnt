@@ -254,13 +254,16 @@ module attackDamageComposition {
 
   // A target the attack's damage can reach: dead or with positive Hit Points
   // (the positive-HP damage procedure), or at 0 Hit Points and still making
-  // Death Saving Throws (the zero-HP lifecycle).
+  // Death Saving Throws (the zero-HP lifecycle). Either way its lifecycle must
+  // agree with its vitals, since the result carries that lifecycle forward.
   pure def attackTargetCanTakeDamage(
     vitals: CreatureVitals,
     lifecycle: DeathSavingThrowLifecycle
-  ): bool =
+  ): bool = all {
+    legalDeathSavingThrowLifecycleForVitals(vitals, lifecycle),
     canApplyResolvedDamageToPositiveHitPoints(vitals)
-      or canUseDeathSavingThrowLifecycle(vitals, lifecycle)
+      or canUseDeathSavingThrowLifecycle(vitals, lifecycle),
+  }
 
   pure def resolveAttackProcedure(
     quota: ActionQuota,

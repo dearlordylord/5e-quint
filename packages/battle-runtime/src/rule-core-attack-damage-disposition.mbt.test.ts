@@ -211,10 +211,7 @@ function resolveMeleeKnockOut(): Projection {
     accepted: true,
     targetHp: Number(target.hp),
     targetUnconscious: target.conditions.includes("unconscious"),
-    targetDead:
-      target.zeroHpLifecycle.policy === "diesAtZeroHp"
-        ? target.zeroHpLifecycle.dead
-        : deathSaveStateIsDead(target.zeroHpLifecycle.deathSaves),
+    targetDead: targetIsDead(target),
     knockOutRecovery:
       Number(target.hp) === 1 && target.conditions.includes("unconscious"),
     targetDeathSavingThrowFailures: targetDeathSavingThrowFailures(target),
@@ -278,10 +275,7 @@ function rejectRangedKnockOut(): Projection {
     accepted: false,
     targetHp: Number(target.hp),
     targetUnconscious: target.conditions.includes("unconscious"),
-    targetDead:
-      target.zeroHpLifecycle.policy === "diesAtZeroHp"
-        ? target.zeroHpLifecycle.dead
-        : deathSaveStateIsDead(target.zeroHpLifecycle.deathSaves),
+    targetDead: targetIsDead(target),
     knockOutRecovery: false,
     targetDeathSavingThrowFailures: targetDeathSavingThrowFailures(target),
     replayIndex: 2,

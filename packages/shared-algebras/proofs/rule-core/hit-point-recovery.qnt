@@ -29,17 +29,26 @@ module hitPointRecovery {
         not(vitals.dead),
       }
 
+  // A player character's Death Saving Throw lifecycle must agree with its
+  // vitals. Other creatures don't make Death Saving Throws, so theirs stays
+  // reset.
+  pure def legalDeathSavingThrowLifecycleForVitals(
+    vitals: CreatureVitals,
+    lifecycle: DeathSavingThrowLifecycle
+  ): bool =
+    if (vitals.kind == PlayerCharacter) {
+      legalPlayerCharacterDeathSavingThrowState(vitals, lifecycle)
+    } else {
+      lifecycle == resetDeathSavingThrowLifecycle
+    }
+
   pure def legalHitPointRecoveryState(
     vitals: CreatureVitals,
     lifecycle: DeathSavingThrowLifecycle,
     recovery: PositiveHitPointUnconsciousRecovery
   ): bool = all {
     legalVitals(vitals),
-    if (vitals.kind == PlayerCharacter) {
-      legalPlayerCharacterDeathSavingThrowState(vitals, lifecycle)
-    } else {
-      lifecycle == resetDeathSavingThrowLifecycle
-    },
+    legalDeathSavingThrowLifecycleForVitals(vitals, lifecycle),
     legalPositiveHitPointUnconsciousRecovery(vitals, recovery),
     vitals.dead implies recovery == NoPositiveHitPointUnconsciousRecovery,
     (vitals.hitPoints == 0 and not(vitals.dead)) implies recovery == NoPositiveHitPointUnconsciousRecovery,

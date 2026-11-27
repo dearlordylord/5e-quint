@@ -668,4 +668,43 @@ module attackDamageCompositionExamples {
       assert(result.damageResult.deathSavingThrows == resetDeathSavingThrowLifecycle),
     }
   }
+
+  run test_a_lifecycle_that_disagrees_with_the_target_is_not_admitted = {
+    val woundedMonster: CreatureVitals = {
+      kind: MonsterCreature,
+      hitPoints: 7,
+      hitPointMaximum: 12,
+      temporaryHitPoints: 0,
+      dead: false,
+      unconscious: false,
+    }
+    val woundedCharacter = woundedMonster.with("kind", PlayerCharacter)
+    val monsterAttack = resolveAttackProcedure(
+      ActionAvailable,
+      meleeTargetRangeFacts(5),
+      { naturalD20: 10, total: 17, armorClass: 15, criticalThreshold: 20 },
+      noAttackRollModeSources,
+      woundedMonster,
+      Dying({ successes: 0, failures: 2 }),
+      ordinaryDamageFacts(MeleeAttack, 2),
+    )
+    val characterAttack = resolveAttackProcedure(
+      ActionAvailable,
+      meleeTargetRangeFacts(5),
+      { naturalD20: 10, total: 17, armorClass: 15, criticalThreshold: 20 },
+      noAttackRollModeSources,
+      woundedCharacter,
+      Stable,
+      ordinaryDamageFacts(MeleeAttack, 2),
+    )
+    all {
+      assert(not(attackTargetCanTakeDamage(woundedMonster, Dying({ successes: 0, failures: 2 })))),
+      assert(not(attackTargetCanTakeDamage(woundedCharacter, Stable))),
+      assert(attackTargetCanTakeDamage(woundedMonster, resetDeathSavingThrowLifecycle)),
+      assert(monsterAttack.actionQuota == ActionAvailable),
+      assert(monsterAttack.damageResult.vitals == woundedMonster),
+      assert(characterAttack.actionQuota == ActionAvailable),
+      assert(characterAttack.damageResult.vitals == woundedCharacter),
+    }
+  }
 }
