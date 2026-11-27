@@ -1355,7 +1355,7 @@ function prepareStartingTurn(state: BattleState): BattleState {
 }
 
 /**
- * A dead participant's turn, passed without being taken (ASSUMPTIONS.md A71):
+ * A dead participant's turn, passed without being taken (ASSUMPTIONS.md A73):
  * only what its turn's start and end end without asking anything, so an effect
  * that lasts until the start or end of its turn still ends then. Nothing is
  * rolled, saved or chosen for it.
@@ -5276,7 +5276,7 @@ function resolveEndTurnForParent(
 }
 
 /**
- * End Turn with nobody alive to take the next turn (ASSUMPTIONS.md A71): it
+ * End Turn with nobody alive to take the next turn (ASSUMPTIONS.md A73): it
  * asks for nothing and changes nothing, so the order stays where it is and End
  * Turn stays offered until the table ends the battle.
  */
@@ -6084,7 +6084,7 @@ function resolveStartTurnOccurrences(input: {
   readonly parent: ReplayParentContinuation;
 }): StartedTurn {
   if (participantIsDead(input.startingTurnState, input.sourceTurn.actorId)) {
-    // A dead creature's turn asks nothing of it (ASSUMPTIONS.md A71). End Turn
+    // A dead creature's turn asks nothing of it (ASSUMPTIONS.md A73). End Turn
     // reaches one only when the last creature alive dies in its own outgoing
     // turn, and the order then stops on that turn.
     return {

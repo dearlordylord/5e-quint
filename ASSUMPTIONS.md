@@ -564,7 +564,7 @@ rerolls first. The SRD also doesn't say whether Tactical Mind's "still fails"
 reads the check before or after another added die; the model judges the check
 once with every added die.
 
-## A71: A dead creature's turn passes without being taken
+## A73: A dead creature's turn passes without being taken
 
 **Assumption:** A dead creature takes no turn. When its place in the
 Initiative order comes up, its turn passes on its own: nothing is rolled,

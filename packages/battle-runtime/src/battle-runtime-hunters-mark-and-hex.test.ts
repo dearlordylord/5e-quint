@@ -365,14 +365,12 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       }),
     ]);
 
+    // The dead Goblin's turn passes on its own.
     const afterFighterTurn = requireResolved(
       endTurn({ state: dropped.state, actorId: fighterId }),
     ).state;
-    const afterGoblinTurn = requireResolved(
-      endTurn({ state: afterFighterTurn, actorId: goblinId }),
-    ).state;
     const nextFighterTurn = requireResolved(
-      endTurn({ state: afterGoblinTurn, actorId: skeletonId }),
+      endTurn({ state: afterFighterTurn, actorId: skeletonId }),
     ).state;
     const transferAct = discoverBattleActs(
       battleRuntimeSessionForTest({
@@ -639,16 +637,11 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       deathFailuresAtZeroHp: 1,
       damageSourceId: fighterId,
     });
+    // The dead Goblin's turn passes on its own.
     const nextFighterTurn = requireResolved(
       endTurn({
-        state: requireResolved(
-          endTurn({
-            state: requireResolved(
-              endTurn({ state: dropped, actorId: fighterId }),
-            ).state,
-            actorId: goblinId,
-          }),
-        ).state,
+        state: requireResolved(endTurn({ state: dropped, actorId: fighterId }))
+          .state,
         actorId: skeletonId,
       }),
     ).state;
@@ -1349,16 +1342,11 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       ),
     ).toBe(false);
 
+    // The dead Goblin's turn passes on its own.
     const laterTurn = requireResolved(
       endTurn({
-        state: requireResolved(
-          endTurn({
-            state: requireResolved(
-              endTurn({ state: dropped, actorId: fighterId }),
-            ).state,
-            actorId: goblinId,
-          }),
-        ).state,
+        state: requireResolved(endTurn({ state: dropped, actorId: fighterId }))
+          .state,
         actorId: skeletonId,
       }),
     ).state;

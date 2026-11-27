@@ -24,7 +24,7 @@ module battleRuntimeTurnAdvancement {
     fighter: { ...state.fighter, readiedSpellHeld: false, readiedMovementHeld: false },
   }
 
-  // ASSUMPTIONS.md A71: a dead creature takes no turn. Its turn passes with
+  // ASSUMPTIONS.md A73: a dead creature takes no turn. Its turn passes with
   // only what ends at its start and end, and nothing asked of it. `state` has
   // the Initiative order on the passed turn.
   pure def passDeadActorTurn(state: BattleState): BattleState = {
@@ -36,7 +36,7 @@ module battleRuntimeTurnAdvancement {
     expireFighterEndOfTurnOngoingFeatures(expireEndOfTurnSpellEffects(helpAndReadiedEnded))
   }
 
-  // With nobody alive, the order stays where it is (A71).
+  // With nobody alive, the order stays where it is (A73).
   pure def endTurn(state: BattleState): BattleState =
     if (actorIsDead(state, Fighter) and actorIsDead(state, Goblin)) state
     else endTurnToNextLivingActor(state)
@@ -57,7 +57,7 @@ module battleRuntimeTurnAdvancement {
     val nextActor = advancedInitiative.stillToAct.actor
     val startTimingsEnded = expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(featureChecked, nextActor), nextActor)
     // A creature that died in its own outgoing turn, as the last one alive,
-    // has its turn come up with nothing applied to it (A71).
+    // has its turn come up with nothing applied to it (A73).
     val featureAdvanced =
       if (actorIsDead(featureChecked, nextActor)) startTimingsEnded
       else applyStartOfTurnSpellEffects(startTimingsEnded, nextActor)

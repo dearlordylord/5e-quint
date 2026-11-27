@@ -27,7 +27,7 @@ export type LivingTurnAdvance = {
 
 /**
  * Where End Turn moves the Initiative order. A dead creature takes no turn
- * (ASSUMPTIONS.md A71): End Turn passes over each dead participant, in order,
+ * (ASSUMPTIONS.md A73): End Turn passes over each dead participant, in order,
  * to the next one still alive, and the dead keep their places. When no
  * participant is alive, the order doesn't move and the battle waits for the
  * table.
