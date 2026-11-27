@@ -6,9 +6,9 @@ module ruleCoreAttackRangeMbt {
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
 
-  type OfferedAttackRoll = NoAttackRoll | OfferedAttackRoll(D20TestRollMode)
+  type AttackRollOffer = NoAttackRoll | OfferedAttackRoll(D20TestRollMode)
   var qCaseIndex: int
-  var qOfferedAttackRoll: OfferedAttackRoll
+  var qOfferedAttackRoll: AttackRollOffer
   var qActionSpent: bool
 
   action init = all {
