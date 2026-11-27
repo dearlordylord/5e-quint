@@ -307,11 +307,10 @@ import {
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   parseSupportedUnitFeatureProfile,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
-  resolveBardicInspirationFailedD20Test,
+  resolveBardicInspirationFailedAttackRoll,
   resolveBattleConcentrationDamage,
   resolveBattleInterrupt,
   resolveBattleSubject as resolveBattleSubjectRuntime,
-  resolveFailedAbilityCheckResourceBoost,
   resolveSuccessfulAbilityCheckReactionReduction,
   sameBattleSubject,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
@@ -1230,10 +1229,10 @@ export function requireResolved(
   return result;
 }
 
-export function requireBardicInspirationD20TestResolved(
-  result: ReturnType<typeof resolveBardicInspirationFailedD20Test>,
+export function requireBardicInspirationAttackRollResolved(
+  result: ReturnType<typeof resolveBardicInspirationFailedAttackRoll>,
 ): Extract<
-  ReturnType<typeof resolveBardicInspirationFailedD20Test>,
+  ReturnType<typeof resolveBardicInspirationFailedAttackRoll>,
   { readonly tag: "resolved" }
 > {
   if (result.tag !== "resolved") {
@@ -3373,6 +3372,10 @@ export function abilityCheckFill(
         readonly naturalD20?: number;
         readonly rollMode?: AttackRollMode;
         readonly rolledD20s?: TestD20RolledD20s;
+        readonly d20TestDieMinimum?: Extract<
+          BattleFill,
+          { readonly kind: "abilityCheck" }
+        >["value"]["d20TestDieMinimum"];
         readonly d20TestRerolls?: Extract<
           BattleFill,
           { readonly kind: "abilityCheck" }
@@ -3394,6 +3397,9 @@ export function abilityCheckFill(
       ...(testD20TestRoll(checkValue) === undefined
         ? {}
         : { d20TestRoll: testD20TestRoll(checkValue)! }),
+      ...(checkValue.d20TestDieMinimum === undefined
+        ? {}
+        : { d20TestDieMinimum: checkValue.d20TestDieMinimum }),
       ...(checkValue.d20TestRerolls === undefined
         ? {}
         : { d20TestRerolls: checkValue.d20TestRerolls }),
@@ -6985,11 +6991,10 @@ export {
   pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
   removeCondition,
   requiredAbilityCheckRollMode,
-  resolveBardicInspirationFailedD20Test,
+  resolveBardicInspirationFailedAttackRoll,
   resolveBattleConcentrationDamage,
   resolveBattleInterrupt,
   resolveBattleSubject,
-  resolveFailedAbilityCheckResourceBoost,
   resolveSpawnedCompanionForm,
   resolvePactOfTheChainSpawnedCompanionForm,
   resolveSuccessfulAbilityCheckReactionReduction,

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-healing-movement-rider unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.self-bonus-action-healing
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-healing-movement-rider unit-feature.innate-sorcery-activation unit-feature.self-bonus-action-healing
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 
 module unitFeaturePoolCostCore {
@@ -10,7 +10,8 @@ module unitFeaturePoolCostCore {
   import actionTurnProcedures.* from "./action-turn-procedures"
 
   // RAW anchors:
-  // - classes.md: Second Wind, Tactical Shift, and Tactical Mind.
+  // - classes.md: Second Wind and Tactical Shift. Tactical Mind is owned by
+  //   d20-test-failed-test-added-dice-core.qnt.
   // - classes.md: Cunning Action.
   // - classes.md: Innate Sorcery activation.
   // - character-origins.md: Orc Adrenaline Rush.
@@ -79,19 +80,6 @@ module unitFeaturePoolCostCore {
     tacticalShiftTravelDistanceFeet: int,
     ordinaryMovementSpentFeet: int,
     opportunityAttackWindow: bool,
-  }
-
-  type FailedAbilityCheckResourceBoostFacts = {
-    originalTotal: int,
-    dc: int,
-    boostRoll: int,
-  }
-
-  type FailedAbilityCheckResourceBoostResult = {
-    pool: FeatureUsePool,
-    originalSucceeded: bool,
-    boostedTotal: int,
-    boostedSucceeded: bool,
   }
 
   type CunningActionChoice =
@@ -360,35 +348,6 @@ module unitFeaturePoolCostCore {
         if (traversalAdmitted) resolved.tacticalShiftTravelDistanceFeet else 0,
       ordinaryMovementSpentFeet: resolved.ordinaryMovementSpentFeet,
       opportunityAttackWindow: resolved.opportunityAttackWindow,
-    }
-  }
-
-  pure def legalFailedAbilityCheckResourceBoostFacts(
-    facts: FailedAbilityCheckResourceBoostFacts
-  ): bool = all {
-    facts.boostRoll >= 1,
-    facts.boostRoll <= 10,
-  }
-
-  pure def resolveFailedAbilityCheckResourceBoost(
-    pool: FeatureUsePool,
-    facts: FailedAbilityCheckResourceBoostFacts
-  ): FailedAbilityCheckResourceBoostResult = {
-    val originalSucceeded = facts.originalTotal >= facts.dc
-    val boostedTotal = facts.originalTotal + facts.boostRoll
-    val boostedSucceeded = boostedTotal >= facts.dc
-    val admitted = all {
-      legalFeatureUsePool(pool),
-      legalFailedAbilityCheckResourceBoostFacts(facts),
-      pool.usesRemaining > 0,
-      not(originalSucceeded),
-    }
-    val spend = admitted and boostedSucceeded
-    {
-      pool: if (spend) spendFeatureUsePool(pool) else pool,
-      originalSucceeded: originalSucceeded,
-      boostedTotal: boostedTotal,
-      boostedSucceeded: boostedSucceeded,
     }
   }
 

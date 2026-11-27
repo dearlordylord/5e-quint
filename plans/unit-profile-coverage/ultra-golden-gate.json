@@ -79,12 +79,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 40,
-              "numerator": 40
+              "denominator": 41,
+              "numerator": 41
             },
             "qntCoveredObligations": {
-              "denominator": 47,
-              "numerator": 47
+              "denominator": 48,
+              "numerator": 48
             }
           },
           "generatorBlockingRows": [],
@@ -96,11 +96,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 47,
-              "numerator": 47
+              "denominator": 48,
+              "numerator": 48
             },
             "witnessKinds": {
-              "contract-test": 12,
+              "contract-test": 16,
               "deterministic-qnt-replay": 5,
               "focused-mbt": 57,
               "runtime-test": 19
@@ -363,6 +363,7 @@
       ],
       "scopedObligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -459,12 +460,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 41,
-              "numerator": 41
+              "denominator": 42,
+              "numerator": 42
             },
             "qntCoveredObligations": {
-              "denominator": 50,
-              "numerator": 50
+              "denominator": 51,
+              "numerator": 51
             }
           },
           "generatorBlockingRows": [],
@@ -476,11 +477,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 50,
-              "numerator": 50
+              "denominator": 51,
+              "numerator": 51
             },
             "witnessKinds": {
-              "contract-test": 12,
+              "contract-test": 16,
               "deterministic-qnt-replay": 8,
               "focused-mbt": 57,
               "runtime-test": 19
@@ -743,6 +744,7 @@
       ],
       "scopedObligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -842,12 +844,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 65,
-              "numerator": 65
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             }
           },
           "generatorBlockingRows": [],
@@ -859,11 +861,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             },
             "witnessKinds": {
-              "contract-test": 12,
+              "contract-test": 16,
               "deterministic-qnt-replay": 14,
               "focused-mbt": 79,
               "runtime-test": 34
@@ -963,6 +965,7 @@
       ],
       "scopedObligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
@@ -1088,12 +1091,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "qntCoveredObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             }
           },
           "generatorBlockingRows": [],
@@ -1105,11 +1108,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             },
             "witnessKinds": {
-              "contract-test": 12,
+              "contract-test": 16,
               "deterministic-qnt-replay": 15,
               "focused-mbt": 79,
               "runtime-test": 36
@@ -1209,6 +1212,7 @@
       ],
       "scopedObligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
@@ -1335,12 +1339,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 72,
-              "numerator": 72
+              "denominator": 73,
+              "numerator": 73
             },
             "qntCoveredObligations": {
-              "denominator": 83,
-              "numerator": 83
+              "denominator": 84,
+              "numerator": 84
             }
           },
           "generatorBlockingRows": [],
@@ -1352,11 +1356,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 83,
-              "numerator": 83
+              "denominator": 84,
+              "numerator": 84
             },
             "witnessKinds": {
-              "contract-test": 12,
+              "contract-test": 16,
               "deterministic-qnt-replay": 17,
               "focused-mbt": 82,
               "runtime-test": 42
@@ -1456,6 +1460,7 @@
       ],
       "scopedObligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
@@ -1588,12 +1593,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 74,
+              "numerator": 74
             },
             "qntCoveredObligations": {
-              "denominator": 84,
-              "numerator": 84
+              "denominator": 85,
+              "numerator": 85
             }
           },
           "generatorBlockingRows": [],
@@ -1605,11 +1610,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 84,
-              "numerator": 84
+              "denominator": 85,
+              "numerator": 85
             },
             "witnessKinds": {
-              "contract-test": 12,
+              "contract-test": 16,
               "deterministic-qnt-replay": 18,
               "focused-mbt": 82,
               "runtime-test": 44
@@ -1709,6 +1714,7 @@
       ],
       "scopedObligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
@@ -1815,13 +1821,13 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 216,
-              "numerator": 216,
+              "denominator": 217,
+              "numerator": 217,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 134,
-              "numerator": 134,
+              "denominator": 135,
+              "numerator": 135,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -1830,8 +1836,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 305,
-              "numerator": 305,
+              "denominator": 306,
+              "numerator": 306,
               "percent": "100%"
             }
           },
@@ -1842,12 +1848,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 74,
-              "numerator": 74
+              "denominator": 75,
+              "numerator": 75
             },
             "qntCoveredObligations": {
-              "denominator": 85,
-              "numerator": 85
+              "denominator": 86,
+              "numerator": 86
             }
           },
           "generatorBlockingRows": [],
@@ -1859,11 +1865,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 85,
-              "numerator": 85
+              "denominator": 86,
+              "numerator": 86
             },
             "witnessKinds": {
-              "contract-test": 12,
+              "contract-test": 16,
               "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
               "runtime-test": 46
@@ -1963,6 +1969,7 @@
       ],
       "scopedObligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
@@ -2070,13 +2077,13 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 217,
-              "numerator": 217,
+              "denominator": 218,
+              "numerator": 218,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 146,
-              "numerator": 146,
+              "denominator": 147,
+              "numerator": 147,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -2085,8 +2092,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 306,
-              "numerator": 306,
+              "denominator": 307,
+              "numerator": 307,
               "percent": "100%"
             }
           },
@@ -2097,12 +2104,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 74,
-              "numerator": 74
+              "denominator": 75,
+              "numerator": 75
             },
             "qntCoveredObligations": {
-              "denominator": 85,
-              "numerator": 85
+              "denominator": 86,
+              "numerator": 86
             }
           },
           "generatorBlockingRows": [],
@@ -2114,11 +2121,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 85,
-              "numerator": 85
+              "denominator": 86,
+              "numerator": 86
             },
             "witnessKinds": {
-              "contract-test": 12,
+              "contract-test": 16,
               "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
               "runtime-test": 46
@@ -2218,6 +2225,7 @@
       ],
       "scopedObligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
@@ -2325,13 +2333,13 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 263,
-              "numerator": 263,
+              "denominator": 264,
+              "numerator": 264,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 155,
-              "numerator": 155,
+              "denominator": 156,
+              "numerator": 156,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -2340,8 +2348,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 352,
-              "numerator": 352,
+              "denominator": 353,
+              "numerator": 353,
               "percent": "100%"
             }
           },
@@ -2352,12 +2360,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 74,
-              "numerator": 74
+              "denominator": 75,
+              "numerator": 75
             },
             "qntCoveredObligations": {
-              "denominator": 85,
-              "numerator": 85
+              "denominator": 86,
+              "numerator": 86
             }
           },
           "generatorBlockingRows": [],
@@ -2369,11 +2377,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 85,
-              "numerator": 85
+              "denominator": 86,
+              "numerator": 86
             },
             "witnessKinds": {
-              "contract-test": 12,
+              "contract-test": 16,
               "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
               "runtime-test": 46
@@ -2461,6 +2469,7 @@
       ],
       "scopedObligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
@@ -2568,13 +2577,13 @@
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
-              "denominator": 275,
-              "numerator": 275,
+              "denominator": 276,
+              "numerator": 276,
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 162,
-              "numerator": 162,
+              "denominator": 163,
+              "numerator": 163,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -2583,8 +2592,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 364,
-              "numerator": 364,
+              "denominator": 365,
+              "numerator": 365,
               "percent": "100%"
             }
           },
@@ -2595,12 +2604,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 74,
-              "numerator": 74
+              "denominator": 75,
+              "numerator": 75
             },
             "qntCoveredObligations": {
-              "denominator": 85,
-              "numerator": 85
+              "denominator": 86,
+              "numerator": 86
             }
           },
           "generatorBlockingRows": [],
@@ -2612,11 +2621,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 85,
-              "numerator": 85
+              "denominator": 86,
+              "numerator": 86
             },
             "witnessKinds": {
-              "contract-test": 12,
+              "contract-test": 16,
               "deterministic-qnt-replay": 19,
               "focused-mbt": 82,
               "runtime-test": 46
@@ -2704,6 +2713,7 @@
       ],
       "scopedObligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",

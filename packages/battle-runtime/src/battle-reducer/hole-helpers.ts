@@ -4,12 +4,14 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.DIE_MINIMUM
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-ability-check-roll-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hide-action-obscurement-permission
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-die-minimum
 import { weaponAttackIsThrown } from "./thrown-weapon-attack.ts";
 import {
   consumeHelpAbilityChecks,
@@ -137,6 +139,7 @@ import {
 } from "./statblock-attacks.ts";
 import { activeSpellWeaponDamageRiders } from "./damage-helpers.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
+import { abilityCheckD20TestDieMinimumOption } from "./d20-test-die-minimum.ts";
 import {
   MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
   MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
@@ -278,6 +281,13 @@ function skillCheck(
       ...optionalProperty(
         "requiresTableSpatialFact",
         hole.requiresTableSpatialFact,
+      ),
+      ...optionalProperty(
+        "d20TestDieMinimum",
+        abilityCheckD20TestDieMinimumOption(
+          state.combatants.get(actorId),
+          check.skill,
+        ),
       ),
     },
     stateAfterCheck,

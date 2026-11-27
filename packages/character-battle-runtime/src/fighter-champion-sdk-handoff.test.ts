@@ -1,12 +1,13 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import {
   characterProcedureBinding,
   combatantId,
   requiredInitiativeRollModeForCombatant,
   resolveBattleSubject,
-  resolveFailedAbilityCheckResourceBoost,
+  FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
 } from "@dnd/battle-runtime";
-import { difficultyClass } from "@dnd/shared/types";
+import { DieRollResult, difficultyClass } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -55,6 +56,9 @@ describe("Fighter Champion real-catalog SDK handoff", () => {
           srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
         ),
       ],
+      hidePrerequisites: new Map([
+        [actorId, { kind: "heavilyObscuredOutOfEnemyLineOfSight" }],
+      ]),
     });
     const actor = requireCharacterCombatant(session.state, actorId);
     const ownership =
@@ -116,35 +120,55 @@ describe("Fighter Champion real-catalog SDK handoff", () => {
       ).toMatchObject({ procedure });
     }
 
-    const boosted = resolveFailedAbilityCheckResourceBoost({
-      state: session.state,
-      procedureRef: tacticalMindRef,
-      abilityCheck: {
-        actorId,
-        ability: "int",
-        skillOrToolLabel: "Investigation",
-        originalTotal: 13,
-        dc: difficultyClass(15),
-      },
-      boostRoll: 3,
-    });
-    expect(boosted).toMatchObject({
-      tag: "resolved",
-      abilityCheckBoost: { boostedTotal: 16, boostedSucceeded: true },
-    });
+    // Tactical Mind on a failed Hide check: the check is asked again with
+    // the boost, and the boost that turns it spends one Second Wind use.
+    const hide = { tag: "action", actorId, action: "hide" } as const;
+    const check = requireHole(
+      resolveBattleSubject({ state: session.state, subject: hide, fills: [] }),
+      "abilityCheck",
+    );
+    const failedCheck = {
+      kind: "abilityCheck",
+      holeId: check.holeId,
+      value: { total: 13 },
+    } as const;
     expect(
-      resolveFailedAbilityCheckResourceBoost({
-        state: session.state,
-        procedureRef: tacticalMindRef,
-        abilityCheck: {
-          actorId,
-          ability: "int",
-          originalTotal: 15,
-          dc: difficultyClass(15),
+      requireHole(
+        resolveBattleSubject({
+          state: session.state,
+          subject: hide,
+          fills: [failedCheck],
+        }),
+        "abilityCheck",
+      ),
+    ).toMatchObject({
+      failedAbilityCheckResourceBoosts: [{ rollerId: actorId, dieSize: 10 }],
+    });
+    const boosted = resolveBattleSubject({
+      state: session.state,
+      subject: hide,
+      fills: [
+        {
+          ...failedCheck,
+          value: {
+            total: 13,
+            d20TestAddedDice: [
+              {
+                kind: "addDie",
+                effectKind: FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
+                dieRoll: DieRollResult(3),
+              },
+            ],
+          },
         },
-        boostRoll: 3,
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+      ],
+    });
+    if (boosted.tag !== "resolved") {
+      throw new Error(`Expected the boosted Hide check, got ${boosted.tag}.`);
+    }
+    expect(boosted.state.combatants.get(actorId)?.hidden).toEqual({
+      discoveryDc: difficultyClass(16),
+    });
 
     expect(requiredInitiativeRollModeForCombatant(session.state, actorId)).toBe(
       "advantage",

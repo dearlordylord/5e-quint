@@ -28,6 +28,7 @@ import { registeredSpellProcedureDeclarations } from "./spell-procedure-profiles
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.brutal-strike
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-die-minimum
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
@@ -80,6 +81,7 @@ import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import {
   CreatureAttackRollMechanicsSchema,
   CreatureRechargeMinimumRollSchema,
+  D20_TEST_DIE_MINIMUM_FACE,
   DiceExprSchema,
   StatBlockProcedureOrdinalSchema,
   UnitRecordSchema,
@@ -232,8 +234,12 @@ import {
 import {
   BONUS_ACTION_HEALING_MOVEMENT_ORDER_CHOICES,
   WEAPON_CHANGE_AFTER_ATTACK_STATES,
+  BARDIC_INSPIRATION_DIE_EFFECT_KIND,
+  FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
   FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+  D20_TEST_DIE_MINIMUM_DECISION_KINDS,
+  D20_TEST_DIE_MINIMUM_EFFECT_KIND,
 } from "../battle-state-execution.ts";
 import type {
   BattleCreatureOriginSnapshot,
@@ -1822,6 +1828,18 @@ const HeroicInspirationRerollHoleOptionsFields = (() => {
   };
 })();
 
+/** The d20 minimum an ability check hole offers its roller. */
+const D20TestDieMinimumHoleOptionFields = (() => {
+  const member = pairedBattleHoleNestedMember({
+    effectKind: Schema.Literal(D20_TEST_DIE_MINIMUM_EFFECT_KIND),
+    minimumDieFace: Schema.Literal(D20_TEST_DIE_MINIMUM_FACE),
+  });
+  return {
+    labeled: { d20TestDieMinimum: Schema.optionalKey(member.labeled) },
+    mechanical: { d20TestDieMinimum: Schema.optionalKey(member.mechanical) },
+  };
+})();
+
 /** Every reroll a D20 Test hole can offer, outside attack-only sources. */
 const D20TestRerollHoleOptionsFields = mergeBattleHoleFieldPairs(
   D20TestNaturalOneRerollHoleOptionsFields,
@@ -1854,23 +1872,76 @@ const SavingThrowRerollHoleOptionsFields = mergeBattleHoleFieldPairs(
   FailedSavingThrowRerollHoleOptionsFields,
 );
 
-/** A labeled D20 Test hole member with the rerolls it can offer. */
-function withD20TestRerollLabeledHoleOptions<
+const BardicInspirationDieHoleOptionsFields = (() => {
+  const member = pairedBattleHoleNestedMember({
+    effectKind: Schema.Literal(BARDIC_INSPIRATION_DIE_EFFECT_KIND),
+    rollerId: CombatantId,
+    dieSize: DamageDieSizeSchema,
+  });
+  return {
+    labeled: {
+      bardicInspirationDice: Schema.optionalKey(Schema.Tuple([member.labeled])),
+    },
+    mechanical: {
+      bardicInspirationDice: Schema.optionalKey(
+        Schema.Tuple([member.mechanical]),
+      ),
+    },
+  };
+})();
+
+const FailedAbilityCheckResourceBoostHoleOptionsFields = (() => {
+  const member = pairedBattleHoleNestedMember({
+    effectKind: Schema.Literal(FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND),
+    rollerId: CombatantId,
+    dieSize: DamageDieSizeSchema,
+  });
+  return {
+    labeled: {
+      failedAbilityCheckResourceBoosts: Schema.optionalKey(
+        Schema.Tuple([member.labeled]),
+      ),
+    },
+    mechanical: {
+      failedAbilityCheckResourceBoosts: Schema.optionalKey(
+        Schema.Tuple([member.mechanical]),
+      ),
+    },
+  };
+})();
+
+/** What a saving throw hole can offer after the roll: rerolls, then added dice. */
+const SavingThrowAfterRollHoleOptionsFields = mergeBattleHoleFieldPairs(
+  SavingThrowRerollHoleOptionsFields,
+  BardicInspirationDieHoleOptionsFields,
+);
+
+/** What an ability check hole can offer after the roll: rerolls, then added dice. */
+const AbilityCheckAfterRollHoleOptionsFields = mergeBattleHoleFieldPairs(
+  mergeBattleHoleFieldPairs(
+    D20TestRerollHoleOptionsFields,
+    BardicInspirationDieHoleOptionsFields,
+  ),
+  FailedAbilityCheckResourceBoostHoleOptionsFields,
+);
+
+/** A labeled saving throw hole member with what it can offer after the roll. */
+function withSavingThrowAfterRollLabeledHoleOptions<
   const Fields extends Schema.Struct.Fields,
 >(schema: Schema.Struct<Fields>) {
   return schema.pipe(
-    Schema.fieldsAssign(SavingThrowRerollHoleOptionsFields.labeled),
+    Schema.fieldsAssign(SavingThrowAfterRollHoleOptionsFields.labeled),
   );
 }
 
-/** The mechanical D20 Test hole member with the rerolls it can offer. */
-function withD20TestRerollMechanicalHoleOptions<
+/** The mechanical saving throw hole member with what it can offer after the roll. */
+function withSavingThrowAfterRollMechanicalHoleOptions<
   const Fields extends Schema.Struct.Fields & {
     readonly label: Schema.Top;
   },
 >(schema: Schema.Struct<Fields>) {
   return mechanicalBattleHoleSchemaFromLabeled(schema).pipe(
-    Schema.fieldsAssign(SavingThrowRerollHoleOptionsFields.mechanical),
+    Schema.fieldsAssign(SavingThrowAfterRollHoleOptionsFields.mechanical),
     Schema.annotate({}),
   );
 }
@@ -2349,39 +2420,95 @@ const GenericSavingThrowHoleBaseMembers = [
 ] as const;
 
 const GenericSavingThrowHolePayloadMembers = [
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[0]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[1]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[2]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[3]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[4]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[5]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[6]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[7]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[8]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[9]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[10]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[11]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[12]),
-  withD20TestRerollLabeledHoleOptions(GenericSavingThrowHoleBaseMembers[13]),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[0],
+  ),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[1],
+  ),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[2],
+  ),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[3],
+  ),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[4],
+  ),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[5],
+  ),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[6],
+  ),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[7],
+  ),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[8],
+  ),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[9],
+  ),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[10],
+  ),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[11],
+  ),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[12],
+  ),
+  withSavingThrowAfterRollLabeledHoleOptions(
+    GenericSavingThrowHoleBaseMembers[13],
+  ),
 ] as const satisfies {
   readonly length: (typeof GenericSavingThrowHoleBaseMembers)["length"];
 };
 
 const GenericSavingThrowMechanicalHolePayloadMembers = [
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[0]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[1]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[2]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[3]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[4]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[5]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[6]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[7]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[8]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[9]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[10]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[11]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[12]),
-  withD20TestRerollMechanicalHoleOptions(GenericSavingThrowHoleBaseMembers[13]),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[0],
+  ),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[1],
+  ),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[2],
+  ),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[3],
+  ),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[4],
+  ),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[5],
+  ),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[6],
+  ),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[7],
+  ),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[8],
+  ),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[9],
+  ),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[10],
+  ),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[11],
+  ),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[12],
+  ),
+  withSavingThrowAfterRollMechanicalHoleOptions(
+    GenericSavingThrowHoleBaseMembers[13],
+  ),
 ] as const satisfies {
   readonly length: (typeof GenericSavingThrowHoleBaseMembers)["length"];
 };
@@ -2709,7 +2836,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3274,7 +3401,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3303,7 +3430,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3335,7 +3462,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3361,7 +3488,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3383,7 +3510,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3405,7 +3532,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3440,7 +3567,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3477,7 +3604,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3527,7 +3654,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3556,7 +3683,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3578,7 +3705,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowAutomaticFailureProjectionSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3586,7 +3713,7 @@ const BattleHolePayloadMembers = [
       outcomeTargeting: Schema.Literals(["singleTarget", "targetList"]),
       areaInput: Schema.optionalKey(Schema.Never),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3594,7 +3721,7 @@ const BattleHolePayloadMembers = [
       outcomeTargeting: Schema.Literal("area"),
       areaInput: BattleSpellAreaInputRequestSchema,
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3616,7 +3743,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3640,7 +3767,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3662,7 +3789,7 @@ const BattleHolePayloadMembers = [
         BattleSavingThrowRelationshipFactRequestSchema,
       ),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedUnqualifiedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3725,7 +3852,7 @@ const BattleHolePayloadMembers = [
       ),
       rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
     },
-    SavingThrowRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleMovementHoleCommonFieldsSchema,
@@ -3761,7 +3888,10 @@ const BattleHolePayloadMembers = [
       dc: DifficultyClass,
       rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
     },
-    D20TestRerollHoleOptionsFields,
+    mergeBattleHoleFieldPairs(
+      D20TestDieMinimumHoleOptionFields,
+      AbilityCheckAfterRollHoleOptionsFields,
+    ),
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -3796,7 +3926,7 @@ const BattleHolePayloadMembers = [
         }),
       ]),
     },
-    D20TestRerollHoleOptionsFields,
+    AbilityCheckAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -4131,6 +4261,54 @@ const BattleDeathSavingThrowD20TestRerollDecisionsSchema = Schema.NonEmptyArray(
   ]),
 );
 
+function battleD20TestAddedDieDecisionSchema<const EffectKind extends string>(
+  effectKind: EffectKind,
+) {
+  return Schema.Union([
+    Schema.Struct({
+      kind: Schema.Literal("decline"),
+      effectKind: Schema.Literal(effectKind),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("addDie"),
+      effectKind: Schema.Literal(effectKind),
+      dieRoll: BattleDieRollResultSchema,
+    }),
+  ]);
+}
+
+function battleD20TestOutcomeAddedDieDecisionSchema<
+  const EffectKind extends string,
+>(effectKind: EffectKind) {
+  return Schema.Union([
+    Schema.Struct({
+      kind: Schema.Literal("decline"),
+      effectKind: Schema.Literal(effectKind),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("addDie"),
+      effectKind: Schema.Literal(effectKind),
+      dieRoll: BattleDieRollResultSchema,
+      succeeded: Schema.Boolean,
+    }),
+  ]);
+}
+
+const BattleAbilityCheckAddedDieDecisionsSchema = Schema.NonEmptyArray(
+  Schema.Union([
+    battleD20TestAddedDieDecisionSchema(BARDIC_INSPIRATION_DIE_EFFECT_KIND),
+    battleD20TestAddedDieDecisionSchema(
+      FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
+    ),
+  ]),
+);
+
+const BattleRolledOutcomeAddedDieDecisionsSchema = Schema.NonEmptyArray(
+  battleD20TestOutcomeAddedDieDecisionSchema(
+    BARDIC_INSPIRATION_DIE_EFFECT_KIND,
+  ),
+);
+
 const BattleAbilityCheckD20TestRerollDecisionsSchema = Schema.NonEmptyArray(
   Schema.Union([
     BattleD20TestNaturalOneRerollDecisionSchema,
@@ -4145,12 +4323,16 @@ const BattleD20TestRolledOutcomeFields = {
   d20TestRerolls: Schema.optionalKey(
     BattleRolledOutcomeD20TestRerollDecisionsSchema,
   ),
+  d20TestAddedDice: Schema.optionalKey(
+    BattleRolledOutcomeAddedDieDecisionsSchema,
+  ),
 } as const;
 const BattleD20TestWithoutRollOutcomeFields = {
   succeeded: Schema.Boolean,
   withoutRoll: Schema.Literal(true),
   d20TestRoll: Schema.optionalKey(Schema.Never),
   d20TestRerolls: Schema.optionalKey(Schema.Never),
+  d20TestAddedDice: Schema.optionalKey(Schema.Never),
 } as const;
 const BattleD20TestRolledOutcomeSchema = Schema.Struct(
   BattleD20TestRolledOutcomeFields,
@@ -6381,8 +6563,17 @@ export const BattleFillSchema: Schema.Codec<
       value: Schema.Struct({
         total: Schema.Number.pipe(Schema.check(Schema.isInt())),
         d20TestRoll: Schema.optionalKey(BattleD20TestRollSchema),
+        d20TestDieMinimum: Schema.optionalKey(
+          Schema.Struct({
+            kind: Schema.Literals(D20_TEST_DIE_MINIMUM_DECISION_KINDS),
+            effectKind: Schema.Literal(D20_TEST_DIE_MINIMUM_EFFECT_KIND),
+          }),
+        ),
         d20TestRerolls: Schema.optionalKey(
           BattleAbilityCheckD20TestRerollDecisionsSchema,
+        ),
+        d20TestAddedDice: Schema.optionalKey(
+          BattleAbilityCheckAddedDieDecisionsSchema,
         ),
       }),
       spatialFacts: Schema.optionalKey(

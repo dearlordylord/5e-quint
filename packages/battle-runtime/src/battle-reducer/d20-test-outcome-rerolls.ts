@@ -39,10 +39,11 @@ import {
   D20_TEST_REROLL_WITHOUT_ROLL_MESSAGE,
 } from "./d20-test-natural-one-reroll.ts";
 import {
-  d20TestRerolls,
-  type D20TestRerollRules,
-  type D20TestRerollSourceFlags,
-} from "./d20-test-reroll-sequence.ts";
+  d20TestDecisions,
+  type D20TestDecisionRules,
+  type D20TestSourceFlags,
+} from "./d20-test-decision-sequence.ts";
+import type { D20TestDieMinimumFace } from "./d20-test-die-minimum.ts";
 import {
   d20TestDieAfterReroll,
   d20TestOutcomeAfterReroll,
@@ -53,9 +54,9 @@ import type {
   D20TestRolledOutcome,
 } from "./d20-test-rolls-that-stand.ts";
 import type {
-  D20TestRerollSpendAvailability,
-  D20TestRerollSpendScope,
-} from "./d20-test-reroll-spend.ts";
+  D20TestSpendAvailability,
+  D20TestSpendScope,
+} from "./d20-test-source-spend.ts";
 import {
   battleStateAfterFailedSavingThrowReroll,
   savingThrowHoleWithFailedSavingThrowRerollOption,
@@ -97,7 +98,7 @@ type SavingThrowRerollSource = (typeof SAVING_THROW_REROLL_SOURCES)[number];
 
 /** The reroll sources a D20 Test hole is asked again with. */
 export type D20TestOutcomeRerollOptions =
-  D20TestRerollSourceFlags<D20TestOutcomeRerollSource>;
+  D20TestSourceFlags<D20TestOutcomeRerollSource>;
 
 /**
  * The reroll sources a saving throw hole is asked again with: the D20 Test
@@ -181,13 +182,13 @@ export type SavingThrowRerolls<Roll> = D20TestOutcomeRerolls<
 /** The roll being checked: where it belongs, and who rolled it for which hole. */
 type D20TestRollContext = {
   readonly state: BattleState;
-  readonly scope: D20TestRerollSpendScope;
+  readonly scope: D20TestSpendScope;
   readonly roll: BattleD20TestRollKey;
 };
 
 type D20TestRollSourceFacts = {
   readonly context: D20TestRollContext;
-  readonly heroicInspirationAvailability: D20TestRerollSpendAvailability;
+  readonly heroicInspirationAvailability: D20TestSpendAvailability;
 };
 
 function d20TestRollSourceFacts(
@@ -211,9 +212,9 @@ function resolvedD20TestOutcomeRerolls<Roll, Decision>(
   facts: D20TestRollSourceFacts,
   roll: Roll,
   decisions: readonly Decision[],
-  rules: D20TestRerollRules<Roll, Decision, D20TestOutcomeRerollSource>,
+  rules: D20TestDecisionRules<Roll, Decision, D20TestOutcomeRerollSource>,
 ): D20TestOutcomeRerolls<Roll> {
-  const rerolls = d20TestRerolls({ roll, decisions, rules });
+  const rerolls = d20TestDecisions({ roll, decisions, rules });
   if (rerolls.tag !== "resolved") return rerolls;
   return {
     tag: "resolved",
@@ -221,7 +222,7 @@ function resolvedD20TestOutcomeRerolls<Roll, Decision>(
     uses: {
       heroicInspiration: heroicInspirationUse(
         facts,
-        rerolls.rerolled.heroicInspiration,
+        rerolls.taken.heroicInspiration,
       ),
     },
   };
@@ -248,11 +249,13 @@ export function d20TestOutcomeRerolls<T extends BattleD20TestOutcome>(
 ): SavingThrowRerolls<T> {
   const outcome = input.outcome;
   if (outcome.withoutRoll === true) {
-    // Typed callers cannot build a without-roll outcome that carries a roll or
-    // reroll decisions; decoded or weak input can, and is refused here.
+    // Typed callers cannot build a without-roll outcome that carries a roll,
+    // reroll decisions or added dice; decoded or weak input can, and is
+    // refused here.
     if (
       outcome.d20TestRoll !== undefined ||
-      outcome.d20TestRerolls !== undefined
+      outcome.d20TestRerolls !== undefined ||
+      outcome.d20TestAddedDice !== undefined
     ) {
       return { tag: "invalid", issue: D20_TEST_REROLL_WITHOUT_ROLL_MESSAGE };
     }
@@ -270,7 +273,7 @@ export function d20TestOutcomeRerolls<T extends BattleD20TestOutcome>(
       input.scope,
       input.roll,
     );
-  const rules: D20TestRerollRules<
+  const rules: D20TestDecisionRules<
     D20TestRolledOutcome,
     BattleRolledOutcomeD20TestRerollDecision,
     SavingThrowRerollSource
@@ -305,7 +308,7 @@ export function d20TestOutcomeRerolls<T extends BattleD20TestOutcome>(
           }),
         }),
       ),
-    takesReroll: d20TestRerollDecisionTakesReroll,
+    takes: d20TestRerollDecisionTakesReroll,
     rollAfter: d20TestOutcomeAfterReroll,
     offered: {
       naturalOne: (roll) =>
@@ -319,7 +322,7 @@ export function d20TestOutcomeRerolls<T extends BattleD20TestOutcome>(
         }),
     },
   };
-  const rerolls = d20TestRerolls({
+  const rerolls = d20TestDecisions({
     roll: { succeeded: outcome.succeeded, d20TestRoll: outcome.d20TestRoll },
     decisions: outcome.d20TestRerolls ?? [],
     rules,
@@ -352,13 +355,13 @@ export function d20TestOutcomeRerolls<T extends BattleD20TestOutcome>(
         uses: {
           heroicInspiration: heroicInspirationUse(
             facts,
-            resolved.rerolled.heroicInspiration,
+            resolved.taken.heroicInspiration,
           ),
           failedSavingThrow: failedSavingThrowRerollUseForRoll({
             state: input.state,
             scope: input.scope,
             roll: input.roll,
-            rerolled: resolved.rerolled.failedSavingThrow,
+            rerolled: resolved.taken.failedSavingThrow,
           }),
         },
       }),
@@ -371,6 +374,8 @@ export function d20TestAbilityCheckRerolls(
   input: D20TestRollContext & {
     readonly value: D20TestAbilityCheckValue;
     readonly requiredRollMode: AttackRollMode | undefined;
+    /** The d20 minimum the check's totals count, when its roller uses one. */
+    readonly dieMinimum: D20TestDieMinimumFace | undefined;
   },
 ): D20TestOutcomeRerolls<D20TestAbilityCheckValue> {
   const actor = roller(input);
@@ -380,7 +385,7 @@ export function d20TestAbilityCheckRerolls(
   );
   if (factsIssue !== null) return { tag: "invalid", issue: factsIssue };
   const facts = d20TestRollSourceFacts(input);
-  const rules: D20TestRerollRules<
+  const rules: D20TestDecisionRules<
     D20TestAbilityCheckValue,
     BattleAbilityCheckD20TestRerollDecision,
     D20TestOutcomeRerollSource
@@ -397,6 +402,7 @@ export function d20TestAbilityCheckRerolls(
               originalD20TestRoll: roll.d20TestRoll,
               decision: naturalOne,
               requiredRollMode: input.requiredRollMode,
+              dieMinimum: input.dieMinimum,
             }),
           }),
           [HEROIC_INSPIRATION_REROLL_EFFECT_KIND]: (heroicInspiration) => ({
@@ -407,11 +413,12 @@ export function d20TestAbilityCheckRerolls(
               originalD20TestRoll: roll.d20TestRoll,
               decision: heroicInspiration,
               requiredRollMode: input.requiredRollMode,
+              dieMinimum: input.dieMinimum,
             }),
           }),
         }),
       ),
-    takesReroll: d20TestRerollDecisionTakesReroll,
+    takes: d20TestRerollDecisionTakesReroll,
     rollAfter: d20TestRollAfterReroll,
     offered: {
       naturalOne: (roll) =>
@@ -436,7 +443,7 @@ export function d20TestDeathSavingThrowRerolls(
 ): D20TestOutcomeRerolls<BattleD20TestDieReplacement> {
   const actor = roller(input);
   const facts = d20TestRollSourceFacts(input);
-  const rules: D20TestRerollRules<
+  const rules: D20TestDecisionRules<
     BattleD20TestDieReplacement,
     BattleDeathSavingThrowD20TestRerollDecision,
     D20TestOutcomeRerollSource
@@ -462,7 +469,7 @@ export function d20TestDeathSavingThrowRerolls(
           }),
         }),
       ),
-    takesReroll: d20TestRerollDecisionTakesReroll,
+    takes: d20TestRerollDecisionTakesReroll,
     rollAfter: d20TestDieAfterReroll,
     offered: {
       naturalOne: (roll) =>

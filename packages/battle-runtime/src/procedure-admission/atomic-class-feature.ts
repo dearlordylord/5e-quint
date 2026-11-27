@@ -12,7 +12,10 @@ import type { UnitFeatureProcedureExecution } from "../character-execution-vocab
 export type AtomicClassFeatureProcedureFacts = Extract<
   UnitFeatureProcedureExecution,
   {
-    readonly kind: "acrobaticMovement" | "bonusActionDelegatedStandardActions";
+    readonly kind:
+      | "acrobaticMovement"
+      | "bonusActionDelegatedStandardActions"
+      | "d20TestDieMinimum";
   }
 >;
 
@@ -84,7 +87,8 @@ type AtomicClassFeatureMechanics = Extract<
   {
     readonly family:
       | "acrobatic_movement"
-      | "bonus_action_delegated_standard_actions";
+      | "bonus_action_delegated_standard_actions"
+      | "d20_test_die_minimum";
   }
 >;
 type DelegatedStandardActionsMechanics = Extract<
@@ -102,7 +106,8 @@ export function admitAtomicClassFeatureProcedure(
   if (unit.kind !== "class_feature") return { tag: "notBattleOwned" };
   if (
     unit.mechanics.family !== "acrobatic_movement" &&
-    unit.mechanics.family !== "bonus_action_delegated_standard_actions"
+    unit.mechanics.family !== "bonus_action_delegated_standard_actions" &&
+    unit.mechanics.family !== "d20_test_die_minimum"
   ) {
     return { tag: "notBattleOwned" };
   }
@@ -138,6 +143,9 @@ function atomicClassFeatureProcedureAdmissionIssues(
       acrobatic_movement: acrobaticMovementAdmissionIssues,
       bonus_action_delegated_standard_actions:
         delegatedStandardActionsAdmissionIssues,
+      // Every field of the Surface family is a closed literal, so a decoded
+      // record always admits.
+      d20_test_die_minimum: () => [],
     }),
   );
 }
@@ -164,6 +172,19 @@ function atomicClassFeatureProcedureFacts(
               withoutFallingDuringMovement: true as const,
             },
           ] as const,
+        },
+      }),
+      d20_test_die_minimum: (die) => ({
+        kind: "d20TestDieMinimum" as const,
+        dieMinimum: {
+          appliesTo: Match.value(die.appliesTo.kind).pipe(
+            Match.when(
+              "ability_check_using_own_proficiency",
+              () => "abilityCheckUsingOwnProficiency" as const,
+            ),
+            Match.exhaustive,
+          ),
+          minimumDieFace: die.minimumDieFace,
         },
       }),
       bonus_action_delegated_standard_actions: () => ({

@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 191,
-    "covered": 180,
+    "total": 193,
+    "covered": 182,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 151,
+      "battle": 153,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 180,
+      "covered": 182,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -6516,7 +6516,7 @@
         "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
         "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts",
         "packages/battle-runtime/src/battle-reducer/d20-test-roll-reroll.ts",
-        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-spend.ts"
+        "packages/battle-runtime/src/battle-reducer/d20-test-source-spend.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -6544,12 +6544,12 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-failed-saving-throw-reroll-core.qnt"
       ],
-      "reason": "The QNT owner offers the reroll only while the saving throw as it stands is failed and the roller has a use left, with the class level as its bonus; an admitted reroll replaces the d20, or under Advantage or Disadvantage one chosen d20, the table's ruling on the new roll stands whether it succeeds or fails, and one use is spent, while a decline keeps the roll and the use; a decision, a decline included, is refused where nothing was offered. failed-saving-throw-reroll owns availability, the option, the decision checks and the spend, with d20-test-reroll-spend owning the paid-roll record it shares with Heroic Inspiration; d20-test-outcome-rerolls takes it in turn with the natural-1 reroll and Heroic Inspiration on every saving throw and Concentration save that d20-test-reroll-fills checks and the Glyph release, and the spend is recorded on the subject so a replay does not spend twice. Death Saving Throws are not yet offered it. The executable parity witnesses cover the offer and its bonus, no offer on a success, a successful and a failed new roll, decline, no use left, the roll mode check, Heroic Inspiration then the failed-save reroll on the same save, and a real-catalog Fighter 9 against a Fighter 8 under Burning Hands.",
+      "reason": "The QNT owner offers the reroll only while the saving throw as it stands is failed and the roller has a use left, with the class level as its bonus; an admitted reroll replaces the d20, or under Advantage or Disadvantage one chosen d20, the table's ruling on the new roll stands whether it succeeds or fails, and one use is spent, while a decline keeps the roll and the use; a decision, a decline included, is refused where nothing was offered. failed-saving-throw-reroll owns availability, the option, the decision checks and the spend, with d20-test-source-spend owning the paid-roll record it shares with Heroic Inspiration; d20-test-outcome-rerolls takes it in turn with the natural-1 reroll and Heroic Inspiration on every saving throw and Concentration save that d20-test-reroll-fills checks and the Glyph release, and the spend is recorded on the subject so a replay does not spend twice. Death Saving Throws are not yet offered it. The executable parity witnesses cover the offer and its bonus, no offer on a success, a successful and a failed new roll, decline, no use left, the roll mode check, Heroic Inspiration then the failed-save reroll on the same save, and a real-catalog Fighter 9 against a Fighter 8 under Burning Hands.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/failed-saving-throw-reroll.ts",
         "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts",
-        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-spend.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-source-spend.ts",
         "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts"
       ],
       "status": "covered",
@@ -6958,6 +6958,92 @@
         "UBIQUITOUS_LANGUAGE.md#Movement"
       ],
       "title": "Every reader of a creature's Speed asks one collector which sources change it, so features, spells, Weapon Mastery Slow, Hamstring Blow, heavy armor's Strength, halving and Speed 0 combine the same way for every speed"
+    },
+    {
+      "id": "BATTLE.D20_TEST.DIE_MINIMUM",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-reliable-talent.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/rogue-reliable-talent-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+        }
+      ],
+      "profiles": ["unit-feature.d20-test-die-minimum"],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core.qnt"
+      ],
+      "reason": "The QNT owner offers the highest d20 minimum among the roller's features that apply to the test, today only ability checks that use the roller's own proficiency; the fill must use or decline an offered minimum and may not decide on one it was not offered; the counted d20 is the higher of the natural face and the minimum, applied to whichever d20 stands under Advantage, Disadvantage or a reroll, so a reroll keeps the modifiers of a total that counted the minimum. d20-test-die-minimum owns the offer and the decision check; hole-helpers puts the offer on every battle skill check from the existing combatant skill proficiency facts; d20-test-reroll-fills checks the decision before the subject resolves and passes the counted minimum to the reroll checks in d20-test-roll-reroll. The executable parity witnesses cover admission, the offer and its codecs, no offer when unproficient or without the feature, the required and unavailable decisions, use and decline against the Hide DC, natural-1 rerolls with the minimum, and a real-catalog Rogue 7 and Rogue 6 through the SDK.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/d20-test-die-minimum.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-roll-reroll.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/classes.md#Level 7: Reliable Talent",
+        ".references/srd-5.2.1/playing-the-game.md#Interactions-with-Rerolls",
+        "UBIQUITOUS_LANGUAGE.md#D20-Rolls",
+        "ASSUMPTIONS.md#A55-Different-reroll-sources-may-apply-sequentially-to-the-same-die",
+        "ASSUMPTIONS.md#A67-A-d20-minimum-applies-to-the-d20-that-stands"
+      ],
+      "title": "A feature that sets a d20 minimum lets its holder count a lower d20 as that face on the D20 Tests it applies to, before the total"
+    },
+    {
+      "id": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
+        }
+      ],
+      "profiles": [
+        "unit-feature.bardic-inspiration-failed-d20-test",
+        "unit-feature.failed-ability-check-resource-boost"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
+      ],
+      "reason": "The QNT owner offers each source only while the test as it stands fails and the roller has it, a Bardic Inspiration die on ability checks and saving throws and the failed ability check resource boost on ability checks only; each source decides once on each roll and adds its die at most once, an ability check adds the die to its total and compares it with the DC while a saving throw carries the table's ruling with the die, and on that roll a decision, a decline included, is refused where nothing was offered. The Bardic Inspiration die is expended when it is rolled; the boost's use is spent only when the check succeeds with every added die. d20-test-after-roll-decisions asks for the added dice only once d20-test-outcome-rerolls has decided every reroll, so the dice go on the roll the rerolls leave (A68), and refuses added dice sent before that; d20-test-added-dice folds the sources on that roll for every saving throw, Concentration save and ability check that d20-test-reroll-fills checks and the Glyph release; each source owns its availability, option, decision checks and spend, recorded on the subject so a replay does not spend twice. A take of the boost is recorded with whether it spent the use, so a replay accepts the boost its first pass took on a check that still failed, and only a spent use makes the roller's other rolls spentOnAnotherRoll. The QNT core models one roll: on a roll of a multi-roll subject whose source was spent on another roll, the runtime lets a decline stand and refuses a die, which the core's single-roll offer does not reach. Attack rolls and Death Saving Throws are not yet offered the dice. The executable parity witnesses cover the offer, a die that turns the test and one that falls short, decline, no die or use left, a face outside the die, both dice in either order, a die after the test succeeded, the order after a Heroic Inspiration reroll, a saving throw with the table's ruling and a replay across its damage, a Concentration save, boost replays with and without the use spent, and a real-catalog Champion Fighter's Hide check.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-after-roll-decisions.ts",
+        "packages/battle-runtime/src/battle-reducer/bardic-inspiration-failed-d20-test.ts",
+        "packages/battle-runtime/src/battle-reducer/failed-ability-check-resource-boost.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-added-die.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/classes.md#Level-1-Bardic-Inspiration",
+        ".references/srd-5.2.1/classes.md#Level-2-Tactical-Mind",
+        "UBIQUITOUS_LANGUAGE.md#D20-Rolls",
+        "ASSUMPTIONS.md#A68-Dice-added-to-a-failed-D20-Test-come-after-its-rerolls"
+      ],
+      "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
     }
   ],
   "battleHoleFrontier": [
@@ -9242,7 +9328,10 @@
       "profileId": "unit-feature.hide-action-obscurement-permission"
     },
     {
-      "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE"
+      ],
       "profileId": "unit-feature.bardic-inspiration-failed-d20-test"
     },
     {
@@ -9270,7 +9359,10 @@
       "profileId": "unit-feature.spell-slot-healing-modifier"
     },
     {
-      "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE"
+      ],
       "profileId": "unit-feature.failed-ability-check-resource-boost"
     },
     {
@@ -10143,6 +10235,10 @@
     {
       "obligationIds": ["BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION"],
       "profileId": "unit-feature.combat-turn-start-heroic-inspiration"
+    },
+    {
+      "obligationIds": ["BATTLE.D20_TEST.DIE_MINIMUM"],
+      "profileId": "unit-feature.d20-test-die-minimum"
     }
   ],
   "qntOwnerRoles": [
@@ -11409,10 +11505,6 @@
         {
           "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
           "profileId": "unit-feature.bonus-action-healing-movement-rider"
-        },
-        {
-          "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
-          "profileId": "unit-feature.failed-ability-check-resource-boost"
         },
         {
           "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
@@ -14077,6 +14169,40 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/speed-collector-core-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Owns the d20 minimum offer for the D20 Tests a feature applies to, the use or decline decision check, the counted d20 and the reroll modifier check under a minimum, without importing authored Unit catalog rows.",
+      "obligationIds": ["BATTLE.D20_TEST.DIE_MINIMUM"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover the offer on proficient ability checks only, the required and unavailable decisions, the counted face, rerolls under the minimum and the minimum commuting with die selection.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Owns the dice added to a failed D20 Test once its rerolls are decided: each source's offer while the test still fails, one decision per source on each roll, the ability check total against the DC or the table's ruling on a saving throw, the Bardic Inspiration die expended when rolled and the resource boost's use spent only on success, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": ["BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE"],
+          "profileId": "unit-feature.bardic-inspiration-failed-d20-test"
+        },
+        {
+          "obligationIds": ["BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE"],
+          "profileId": "unit-feature.failed-ability-check-resource-boost"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover the offer of both dice, a boost that turns the check and one that falls short, both dice in either order, a decline asked again after another die, no offer or decision on a success, no use left, a face outside the die, a source twice, and a saving throw with the table's ruling and no boost.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -15562,6 +15688,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/damage-component-adjustments-examples.qnt",
       "role": "proof-only"
     },
@@ -16188,6 +16324,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt",
       "role": "proof-only"
     },
@@ -16588,6 +16734,11 @@
       "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
       "qntOwners": [
         {
+          "obligationIds": ["BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE"],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
+          "role": "semantic-core"
+        },
+        {
           "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
           "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
           "role": "proof-only"
@@ -16708,8 +16859,8 @@
       "profileId": "unit-feature.failed-ability-check-resource-boost",
       "qntOwners": [
         {
-          "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+          "obligationIds": ["BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE"],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
           "role": "semantic-core"
         }
       ]
@@ -21898,6 +22049,62 @@
         "packages/shared-algebras/proofs/rule-core/speed-collector-core.qnt"
       ],
       "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "let-binding",
+        "list",
+        "fold",
+        "arithmetic"
+      ],
+      "obligationId": "BATTLE.D20_TEST.DIE_MINIMUM",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "record-update",
+        "all-block",
+        "list",
+        "fold"
+      ],
+      "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
+      ],
+      "status": "generation-subset-clean"
     }
   ],
   "generatorReadinessBacklog": [],
@@ -22278,6 +22485,7 @@
     "unit-feature.creature-space-movement-permission",
     "unit-feature.cunning-strike",
     "unit-feature.cunning-strike-option-grant",
+    "unit-feature.d20-test-die-minimum",
     "unit-feature.d20-test-natural-one-reroll",
     "unit-feature.druid-wild-shape-known-form",
     "unit-feature.enemy-zero-hit-point-temporary-hit-points",

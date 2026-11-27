@@ -55,8 +55,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | Disposition | Rows |
 | --- | ---: |
 | catalog-authored-review-required | 52 |
-| catalog-installed-owner-evidence-present | 653 |
-| catalog-only/dead-for-now | 338 |
+| catalog-installed-owner-evidence-present | 654 |
+| catalog-only/dead-for-now | 337 |
 | class-progression-follow-up-required | 45 |
 | missing-authored-record | 60 |
 | missing-authored-runtime-closed | 23 |
@@ -66,24 +66,24 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Catalog state | Rows |
 | --- | ---: |
-| installed | 1068 |
-| not-installed | 283 |
+| installed | 1069 |
+| not-installed | 282 |
 
 ### Unit Profile Disposition
 
 | Unit profile disposition | Rows |
 | --- | ---: |
 | not-recorded | 171 |
-| profile-subset-supported | 141 |
+| profile-subset-supported | 142 |
 | supported-profile | 379 |
-| unsupported-profile | 660 |
+| unsupported-profile | 659 |
 
 ### Battle Readiness Snapshot
 
 | Battle readiness status | Rows |
 | --- | ---: |
-| accepted | 649 |
-| accepted-no-battle-effect | 545 |
+| accepted | 650 |
+| accepted-no-battle-effect | 544 |
 | battle-runtime-required | 60 |
 | owner-evidence-required | 97 |
 
@@ -944,7 +944,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Druid Elemental Fury | level-7 | character-level | class feature | `druid_elemental_fury` | `.references/srd-5.2.1/classes.md:3606` |  | present |  |  | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future Elemental Fury selected-option owner plus cantrip damage ability-modifier, weapon-hit damage rider, and Wild Shape active-form attack rider owners | A future owner must represent the character's Elemental Fury option choice as a durable selected feature fact, admit Potent Spellcasting through a generic Druid-cantrip damage ability-modifier owner, and admit Primal Strike through a generic optional once-per-turn attack-hit damage rider that consumes either existing weapon-hit facts or existing active Wild Shape Beast form attack facts with caller-chosen Cold, Fire, Lightning, or Thunder damage. The closure must not store both options as simultaneously executable, collapse the option into inert metadata, copy Wild Shape form or attack identity state, reimplement Wild Shape attack projection, or dispatch on Druid, Elemental Fury, Potent Spellcasting, Primal Strike, Beast form, spell names, or class names in reducers. |
 | Monk Evasion | level-7 | character-level | class feature | `monk_evasion` | `.references/srd-5.2.1/classes.md:5206` |  | present |  |  | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Rogue Evasion | level-7 | character-level | class feature | `rogue_evasion` | `.references/srd-5.2.1/classes.md:7089` |  | present |  |  | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
-| Rogue Reliable Talent | level-7 | character-level | class feature | `rogue_reliable_talent` | `.references/srd-5.2.1/classes.md:7093` |  | present |  |  | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | character-fact-and-runtime-detached-split: future Ability Check d20-floor owner plus existing character-sheet skill/tool proficiency projection | A future owner must derive Reliable Talent eligibility from the selected Rogue feature ref plus the existing CharacterBuild skill and tool proficiency facts, then apply a pre-total d20 floor of 10 only when the resolved Ability Check uses an owned skill or tool proficiency. The owner must compose with Advantage/Disadvantage selected-die results and other d20 replacement/reroll effects at the Ability Check roll boundary, while leaving attack rolls, Saving Throws, Death Saving Throws, passive checks with no d20 roll, and unproficient checks untouched. The closure must not duplicate skill/tool proficiency state, store a parallel list of reliable checks, treat Expertise or Jack of All Trades as separate eligibility copies, add Rogue-name dispatch to check reducers, or modify Proficiency Bonus arithmetic instead of the underlying d20 result. |
+| Rogue Reliable Talent | level-7 | character-level | class feature | `rogue_reliable_talent` | `.references/srd-5.2.1/classes.md:7093` |  | present |  |  | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | profile-subset-remaining-mechanics-closed: future tool-check and non-battle ability check procedure owners | Owner-specific operational evidence is classified and present. |
 | Sorcerer Sorcery Incarnate | level-7 | character-level | class feature | `sorcerer_sorcery_incarnate` | `.references/srd-5.2.1/classes.md:7708` |  | present |  |  | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | outside-battle-runtime: future Innate Sorcery alternate-cost activation owner plus active-Innate-Sorcery Metamagic option-limit owner | A future owner must consume the selected Sorcery Incarnate source fact, the existing sorcerer_innate_sorcery Bonus Action activation/use-count owner, and the existing sorcerer_font_of_magic shared Sorcery Point point-pool bridge to offer the 2-Sorcery-Point activation only when no Innate Sorcery uses remain. A sibling Metamagic governor owner must consume the existing Innate Sorcery active ongoing feature occurrence and the selected sorcerer_metamagic option facts to allow up to two Metamagic options on each spell while Innate Sorcery is active, while still enforcing known-option, affordability, option-specific support, and explicit stacking rules. The closure must not restore Sorcery Points, create a Sorcery Incarnate-local Sorcery Point pool, duplicate Innate Sorcery active state, weaken unsupported Metamagic option rejection into inert labels, or dispatch on Sorcerer, Sorcery Incarnate, Innate Sorcery, Metamagic, or option authored identity. |
 | Barbarian level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_barbarian` | `.references/srd-5.2.1/classes.md:119` |  | present |  |  | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | outside-battle-runtime: class-progression-accounting | No runtime work; keep classification as explicit closure. |
 | Bard level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_bard` | `.references/srd-5.2.1/classes.md:583` |  | present |  |  | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | outside-battle-runtime: class-progression-accounting | No runtime work; keep classification as explicit closure. |

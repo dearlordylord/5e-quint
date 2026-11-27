@@ -174,11 +174,11 @@ import { spellFillSet } from "./spells-resolve-fill-set.ts";
 import { spellAttackRequiresExactDistance } from "./spells-targeting.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
-  battleStateAfterSavingThrowRerollUses,
-  savingThrowHoleWithRerollOptions,
-  d20TestOutcomeRerolls,
-  type SavingThrowRerollUses,
-} from "./d20-test-outcome-rerolls.ts";
+  battleStateAfterSavingThrowAfterRollUses,
+  savingThrowAfterRollDecisions,
+  savingThrowHoleAskedAfterRoll,
+  type SavingThrowAfterRollUses,
+} from "./d20-test-after-roll-decisions.ts";
 
 const DURABLE_GLYPH_INSCRIPTION_HOURS = 1;
 const GLYPH_MAX_COVERED_DIAMETER_FEET = 10;
@@ -565,9 +565,9 @@ type GlyphExplosiveRuneDamageLifecycleCheck =
 type GlyphExplosiveRuneSavingThrowCheck =
   | {
       readonly tag: "ok";
-      /** Each target's outcome that stands after its reroll decisions. */
+      /** Each target's outcome that stands after its after-roll decisions. */
       readonly outcomes: GlyphExplosiveRuneSavingThrowOutcomes;
-      readonly rerollUses: readonly SavingThrowRerollUses[];
+      readonly afterRollUses: readonly SavingThrowAfterRollUses[];
     }
   | {
       readonly tag: "needsHoles";
@@ -978,49 +978,52 @@ export function releaseGlyphExplosiveRune(input: {
     state: input.state,
     witness: input.witness,
     effect: ref.effect,
-    rerollUses: savingThrow.rerollUses,
+    afterRollUses: savingThrow.afterRollUses,
     lifecycle: lifecycle.lifecycle,
     sourceEffectId,
   });
 }
 
 /**
- * The release once its saves and damage lifecycle are known: the reroll
+ * The release once its saves and damage lifecycle are known: the after-roll
  * decisions on the damage's own D20 Tests, then the damage, from the state
- * after every Heroic Inspiration the saves spend.
+ * after everything the saves' decisions spend.
  */
 function releasedGlyphExplosiveRune(input: {
   readonly state: BattleState;
   readonly witness: GlyphExplosiveRuneReleaseWitness;
   readonly effect: StoredGlyphDurableOccurrenceEffect;
-  readonly rerollUses: readonly SavingThrowRerollUses[];
+  readonly afterRollUses: readonly SavingThrowAfterRollUses[];
   readonly lifecycle: GlyphExplosiveRuneDamageLifecycle;
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
 }): ReleaseGlyphExplosiveRuneResult {
   const sourceEffectId = input.sourceEffectId;
-  const lifecycleRerolls = glyphExplosiveRuneDamageLifecycleRerolls({
-    state: battleStateAfterSavingThrowRerollUses(input.state, input.rerollUses),
+  const lifecycleDecisions = glyphExplosiveRuneDamageLifecycleDecisions({
+    state: battleStateAfterSavingThrowAfterRollUses(
+      input.state,
+      input.afterRollUses,
+    ),
     witness: input.witness,
     lifecycle: input.lifecycle,
   });
-  if (lifecycleRerolls.tag === "invalid") {
+  if (lifecycleDecisions.tag === "invalid") {
     return {
       tag: "invalidWitness",
       state: input.state,
       sourceEffectId,
-      reason: lifecycleRerolls.reason,
+      reason: lifecycleDecisions.reason,
     };
   }
-  if (lifecycleRerolls.tag === "needsHoles") {
+  if (lifecycleDecisions.tag === "needsHoles") {
     return {
       tag: "needsHoles",
       state: input.state,
       sourceEffectId,
-      holes: lifecycleRerolls.holes,
+      holes: lifecycleDecisions.holes,
     };
   }
   const stateWithoutOccurrence = battleStateWithoutGlyphOccurrence(
-    lifecycleRerolls.state,
+    lifecycleDecisions.state,
     input.effect.effectRef,
   );
   const applied = applyGlyphExplosiveRuneDamage({
@@ -2546,7 +2549,7 @@ function glyphExplosiveRuneSavingThrowCheck(input: {
 }): GlyphExplosiveRuneSavingThrowCheck {
   const areaMembership = input.witness.areaMembership;
   if (areaMembership.kind === "noCreaturesInArea") {
-    return { tag: "ok", outcomes: [], rerollUses: [] };
+    return { tag: "ok", outcomes: [], afterRollUses: [] };
   }
   const saveHole = glyphExplosiveRuneSavingThrowOutcomeHole({
     state: input.state,
@@ -2584,7 +2587,7 @@ function glyphExplosiveRuneSavingThrowCheck(input: {
   ) {
     return { tag: "invalid", reason: "savingThrowOutcomeMismatch" };
   }
-  return glyphExplosiveRuneSavingThrowRerolls({
+  return glyphExplosiveRuneSavingThrowDecisions({
     state: input.state,
     hole: saveHole,
     outcomes: fill.value.outcomes,
@@ -2592,42 +2595,42 @@ function glyphExplosiveRuneSavingThrowCheck(input: {
 }
 
 /**
- * Each target's reroll decisions on its save. The release resolves in one
- * step, so a Heroic Inspiration spend needs no replay record.
+ * Each target's after-roll decisions on its save. The release resolves in one
+ * step, so a spend needs no replay record.
  */
-function glyphExplosiveRuneSavingThrowRerolls(input: {
+function glyphExplosiveRuneSavingThrowDecisions(input: {
   readonly state: BattleState;
   readonly hole: BattleGlyphExplosiveRuneSavingThrowOutcomeHole;
   readonly outcomes: GlyphExplosiveRuneSavingThrowOutcomes;
 }): GlyphExplosiveRuneSavingThrowCheck {
   const outcomes: GlyphExplosiveRuneSavingThrowOutcomes[number][] = [];
-  const rerollUses: SavingThrowRerollUses[] = [];
+  const afterRollUses: SavingThrowAfterRollUses[] = [];
   for (const outcome of input.outcomes) {
-    const rerolls = d20TestOutcomeRerolls({
+    const decisions = savingThrowAfterRollDecisions({
       state: input.state,
       scope: { kind: "oneStep" },
       roll: { rollerId: outcome.targetId, holeId: input.hole.holeId },
       outcome,
     });
-    if (rerolls.tag === "decisionsRequired") {
+    if (decisions.tag === "decisionsRequired") {
       return {
         tag: "needsHoles",
-        holes: [savingThrowHoleWithRerollOptions(input.hole, rerolls.options)],
+        holes: [savingThrowHoleAskedAfterRoll(input.hole, decisions.ask)],
       };
     }
-    if (rerolls.tag === "invalid") {
+    if (decisions.tag === "invalid") {
       return { tag: "invalid", reason: "savingThrowOutcomeMismatch" };
     }
-    outcomes.push(rerolls.roll);
-    rerollUses.push(rerolls.uses);
+    outcomes.push(decisions.roll);
+    afterRollUses.push(decisions.uses);
   }
-  return { tag: "ok", outcomes, rerollUses };
+  return { tag: "ok", outcomes, afterRollUses };
 }
 
-type GlyphExplosiveRuneDamageLifecycleRerolls =
+type GlyphExplosiveRuneDamageLifecycleDecisions =
   | {
       readonly tag: "ok";
-      /** The state after every Heroic Inspiration the decisions spend. */
+      /** The state after everything the decisions spend. */
       readonly state: BattleState;
     }
   | {
@@ -2651,40 +2654,40 @@ type GlyphExplosiveRuneDamageD20Test = {
   readonly rollerId: CombatantId;
   readonly outcome: BattleD20TestOutcome;
   readonly mismatch: Extract<
-    GlyphExplosiveRuneDamageLifecycleRerolls,
+    GlyphExplosiveRuneDamageLifecycleDecisions,
     { readonly tag: "invalid" }
   >["reason"];
 };
 
 /**
- * The reroll decisions on the D20 Tests the damage asks for: each Concentration
- * save, then each repeat save, each against the state after the Heroic
- * Inspiration the rolls before it spend. The release resolves in one step, so
- * a spend needs no replay record.
+ * The after-roll decisions on the D20 Tests the damage asks for: each
+ * Concentration save, then each repeat save, each against the state after
+ * what the rolls before it spend. The release resolves in one step, so a
+ * spend needs no replay record.
  */
-function glyphExplosiveRuneDamageLifecycleRerolls(input: {
+function glyphExplosiveRuneDamageLifecycleDecisions(input: {
   readonly state: BattleState;
   readonly witness: GlyphExplosiveRuneReleaseWitness;
   readonly lifecycle: GlyphExplosiveRuneDamageLifecycle;
-}): GlyphExplosiveRuneDamageLifecycleRerolls {
+}): GlyphExplosiveRuneDamageLifecycleDecisions {
   let state = input.state;
   for (const test of glyphExplosiveRuneDamageD20Tests(input)) {
-    const rerolls = d20TestOutcomeRerolls({
+    const decisions = savingThrowAfterRollDecisions({
       state,
       scope: { kind: "oneStep" },
       roll: { rollerId: test.rollerId, holeId: test.hole.holeId },
       outcome: test.outcome,
     });
-    if (rerolls.tag === "decisionsRequired") {
+    if (decisions.tag === "decisionsRequired") {
       return {
         tag: "needsHoles",
-        holes: [savingThrowHoleWithRerollOptions(test.hole, rerolls.options)],
+        holes: [savingThrowHoleAskedAfterRoll(test.hole, decisions.ask)],
       };
     }
-    if (rerolls.tag === "invalid") {
+    if (decisions.tag === "invalid") {
       return { tag: "invalid", reason: test.mismatch };
     }
-    state = battleStateAfterSavingThrowRerollUses(state, [rerolls.uses]);
+    state = battleStateAfterSavingThrowAfterRollUses(state, [decisions.uses]);
   }
   return { tag: "ok", state };
 }

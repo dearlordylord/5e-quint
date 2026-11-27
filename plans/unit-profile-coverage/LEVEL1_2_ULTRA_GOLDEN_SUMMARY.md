@@ -13,8 +13,8 @@ This summary is layer-by-layer. It deliberately does not publish a blended ultra
 | Layer | Status | Evidence | Blocking issue |
 | --- | --- | --- | --- |
 | Support completeness | pass | strict target closure 122/122 (100%); selected identity 104/104 (100%); SRD authored product readiness 101/101 (100%) | _none_ |
-| QNT/generator readiness | pass | QNT-covered obligations 50/50; generator-ready semantic-core obligations 41/41 | _none_ |
-| MBT/parity evidence | pass | parity-witnessed obligations 50/50; witness kinds contract-test: 12, deterministic-qnt-replay: 8, focused-mbt: 57, runtime-test: 19 | _none_ |
+| QNT/generator readiness | pass | QNT-covered obligations 51/51; generator-ready semantic-core obligations 42/42 | _none_ |
+| MBT/parity evidence | pass | parity-witnessed obligations 51/51; witness kinds contract-test: 16, deterministic-qnt-replay: 8, focused-mbt: 57, runtime-test: 19 | _none_ |
 | MCP scenario evidence | pass | scenario flows 4/4; check pnpm --filter @dnd/mcp test:mcp-scenario-evidence | _none_ |
 
 ## Unit-Profile Disposition
@@ -42,10 +42,10 @@ Level 1-2 parity witness join open gaps: **0**.
 | --- | ---: |
 | Supported Units in join | 96/96 (100%) |
 | Rules-kernel profiles in join | 73/73 (100%) |
-| Obligation join rows without open gaps | 187/187 (100%) |
-| Unique covered obligations | 50/50 (100%) |
-| Unique QNT-owned obligations | 50/50 (100%) |
-| Unique parity-witnessed obligations | 50/50 (100%) |
+| Obligation join rows without open gaps | 189/189 (100%) |
+| Unique covered obligations | 51/51 (100%) |
+| Unique QNT-owned obligations | 51/51 (100%) |
+| Unique parity-witnessed obligations | 51/51 (100%) |
 
 Generator readiness passes when every scoped semantic-core obligation is generation-subset-clean and has no blocker or follow-up rows. It does not require a generator implementation or committed generated Rust.
 

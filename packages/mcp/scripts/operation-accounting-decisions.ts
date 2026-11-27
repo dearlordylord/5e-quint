@@ -3715,6 +3715,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.unitFact,
     ),
+    d20TestDieMinimum: account(
+      "continuation",
+      "d20TestDieMinimum",
+      at(
+        "packages/battle-runtime/src/battle-reducer/d20-test-die-minimum.ts",
+        "abilityCheckD20TestDieMinimum",
+      ),
+      REASONS.unitContinuation,
+    ),
     d20TestNaturalOneReroll: account(
       "continuation",
       "d20TestNaturalOneReroll",
@@ -3755,8 +3764,8 @@ export const OPERATION_ACCOUNTING = {
       "continuation",
       "failedAbilityCheckResourceBoost",
       at(
-        "packages/battle-runtime/src/battle-reducer/unit-features.ts",
-        "resolveFailedAbilityCheckResourceBoost",
+        "packages/battle-runtime/src/battle-reducer/failed-ability-check-resource-boost.ts",
+        "failedAbilityCheckResourceBoostDecisionIssue",
       ),
       REASONS.unitContinuation,
     ),
@@ -4216,6 +4225,15 @@ export const OPERATION_ACCOUNTING = {
       ),
       REASONS.unitContinuation,
     ),
+    d20TestDieMinimum: account(
+      "continuation",
+      "d20TestDieMinimum",
+      at(
+        "packages/battle-runtime/src/battle-reducer/d20-test-die-minimum.ts",
+        "abilityCheckD20TestDieMinimum",
+      ),
+      REASONS.unitContinuation,
+    ),
     d20TestNaturalOneReroll: account(
       "continuation",
       "d20TestNaturalOneReroll",
@@ -4256,8 +4274,8 @@ export const OPERATION_ACCOUNTING = {
       "continuation",
       "failedAbilityCheckResourceBoost",
       at(
-        "packages/battle-runtime/src/battle-reducer/unit-features.ts",
-        "resolveFailedAbilityCheckResourceBoost",
+        "packages/battle-runtime/src/battle-reducer/failed-ability-check-resource-boost.ts",
+        "failedAbilityCheckResourceBoostDecisionIssue",
       ),
       REASONS.unitContinuation,
     ),

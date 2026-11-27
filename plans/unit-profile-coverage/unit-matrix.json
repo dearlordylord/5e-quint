@@ -43,13 +43,13 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 543,
-      "numerator": 398,
+      "denominator": 544,
+      "numerator": 399,
       "percent": "73.3%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 631,
-      "numerator": 453,
+      "denominator": 632,
+      "numerator": 454,
       "percent": "71.8%"
     },
     "classicNonSrdExpressionGate": {
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 454
+      "value": 455
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 244,
@@ -67,28 +67,28 @@
       "percent": "96.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 454,
-      "numerator": 454,
+      "denominator": 455,
+      "numerator": 455,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 172,
-      "numerator": 167,
+      "denominator": 173,
+      "numerator": 168,
       "percent": "97.1%"
     },
     "qntProofCoverage": {
-      "denominator": 172,
-      "numerator": 164,
-      "percent": "95.3%"
+      "denominator": 173,
+      "numerator": 165,
+      "percent": "95.4%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 217,
-      "numerator": 192,
+      "denominator": 218,
+      "numerator": 193,
       "percent": "88.5%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 217,
-      "numerator": 215,
+      "denominator": 218,
+      "numerator": 216,
       "percent": "99.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -97,13 +97,13 @@
       "percent": "81.7%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 172,
-      "numerator": 167,
+      "denominator": 173,
+      "numerator": 168,
       "percent": "97.1%"
     },
     "runtimeParityCoverage": {
-      "denominator": 172,
-      "numerator": 167,
+      "denominator": 173,
+      "numerator": 168,
       "percent": "97.1%"
     },
     "selectedIdentityReplayCoverage": {
@@ -112,9 +112,9 @@
       "percent": "97.6%"
     },
     "supportedProfileCoverage": {
-      "denominator": 399,
+      "denominator": 400,
       "numerator": 244,
-      "percent": "61.2%"
+      "percent": "61%"
     }
   },
   "metricSemantics": [
@@ -643,13 +643,16 @@
       "id": "unit-feature.bardic-inspiration-failed-d20-test",
       "profileKind": "resource",
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
         "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+        "packages/battle-runtime/src/battle-reducer/bardic-inspiration-failed-d20-test.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts"
       ],
-      "sourceBoundary": "Separate public helper boundary, not a BattleSubject replay path; consumes an existing Bardic Inspiration die effect after the caller supplies an already-failed attack roll, Saving Throw, or Ability Check total.",
+      "sourceBoundary": "On ability checks and saving throws the die is offered on the battle's D20 Test holes once the test's rerolls are decided and expended when rolled; an attack roll still goes through the separate public helper boundary, which consumes an existing die after the caller supplies an already-failed attack roll.",
       "taskRefs": [
         "SRDINV72B"
       ],
@@ -662,6 +665,14 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime.test-support.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
         }
       ]
     },
@@ -757,16 +768,18 @@
       "id": "unit-feature.failed-ability-check-resource-boost",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+        "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/failed-ability-check-resource-boost.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts"
       ],
       "taskRefs": [
         "QMBT62"
       ],
-      "title": "Unit feature adds 1d10 to an already-failed ability check using the Second Wind pool",
+      "title": "Unit feature adds its die to an already-failed ability check, spending a use of its resource only if the check then succeeds",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -775,6 +788,14 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
         }
       ]
     },
@@ -8383,19 +8404,55 @@
           "ownerPath": "packages/battle-runtime/src/combat-turn-start-heroic-inspiration.test.ts"
         }
       ]
+    },
+    {
+      "id": "unit-feature.d20-test-die-minimum",
+      "profileKind": "persistent-effect",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/procedure-execution-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-die-minimum.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-roll-reroll.ts"
+      ],
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface d20_test_die_minimum class-feature shape and projects a d20 minimum procedure fact scoped to ability checks that use the roller's own proficiency. The ability check hole offers the minimum only when the roller's selected Unit refs carry that fact and the existing combatant skill proficiency facts (including an assumed Wild Shape form) include the check's skill; the fill must then say whether the roller used it, and a fill may not decide on a minimum the hole did not offer. The table's totals count the minimum: the engine does not recompute the total, and when a d20 reroll replaces the roll it checks that the replacement total keeps the modifiers of a total that counted the minimum on both faces. No proficiency state is copied, no list of eligible checks is stored, the Proficiency Bonus is untouched, and nothing dispatches on authored identity.",
+      "taskRefs": [
+        "GH695-D20-TEST-DIE-MINIMUM"
+      ],
+      "title": "Unit feature lets its holder count a low d20 as a minimum face on ability checks that use one of its proficiencies",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-reliable-talent.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/rogue-reliable-talent-sdk-handoff.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 217,
-        "numerator": 192,
+        "denominator": 218,
+        "numerator": 193,
         "percent": "88.5%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 217,
-        "numerator": 215,
+        "denominator": 218,
+        "numerator": 216,
         "percent": "99.1%"
       }
     },
@@ -8626,6 +8683,12 @@
         "joinStatus": "covered",
         "obligations": [
           {
+            "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+          },
+          {
             "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
             "runtime": "battle",
             "status": "covered",
@@ -8635,7 +8698,8 @@
         "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
         "profileKind": "resource",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
+          "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+          "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
         ]
       },
       {
@@ -8691,6 +8755,12 @@
         "joinStatus": "covered",
         "obligations": [
           {
+            "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+          },
+          {
             "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
             "runtime": "battle",
             "status": "covered",
@@ -8700,7 +8770,7 @@
         "profileId": "unit-feature.failed-ability-check-resource-boost",
         "profileKind": "resource",
         "qntOwners": [
-          "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+          "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
         ]
       },
       {
@@ -12138,6 +12208,22 @@
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/combat-turn-start-heroic-inspiration-core.qnt"
         ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.D20_TEST.DIE_MINIMUM",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "A feature that sets a d20 minimum lets its holder count a lower d20 as that face on the D20 Tests it applies to, before the total"
+          }
+        ],
+        "profileId": "unit-feature.d20-test-die-minimum",
+        "profileKind": "persistent-effect",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core.qnt"
+        ]
       }
     ],
     "sourceArtifacts": {
@@ -12761,6 +12847,12 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+                },
+                {
                   "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                   "runtime": "battle",
                   "status": "covered",
@@ -12770,7 +12862,8 @@
               "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
               "profileKind": "resource",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
+                "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+                "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
               ]
             }
           ],
@@ -14462,6 +14555,12 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+                },
+                {
                   "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
                   "runtime": "battle",
                   "status": "covered",
@@ -14471,7 +14570,7 @@
               "profileId": "unit-feature.failed-ability-check-resource-boost",
               "profileKind": "resource",
               "qntOwners": [
-                "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+                "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
               ]
             }
           ],
@@ -23571,6 +23670,22 @@
         "unit-feature.combat-turn-start-heroic-inspiration"
       ],
       "taskId": "GH686-HEROIC-WARRIOR-TURN-START"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Rule-core examples cover the minimum applying only to ability checks with the roller's own proficiency, the fill deciding exactly when the hole offers it, the counted face being the higher of the natural face and the minimum, rerolls keeping the modifiers of a minimum-counted total, and the minimum commuting with Advantage and Disadvantage die selection.",
+      "profileIds": [
+        "unit-feature.d20-test-die-minimum"
+      ],
+      "taskId": "GH695-D20-TEST-DIE-MINIMUM"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle runtime tests cover Unit admission of the d20 minimum, the offer on a proficient skill check and its hole and fill codecs, no offer when unproficient or without the feature, the required and unavailable decisions, use and decline outcomes against the Hide DC, and a natural-1 reroll keeping the modifiers of a minimum-counted total. A real-catalog Rogue 7 SDK handoff test shows the offer and its use, and that a Rogue 6 is not offered it.",
+      "profileIds": [
+        "unit-feature.d20-test-die-minimum"
+      ],
+      "taskId": "GH695-D20-TEST-DIE-MINIMUM"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -23639,16 +23754,16 @@
         "unsupportedOrOtherUnits": 75
       },
       {
-        "executableUnitDenominator": 128,
-        "installedUnitDenominator": 128,
+        "executableUnitDenominator": 129,
+        "installedUnitDenominator": 129,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 180,
-        "profileSubsetSupportedUnits": 10,
+        "profileFactDenominator": 181,
+        "profileSubsetSupportedUnits": 11,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 91,
+        "selectedIdentityReplayDenominator": 92,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 91,
+        "selectedIdentityReplayWitnessUnits": 92,
         "supportedProfileUnits": 116,
         "unsupportedOrOtherUnits": 2
       }
@@ -24878,16 +24993,18 @@
           "id": "unit-feature.failed-ability-check-resource-boost",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+            "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
-            "packages/battle-runtime/src/battle-state-execution.ts"
+            "packages/battle-runtime/src/battle-state-execution.ts",
+            "packages/battle-runtime/src/battle-reducer/failed-ability-check-resource-boost.ts",
+            "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts"
           ],
           "taskRefs": [
             "QMBT62"
           ],
-          "title": "Unit feature adds 1d10 to an already-failed ability check using the Second Wind pool",
+          "title": "Unit feature adds its die to an already-failed ability check, spending a use of its resource only if the check then succeeds",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -24896,6 +25013,14 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
             }
           ]
         }
@@ -26434,13 +26559,16 @@
           "id": "unit-feature.bardic-inspiration-failed-d20-test",
           "profileKind": "resource",
           "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core.qnt",
             "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+            "packages/battle-runtime/src/battle-reducer/bardic-inspiration-failed-d20-test.ts",
+            "packages/battle-runtime/src/battle-reducer/d20-test-added-dice.ts"
           ],
-          "sourceBoundary": "Separate public helper boundary, not a BattleSubject replay path; consumes an existing Bardic Inspiration die effect after the caller supplies an already-failed attack roll, Saving Throw, or Ability Check total.",
+          "sourceBoundary": "On ability checks and saving throws the die is offered on the battle's D20 Test holes once the test's rerolls are decided and expended when rolled; an attack roll still goes through the separate public helper boundary, which consumes an existing die after the caller supplies an already-failed attack roll.",
           "taskRefs": [
             "SRDINV72B"
           ],
@@ -26453,6 +26581,14 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime.test-support.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-failed-test-added-dice-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
             }
           ]
         }
@@ -30331,6 +30467,93 @@
       ],
       "sourceRecordPath": "packages/surface/content/rogue_evasion.json",
       "unitId": "rogue_evasion"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future tool-check and non-battle ability check procedure owners",
+              "reason": "Battle ability checks all use a skill; no battle procedure makes a tool check. Tool and non-battle ability check procedures must consume the same Unit profile and their own proficiency facts at their execution boundaries rather than adding battle-owned state."
+            },
+            "mechanic": "d20 minimum on ability checks that use a tool proficiency, and on ability checks outside battle"
+          }
+        ],
+        "profileIds": [
+          "unit-feature.d20-test-die-minimum"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Rogue grants Reliable Talent as a level-7 class feature Unit",
+          "Battle Unit admission derives the d20 minimum profile from the Surface d20_test_die_minimum mechanics shape without dispatching on Rogue or Reliable Talent identity",
+          "Battle ability check holes offer a d20 minimum of 10 only when the roller is proficient in the check's skill according to the existing combatant skill proficiency facts, and the fill must use or decline it",
+          "The table's total counts the minimum, d20 rerolls keep the modifiers of a minimum-counted total, and attack rolls, saving throws, Death Saving Throws, passive checks and unproficient checks are untouched"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-battle-runtime/src/rogue-reliable-talent-sdk-handoff.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "GH695-D20-TEST-DIE-MINIMUM"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/rogue-reliable-talent-sdk-handoff.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "GH695-D20-TEST-DIE-MINIMUM"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.d20-test-die-minimum",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-state-execution.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/procedure-execution-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/d20-test-die-minimum.ts",
+            "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+            "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/d20-test-roll-reroll.ts"
+          ],
+          "sourceBoundary": "Battle Unit admission consumes the authored Surface d20_test_die_minimum class-feature shape and projects a d20 minimum procedure fact scoped to ability checks that use the roller's own proficiency. The ability check hole offers the minimum only when the roller's selected Unit refs carry that fact and the existing combatant skill proficiency facts (including an assumed Wild Shape form) include the check's skill; the fill must then say whether the roller used it, and a fill may not decide on a minimum the hole did not offer. The table's totals count the minimum: the engine does not recompute the total, and when a d20 reroll replaces the roll it checks that the replacement total keeps the modifiers of a total that counted the minimum on both faces. No proficiency state is copied, no list of eligible checks is stored, the Proficiency Bonus is untouched, and nothing dispatches on authored identity.",
+          "taskRefs": [
+            "GH695-D20-TEST-DIE-MINIMUM"
+          ],
+          "title": "Unit feature lets its holder count a low d20 as a minimum face on ability checks that use one of its proficiencies",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-die-minimum-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-reliable-talent.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/rogue-reliable-talent-sdk-handoff.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/rogue_reliable_talent.json",
+      "unitId": "rogue_reliable_talent"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

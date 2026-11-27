@@ -1,7 +1,11 @@
 import { Schema } from "effect";
 import { SpatialMeleeSpellAttackProxyRepeatTargetingSchema } from "./active-effect/codecs.ts";
 import { admittedSpellInvocationCastingFacts } from "./battle-reducer/spell-procedure-profiles/profile.ts";
-import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleResolutionHolesForTest,
+  goblinId,
+  grantBardicInspirationToGoblin,
+} from "./battle-runtime.test-support.ts";
 import {
   HEROIC_INSPIRATION_AVAILABLE,
   NO_HEROIC_INSPIRATION,
@@ -91,6 +95,7 @@ import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
+  BARDIC_INSPIRATION_DIE_EFFECT_KIND,
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
   FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
@@ -5102,6 +5107,138 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
           )
         : undefined,
     ).toEqual([0]);
+  });
+
+  test("explosive-rune release offers a held Bardic Inspiration die on a failed Concentration save, and the die is expended", () => {
+    const concentrating = stateWithTargetConcentration(
+      stateWithGlyphEffect(
+        requireCompletedGlyphEffect({
+          anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        }),
+        glyphBattle({ targetHp: 50, targetMaxHp: 50 }),
+      ),
+      spellTargetId,
+    );
+    const die = grantBardicInspirationToGoblin()
+      .combatants.get(goblinId)
+      ?.activeEffects.find(
+        (granted) => granted.kind === "bardicInspirationDie",
+      );
+    const holder = concentrating.combatants.get(spellTargetId);
+    if (die === undefined || holder === undefined) {
+      throw new Error("Expected a granted die and its holder.");
+    }
+    const baseState: BattleState = {
+      ...concentrating,
+      combatants: new Map(concentrating.combatants).set(spellTargetId, {
+        ...holder,
+        activeEffects: [...holder.activeEffects, die],
+      }),
+    };
+    const effect = glyphEffects(baseState)[0];
+    expect(effect).toBeDefined();
+    if (effect === undefined) return;
+    const profile = requireGlyphExplosiveRuneProfile();
+    const areaMembership = {
+      kind: "creaturesInArea" as const,
+      affectedTargetIds: [spellTargetId] as const,
+      savingThrowOutcomes: [
+        glyphSavingThrowOutcomeFillForTargets({
+          state: baseState,
+          effect,
+          targetIds: [spellTargetId],
+          outcomes: [
+            { targetId: spellTargetId, succeeded: false, withoutRoll: true },
+          ],
+        }),
+      ],
+      damageRoll: glyphDamageRollFill(
+        glyphExplosiveRuneDamageRollHole({ profile, effect }),
+        [[4, 4, 4, 4, 4]],
+      ),
+      spellDamageReductionRolls: [],
+      concentrationSavingThrows: [],
+      damageDispositions: [],
+      saveGatedConditionWithRepeatDamageRepeatSaves: [],
+    };
+    const release = (
+      concentrationSavingThrows: readonly Extract<
+        BattleFill,
+        { readonly kind: "concentrationSavingThrow" }
+      >[],
+    ) =>
+      releaseGlyphExplosiveRune({
+        state: baseState,
+        profile,
+        witness: {
+          kind: "tableWitnessedGlyphExplosiveRuneRelease",
+          triggerOccurrence: glyphTriggerOccurrenceWitness(
+            glyphEffectRef(baseState),
+          ),
+          coveredAreaId: glyphCoveredAreaId,
+          areaMembership: { ...areaMembership, concentrationSavingThrows },
+        },
+      });
+    const pending = release([]);
+    expect(pending.tag).toBe("needsHoles");
+    if (pending.tag !== "needsHoles") return;
+    const concentration = requireReleaseHole(
+      pending.holes,
+      "concentrationSavingThrow",
+    );
+    const failed = {
+      succeeded: false,
+      d20TestRoll: { tag: "single" as const, naturalD20: DieRollResult(4) },
+    };
+    const concentrationFill = (
+      value: Extract<
+        BattleFill,
+        { readonly kind: "concentrationSavingThrow" }
+      >["value"],
+    ) => [
+      {
+        kind: "concentrationSavingThrow" as const,
+        holeId: concentration.holeId,
+        value,
+      },
+    ];
+
+    const offered = release(concentrationFill(failed));
+    expect(offered.tag).toBe("needsHoles");
+    if (offered.tag !== "needsHoles") return;
+    expect(
+      requireReleaseHole(offered.holes, "concentrationSavingThrow"),
+    ).toMatchObject({
+      holeId: concentration.holeId,
+      bardicInspirationDice: [
+        {
+          effectKind: BARDIC_INSPIRATION_DIE_EFFECT_KIND,
+          rollerId: spellTargetId,
+          dieSize: 6,
+        },
+      ],
+    });
+
+    const released = release(
+      concentrationFill({
+        ...failed,
+        d20TestAddedDice: [
+          {
+            kind: "addDie" as const,
+            effectKind: BARDIC_INSPIRATION_DIE_EFFECT_KIND,
+            dieRoll: DieRollResult(5),
+            succeeded: true,
+          },
+        ] as const,
+      }),
+    );
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    const target = requireCombatant(released.state, spellTargetId);
+    expect(target.concentration).not.toBeNull();
+    expect(
+      target.activeEffects.some((held) => held.kind === "bardicInspirationDie"),
+    ).toBe(false);
   });
 
   test("explosive-rune release requests and consumes zero-HP damage disposition fills", () => {

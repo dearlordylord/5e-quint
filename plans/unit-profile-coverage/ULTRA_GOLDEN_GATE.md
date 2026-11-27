@@ -31,16 +31,16 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 
 | Scope | Status | Complete layers | Scoped obligations |
 | --- | --- | ---: | ---: |
-| level-1 | pass | 4/4 | 47 |
-| level-1-2 | pass | 4/4 | 50 |
-| level-1-3 | pass | 4/4 | 76 |
-| level-1-4 | pass | 4/4 | 77 |
-| level-1-5 | pass | 4/4 | 83 |
-| level-1-6 | pass | 4/4 | 84 |
-| level-1-7 | pass | 4/4 | 85 |
-| level-1-8 | pass | 4/4 | 85 |
-| level-1-9 | pass | 4/4 | 85 |
-| level-1-10 | pass | 4/4 | 85 |
+| level-1 | pass | 4/4 | 48 |
+| level-1-2 | pass | 4/4 | 51 |
+| level-1-3 | pass | 4/4 | 77 |
+| level-1-4 | pass | 4/4 | 78 |
+| level-1-5 | pass | 4/4 | 84 |
+| level-1-6 | pass | 4/4 | 85 |
+| level-1-7 | pass | 4/4 | 86 |
+| level-1-8 | pass | 4/4 | 86 |
+| level-1-9 | pass | 4/4 | 86 |
+| level-1-10 | pass | 4/4 | 86 |
 
 ## Layer Results
 

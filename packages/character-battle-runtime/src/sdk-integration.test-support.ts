@@ -273,6 +273,9 @@ export function battleSessionFromSheets(input: {
   readonly battleIdText: string;
   readonly characters: readonly SheetFixture[];
   readonly monsters: readonly AuthoredStatBlockBattleInitInput[];
+  readonly hidePrerequisites?: Parameters<
+    typeof startBattle
+  >[0]["hidePrerequisites"];
 }): BattleRuntimeSession {
   const characterInits = input.characters.map((character) =>
     requireSuccess(
@@ -291,6 +294,9 @@ export function battleSessionFromSheets(input: {
     startBattle({
       battleId: battleId(input.battleIdText),
       combatants: [...characterInits, ...input.monsters],
+      ...(input.hidePrerequisites === undefined
+        ? {}
+        : { hidePrerequisites: input.hidePrerequisites }),
     }),
   );
 }
