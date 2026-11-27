@@ -15,12 +15,12 @@ import { pathToFileURL } from "node:url";
 import { setTimeout } from "node:timers/promises";
 
 // Reviewed upstream release asset digest:
-// https://github.com/quint-co/quint/releases/download/evaluator/v0.5.0/quint_evaluator-x86_64-unknown-linux-gnu.tar.gz
+// https://github.com/quint-co/quint/releases/download/evaluator/v0.8.0/quint_evaluator-x86_64-unknown-linux-gnu.tar.gz
 export const REVIEWED_EVALUATOR_RELEASE = Object.freeze({
-  version: "v0.5.0",
+  version: "v0.8.0",
   repository: "quint-co/quint",
   assetName: "quint_evaluator-x86_64-unknown-linux-gnu.tar.gz",
-  sha256: "dc1f4a672c56c077b769eded2478e43a3bccea0a8efcbe5bb1cabb609ce00ec0",
+  sha256: "774020b648a887f511d040fd564a8223c62a996b80f8dc50ea24d8630235be51",
 });
 
 export async function prepareQuintEvaluator({
