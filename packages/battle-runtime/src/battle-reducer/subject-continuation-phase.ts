@@ -43,6 +43,10 @@ export function acceptedSubjectReplayEvidence(
       source.acceptedHeroicInspirationRerolls,
     ),
     ...optionalProperty(
+      "acceptedFailedSavingThrowRerolls",
+      source.acceptedFailedSavingThrowRerolls,
+    ),
+    ...optionalProperty(
       "acceptedAttackAmmunitionSpend",
       source.acceptedAttackAmmunitionSpend,
     ),
@@ -82,6 +86,7 @@ export function stateForSubjectContinuation(
 ): BattleState {
   const {
     acceptedHeroicInspirationRerolls: _previousHeroicInspiration,
+    acceptedFailedSavingThrowRerolls: _previousFailedSavingThrowRerolls,
     acceptedAttackAmmunitionSpend: _previousAmmunition,
     acceptedThrownWeaponRelease: _previousThrow,
     ...phase

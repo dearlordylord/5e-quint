@@ -1,10 +1,12 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // Checks the reroll decisions on a subject's rolled D20 Test outcomes (ability
 // checks, saving throws and Concentration saves) before the subject resolves.
 // A roller who still has a source to decide on is asked the same hole again
-// with that option. The Heroic Inspiration the admitted rolls took is spent
-// once, before the subject's owners read the rolls that stand.
+// with that option. What the admitted rolls' rerolls cost (Heroic
+// Inspiration, a use of a failed saving throw reroll) is spent once, before
+// the subject's owners read the rolls that stand.
 
 import {
   d20TestRollMode,
@@ -26,17 +28,22 @@ import {
   D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE,
   D20_TEST_REROLL_DECISION_REQUIRED_MESSAGE,
 } from "./d20-test-natural-one-reroll.ts";
+import { Match } from "effect";
+
 import {
+  battleStateAfterD20TestRerollUses,
+  battleStateAfterSavingThrowRerollUses,
   d20TestAbilityCheckRerolls,
   d20TestHoleWithRerollOptions,
   d20TestOutcomeRerolls,
+  savingThrowHoleWithRerollOptions,
   type D20TestOutcomeRerollOptions,
   type D20TestOutcomeRerolls,
+  type D20TestRerollUses,
+  type SavingThrowRerollOptions,
+  type SavingThrowRerollUses,
+  type SavingThrowRerolls,
 } from "./d20-test-outcome-rerolls.ts";
-import {
-  battleStateAfterHeroicInspirationRerolls,
-  type HeroicInspirationUse,
-} from "./heroic-inspiration-reroll.ts";
 import { invalidResult } from "./result-helpers.ts";
 
 export const D20_TEST_REROLL_ROLLER_REQUIRED_MESSAGE =
@@ -60,16 +67,51 @@ type D20TestRerollDecisionHole = Extract<
   { readonly kind: D20TestRerollDecisionHoleKind }
 >;
 
+/** The hole asked again with its reroll options, if it is the hole they ask. */
+function d20TestRerollDecisionHoleAskedAgain(
+  hole: D20TestRerollDecisionHole,
+  reask: D20TestRerollReask,
+): BattleOrdinaryHole | undefined {
+  if (hole.kind !== reask.holeKind) return undefined;
+  if (
+    reask.holeKind === "savingThrowOutcome" ||
+    reask.holeKind === "concentrationSavingThrow"
+  ) {
+    return hole.kind === "savingThrowOutcome" ||
+      hole.kind === "concentrationSavingThrow"
+      ? savingThrowHoleWithRerollOptions(hole, reask.options)
+      : undefined;
+  }
+  return hole.kind === "abilityCheck" ||
+    hole.kind === "spellcastingAbilityCheck"
+    ? d20TestHoleWithRerollOptions(hole, reask.options)
+    : undefined;
+}
+
 function isD20TestRerollDecisionHole(
   hole: BattleOrdinaryHole,
 ): hole is D20TestRerollDecisionHole {
   return D20_TEST_REROLL_DECISION_HOLE_KINDS.some((kind) => kind === hole.kind);
 }
 
+/**
+ * The hole a roller is asked again, with the options its roll kind offers:
+ * a saving throw also offers a failed saving throw reroll.
+ */
+type D20TestRerollReask =
+  | {
+      readonly holeKind: "abilityCheck" | "spellcastingAbilityCheck";
+      readonly options: D20TestOutcomeRerollOptions;
+    }
+  | {
+      readonly holeKind: "savingThrowOutcome" | "concentrationSavingThrow";
+      readonly options: SavingThrowRerollOptions;
+    };
+
 type D20TestRerollFillValidation =
   | {
       readonly tag: "ok";
-      /** The state after every Heroic Inspiration the fills spend. */
+      /** The state after every reroll cost the fills spend. */
       readonly state: BattleState;
     }
   | { readonly tag: "invalid"; readonly message: string }
@@ -77,9 +119,8 @@ type D20TestRerollFillValidation =
       readonly tag: "decisionsRequired";
       readonly fillIndex: number;
       readonly holeId: BattleFill["holeId"];
-      readonly holeKind: D20TestRerollDecisionHoleKind;
-      readonly options: D20TestOutcomeRerollOptions;
-      /** The state after the Heroic Inspiration the earlier fills spend. */
+      readonly reask: D20TestRerollReask;
+      /** The state after the reroll costs the earlier fills spend. */
       readonly state: BattleState;
     };
 
@@ -171,9 +212,14 @@ function savingThrowOutcomeRollModeIssue(input: {
     : D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE;
 }
 
+/** What an admitted roll's rerolls cost, by its roll kind. */
+type D20TestRollCheckUses =
+  | { readonly kind: "d20Test"; readonly uses: D20TestRerollUses }
+  | { readonly kind: "savingThrow"; readonly uses: SavingThrowRerollUses };
+
 /** One rolled D20 Test's check, in the shape the fill validation folds. */
 type D20TestRollCheck =
-  | { readonly tag: "admitted"; readonly use: HeroicInspirationUse }
+  | { readonly tag: "admitted"; readonly uses: D20TestRollCheckUses }
   | Extract<D20TestRerollFillValidation, { readonly tag: "invalid" }>
   | Omit<
       Extract<
@@ -183,18 +229,62 @@ type D20TestRollCheck =
       "state"
     >;
 
-function d20TestRollCheck<Roll>(
+type D20TestRollCheckHole = Pick<
+  Extract<D20TestRerollFillValidation, { readonly tag: "decisionsRequired" }>,
+  "fillIndex" | "holeId"
+>;
+
+function abilityCheckRollCheck<Roll>(
   rerolls: D20TestOutcomeRerolls<Roll>,
-  hole: Pick<
-    Extract<D20TestRerollFillValidation, { readonly tag: "decisionsRequired" }>,
-    "fillIndex" | "holeId" | "holeKind"
-  >,
+  hole: D20TestRollCheckHole & {
+    readonly holeKind: "abilityCheck" | "spellcastingAbilityCheck";
+  },
 ): D20TestRollCheck {
   if (rerolls.tag === "resolved")
-    return { tag: "admitted", use: rerolls.heroicInspirationUse };
+    return { tag: "admitted", uses: { kind: "d20Test", uses: rerolls.uses } };
   if (rerolls.tag === "invalid")
     return { tag: "invalid", message: rerolls.issue };
-  return { tag: "decisionsRequired", ...hole, options: rerolls.options };
+  return {
+    tag: "decisionsRequired",
+    fillIndex: hole.fillIndex,
+    holeId: hole.holeId,
+    reask: { holeKind: hole.holeKind, options: rerolls.options },
+  };
+}
+
+function savingThrowRollCheck<Roll>(
+  rerolls: SavingThrowRerolls<Roll>,
+  hole: D20TestRollCheckHole & {
+    readonly holeKind: "savingThrowOutcome" | "concentrationSavingThrow";
+  },
+): D20TestRollCheck {
+  if (rerolls.tag === "resolved")
+    return {
+      tag: "admitted",
+      uses: { kind: "savingThrow", uses: rerolls.uses },
+    };
+  if (rerolls.tag === "invalid")
+    return { tag: "invalid", message: rerolls.issue };
+  return {
+    tag: "decisionsRequired",
+    fillIndex: hole.fillIndex,
+    holeId: hole.holeId,
+    reask: { holeKind: hole.holeKind, options: rerolls.options },
+  };
+}
+
+function battleStateAfterRollCheckUses(
+  state: BattleState,
+  uses: D20TestRollCheckUses,
+): BattleState {
+  return Match.value(uses).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      d20Test: ({ uses: d20TestUses }) =>
+        battleStateAfterD20TestRerollUses(state, [d20TestUses]),
+      savingThrow: ({ uses: savingThrowUses }) =>
+        battleStateAfterSavingThrowRerollUses(state, [savingThrowUses]),
+    }),
+  );
 }
 
 function d20TestRollChecksForFill(
@@ -223,7 +313,7 @@ function abilityCheckRollChecks(
   const fill = input.fill;
   const hole = abilityCheckHoleForFill({ ...input, fill });
   return [
-    d20TestRollCheck(
+    abilityCheckRollCheck(
       d20TestAbilityCheckRerolls({
         state,
         scope,
@@ -265,7 +355,7 @@ function savingThrowOutcomeRollChecks(
     if (rollModeIssue !== null)
       return { tag: "invalid", message: rollModeIssue };
     /* v8 ignore stop -- @preserve */
-    return d20TestRollCheck(
+    return savingThrowRollCheck(
       d20TestOutcomeRerolls({
         state,
         scope,
@@ -306,7 +396,7 @@ function concentrationSavingThrowRollChecks(
     /* v8 ignore stop -- @preserve */
   }
   return [
-    d20TestRollCheck(
+    savingThrowRollCheck(
       d20TestOutcomeRerolls({
         state,
         scope,
@@ -326,11 +416,11 @@ function validateD20TestRerollFills(input: {
   readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly resolvePrefix: D20TestRerollPrefixResolver;
 }): D20TestRerollFillValidation {
-  // Each fill is checked against the state after the Heroic Inspiration the
+  // Each fill is checked against the state after the reroll costs the
   // earlier fills spend, so a later roll is not offered a spent reroll.
   let resolutionInput = input.resolutionInput;
   for (const [fillIndex, fill] of input.resolutionInput.fills.entries()) {
-    const fillUses: HeroicInspirationUse[] = [];
+    const fillUses: D20TestRollCheckUses[] = [];
     for (const check of d20TestRollChecksForFill({
       resolutionInput,
       resolvePrefix: input.resolvePrefix,
@@ -341,13 +431,13 @@ function validateD20TestRerollFills(input: {
         return { ...check, state: resolutionInput.state };
       }
       if (check.tag !== "admitted") return check;
-      fillUses.push(check.use);
+      fillUses.push(check.uses);
     }
     resolutionInput = {
       ...resolutionInput,
-      state: battleStateAfterHeroicInspirationRerolls(
+      state: fillUses.reduce(
+        battleStateAfterRollCheckUses,
         resolutionInput.state,
-        fillUses,
       ),
     };
   }
@@ -378,15 +468,15 @@ function resolveD20TestRerollDecisionHole(input: {
   /* v8 ignore stop -- @preserve */
   let matched = false;
   const holes = pending.frontier.holes.map((hole): BattleOrdinaryHole => {
-    if (
-      isD20TestRerollDecisionHole(hole) &&
-      hole.kind === input.decision.holeKind &&
-      hole.holeId === input.decision.holeId
-    ) {
-      matched = true;
-      return d20TestHoleWithRerollOptions(hole, input.decision.options);
-    }
-    return hole;
+    if (!isD20TestRerollDecisionHole(hole)) return hole;
+    if (hole.holeId !== input.decision.holeId) return hole;
+    const askedAgain = d20TestRerollDecisionHoleAskedAgain(
+      hole,
+      input.decision.reask,
+    );
+    if (askedAgain === undefined) return hole;
+    matched = true;
+    return askedAgain;
   });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!matched) {
@@ -411,7 +501,7 @@ export type D20TestRerollFills =
   | { readonly tag: "settled"; readonly result: BattleResolutionResult }
   | {
       readonly tag: "admitted";
-      /** The input state after the Heroic Inspiration the admitted rolls took. */
+      /** The input state after the reroll costs the admitted rolls took. */
       readonly state: BattleState;
     };
 

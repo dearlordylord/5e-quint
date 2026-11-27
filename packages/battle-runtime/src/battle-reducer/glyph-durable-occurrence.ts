@@ -174,13 +174,11 @@ import { spellFillSet } from "./spells-resolve-fill-set.ts";
 import { spellAttackRequiresExactDistance } from "./spells-targeting.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
-  d20TestHoleWithRerollOptions,
+  battleStateAfterSavingThrowRerollUses,
+  savingThrowHoleWithRerollOptions,
   d20TestOutcomeRerolls,
+  type SavingThrowRerollUses,
 } from "./d20-test-outcome-rerolls.ts";
-import {
-  battleStateAfterHeroicInspirationRerolls,
-  type HeroicInspirationUse,
-} from "./heroic-inspiration-reroll.ts";
 
 const DURABLE_GLYPH_INSCRIPTION_HOURS = 1;
 const GLYPH_MAX_COVERED_DIAMETER_FEET = 10;
@@ -569,7 +567,7 @@ type GlyphExplosiveRuneSavingThrowCheck =
       readonly tag: "ok";
       /** Each target's outcome that stands after its reroll decisions. */
       readonly outcomes: GlyphExplosiveRuneSavingThrowOutcomes;
-      readonly heroicInspirationUses: readonly HeroicInspirationUse[];
+      readonly rerollUses: readonly SavingThrowRerollUses[];
     }
   | {
       readonly tag: "needsHoles";
@@ -980,7 +978,7 @@ export function releaseGlyphExplosiveRune(input: {
     state: input.state,
     witness: input.witness,
     effect: ref.effect,
-    heroicInspirationUses: savingThrow.heroicInspirationUses,
+    rerollUses: savingThrow.rerollUses,
     lifecycle: lifecycle.lifecycle,
     sourceEffectId,
   });
@@ -995,16 +993,13 @@ function releasedGlyphExplosiveRune(input: {
   readonly state: BattleState;
   readonly witness: GlyphExplosiveRuneReleaseWitness;
   readonly effect: StoredGlyphDurableOccurrenceEffect;
-  readonly heroicInspirationUses: readonly HeroicInspirationUse[];
+  readonly rerollUses: readonly SavingThrowRerollUses[];
   readonly lifecycle: GlyphExplosiveRuneDamageLifecycle;
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
 }): ReleaseGlyphExplosiveRuneResult {
   const sourceEffectId = input.sourceEffectId;
   const lifecycleRerolls = glyphExplosiveRuneDamageLifecycleRerolls({
-    state: battleStateAfterHeroicInspirationRerolls(
-      input.state,
-      input.heroicInspirationUses,
-    ),
+    state: battleStateAfterSavingThrowRerollUses(input.state, input.rerollUses),
     witness: input.witness,
     lifecycle: input.lifecycle,
   });
@@ -2551,7 +2546,7 @@ function glyphExplosiveRuneSavingThrowCheck(input: {
 }): GlyphExplosiveRuneSavingThrowCheck {
   const areaMembership = input.witness.areaMembership;
   if (areaMembership.kind === "noCreaturesInArea") {
-    return { tag: "ok", outcomes: [], heroicInspirationUses: [] };
+    return { tag: "ok", outcomes: [], rerollUses: [] };
   }
   const saveHole = glyphExplosiveRuneSavingThrowOutcomeHole({
     state: input.state,
@@ -2606,7 +2601,7 @@ function glyphExplosiveRuneSavingThrowRerolls(input: {
   readonly outcomes: GlyphExplosiveRuneSavingThrowOutcomes;
 }): GlyphExplosiveRuneSavingThrowCheck {
   const outcomes: GlyphExplosiveRuneSavingThrowOutcomes[number][] = [];
-  const heroicInspirationUses: HeroicInspirationUse[] = [];
+  const rerollUses: SavingThrowRerollUses[] = [];
   for (const outcome of input.outcomes) {
     const rerolls = d20TestOutcomeRerolls({
       state: input.state,
@@ -2617,16 +2612,16 @@ function glyphExplosiveRuneSavingThrowRerolls(input: {
     if (rerolls.tag === "decisionsRequired") {
       return {
         tag: "needsHoles",
-        holes: [d20TestHoleWithRerollOptions(input.hole, rerolls.options)],
+        holes: [savingThrowHoleWithRerollOptions(input.hole, rerolls.options)],
       };
     }
     if (rerolls.tag === "invalid") {
       return { tag: "invalid", reason: "savingThrowOutcomeMismatch" };
     }
     outcomes.push(rerolls.roll);
-    heroicInspirationUses.push(rerolls.heroicInspirationUse);
+    rerollUses.push(rerolls.uses);
   }
-  return { tag: "ok", outcomes, heroicInspirationUses };
+  return { tag: "ok", outcomes, rerollUses };
 }
 
 type GlyphExplosiveRuneDamageLifecycleRerolls =
@@ -2683,15 +2678,13 @@ function glyphExplosiveRuneDamageLifecycleRerolls(input: {
     if (rerolls.tag === "decisionsRequired") {
       return {
         tag: "needsHoles",
-        holes: [d20TestHoleWithRerollOptions(test.hole, rerolls.options)],
+        holes: [savingThrowHoleWithRerollOptions(test.hole, rerolls.options)],
       };
     }
     if (rerolls.tag === "invalid") {
       return { tag: "invalid", reason: test.mismatch };
     }
-    state = battleStateAfterHeroicInspirationRerolls(state, [
-      rerolls.heroicInspirationUse,
-    ]);
+    state = battleStateAfterSavingThrowRerollUses(state, [rerolls.uses]);
   }
   return { tag: "ok", state };
 }

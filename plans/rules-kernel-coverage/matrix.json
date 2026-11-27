@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 189,
-    "covered": 178,
+    "total": 190,
+    "covered": 179,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 149,
+      "battle": 150,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 178,
+      "covered": 179,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -6515,7 +6515,8 @@
         "packages/battle-runtime/src/battle-reducer/attack-roll-d20-test-rerolls.ts",
         "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts",
         "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts",
-        "packages/battle-runtime/src/battle-reducer/d20-test-roll-reroll.ts"
+        "packages/battle-runtime/src/battle-reducer/d20-test-roll-reroll.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-spend.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -6525,6 +6526,40 @@
         "ASSUMPTIONS.md#A55-Different-reroll-sources-may-apply-sequentially-to-the-same-die"
       ],
       "title": "A player character who has Heroic Inspiration can expend it to reroll any D20 Test and must use the new roll, in turn with the other reroll sources"
+    },
+    {
+      "id": "BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/failed-saving-throw-reroll.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/fighter-indomitable-sdk-handoff.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-failed-saving-throw-reroll-core.qnt"
+      ],
+      "reason": "The QNT owner offers the reroll only while the saving throw as it stands is failed and the roller has a use left, with the class level as its bonus; an admitted reroll replaces the d20, or under Advantage or Disadvantage one chosen d20, the table's ruling on the new roll stands whether it succeeds or fails, and one use is spent, while a decline keeps the roll and the use; a decision, a decline included, is refused where nothing was offered. failed-saving-throw-reroll owns availability, the option, the decision checks and the spend, with d20-test-reroll-spend owning the paid-roll record it shares with Heroic Inspiration; d20-test-outcome-rerolls takes it in turn with the natural-1 reroll and Heroic Inspiration on every saving throw and Concentration save that d20-test-reroll-fills checks and the Glyph release, and the spend is recorded on the subject so a replay does not spend twice. Death Saving Throws are not yet offered it. The executable parity witnesses cover the offer and its bonus, no offer on a success, a successful and a failed new roll, decline, no use left, the roll mode check, Heroic Inspiration then the failed-save reroll on the same save, and a real-catalog Fighter 9 against a Fighter 8 under Burning Hands.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/failed-saving-throw-reroll.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-outcome-rerolls.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-spend.ts",
+        "packages/battle-runtime/src/battle-reducer/d20-test-reroll-fills.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/classes.md#Level-9-Indomitable",
+        ".references/srd-5.2.1/playing-the-game.md#Interactions-with-Rerolls",
+        "UBIQUITOUS_LANGUAGE.md#D20-Rolls",
+        "ASSUMPTIONS.md#A55-Different-reroll-sources-may-apply-sequentially-to-the-same-die"
+      ],
+      "title": "A creature with a failed saving throw reroll feature can reroll a saving throw that stands failed with a bonus equal to its class level, must use the new roll, and spends a use"
     },
     {
       "id": "BATTLE.FEATURE.WEAPON_MASTERY_GRAZE",
@@ -13858,6 +13893,18 @@
       "role": "proof-only"
     },
     {
+      "evidence": "Owns the failed saving throw reroll offer on a saving throw that stands failed, its class-level bonus, the whole-roll or chosen-die replacement, the new roll standing whether it succeeds or fails, and the use spend, independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-failed-saving-throw-reroll-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover the offer and bonus, a successful and a failed new roll, decline, no offer on a success or without a use, and the chosen d20 under Advantage and Disadvantage.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-failed-saving-throw-reroll-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "Owns when Weapon Mastery Graze is offered after an attack roll and the miss damage it deals, independently of battle or authored identity.",
       "obligationIds": ["BATTLE.FEATURE.WEAPON_MASTERY_GRAZE"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/weapon-mastery-graze-core.qnt",
@@ -16112,6 +16159,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-failed-saving-throw-reroll-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-failed-saving-throw-reroll-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -21490,6 +21547,32 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/heroic-inspiration-reroll-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "all-block"
+      ],
+      "obligationId": "BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-failed-saving-throw-reroll-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-failed-saving-throw-reroll-core.qnt"
       ],
       "status": "generation-subset-clean"
     },

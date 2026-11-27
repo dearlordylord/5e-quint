@@ -11,6 +11,7 @@ export const D20_TEST_REROLL_SOURCES = [
   "naturalOne",
   "heroicInspiration",
   "missedSpellAttack",
+  "failedSavingThrow",
 ] as const;
 /** One of {@link D20_TEST_REROLL_SOURCES}. */
 export type D20TestRerollSource = (typeof D20_TEST_REROLL_SOURCES)[number];

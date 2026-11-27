@@ -4230,7 +4230,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The promoted subset is an executable profile/resource/resolution owner. Threading this optional reroll through every battle Saving Throw fill protocol should be done in the generic Saving Throw hole/handoff owner so spell, feature, concentration, and hazard save reducers consume the same typed reroll continuation without duplicating Saving Throw state.",
+      "reason": "A Death Saving Throw is a saving throw, so a rolled one can be rerolled; its natural 1 and natural 20 effects and its fixed DC need their own decision shape on the death save hole. A failure taken without a roll has no roll to reroll.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"

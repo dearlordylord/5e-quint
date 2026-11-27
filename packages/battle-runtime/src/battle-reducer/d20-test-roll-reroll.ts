@@ -10,6 +10,7 @@ import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { selectedD20TestNaturalD20 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   BattleD20TestDieReplacement,
+  BattleD20TestOutcomeReplacement,
   BattleD20TestDieRerollDecision,
   BattleD20TestOutcomeRerollDecision,
   BattleD20TestRoll,
@@ -124,6 +125,46 @@ export function d20TestRolledDieProjectionIssue(input: {
   return null;
 }
 /* v8 ignore stop -- @preserve */
+
+/**
+ * The issue with a source's replacement of a rolled outcome whose success the
+ * table rules (a saving throw), if any. Under Advantage or Disadvantage it
+ * replaces one chosen die, not both (playing-the-game.md, "Interactions with
+ * Rerolls"); otherwise it replaces the single d20.
+ */
+export function d20TestOutcomeReplacementIssue(input: {
+  /** The roll as it stands: the original roll, or another source's reroll of it. */
+  readonly originalD20TestRoll: BattleD20TestRoll;
+  readonly replacement:
+    | {
+        readonly kind: "reroll";
+        readonly replacement: BattleD20TestOutcomeReplacement;
+      }
+    | {
+        readonly kind: "rerollRolledDie";
+        readonly replacement: BattleD20TestRolledDieOutcomeReplacement;
+      };
+  readonly messages: D20TestRollRerollMessages;
+  readonly rerollableFace: D20TestRerollableFace;
+}): string | null {
+  return Match.value(input.replacement).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      reroll: ({ replacement }) =>
+        input.originalD20TestRoll.tag === "multiple"
+          ? input.messages.dieSelectionRequired
+          : replacement.d20TestRoll.tag === "single"
+            ? null
+            : input.messages.mode,
+      rerollRolledDie: ({ replacement }) =>
+        d20TestRolledDieProjectionIssue({
+          facts: { d20TestRoll: input.originalD20TestRoll },
+          replacement,
+          messages: input.messages,
+          rerollableFace: input.rerollableFace,
+        }),
+    }),
+  );
+}
 
 /**
  * A roll with a total (an attack roll or an ability check) after a source's

@@ -11,6 +11,7 @@ import {
 } from "./battle-reducer/battle-codecs.ts";
 import { projectMechanicalAttackActionOption } from "./battle-mechanical-attack-options.ts";
 import type {
+  BattleSavingThrowRerollHoleOptions,
   BattleHole,
   BattleInputFrontier,
   BattleInterruptProcedureChoice,
@@ -347,7 +348,23 @@ function projectMechanicalD20Hole(
             projectNestedPresentationLabel,
           ),
         }),
+    ...("failedSavingThrowRerolls" in hole
+      ? mechanicalFailedSavingThrowRerollOptions(hole)
+      : {}),
   };
+}
+
+/** A saving throw hole's failed saving throw reroll option, without its label. */
+function mechanicalFailedSavingThrowRerollOptions(
+  options: BattleSavingThrowRerollHoleOptions,
+) {
+  return options.failedSavingThrowRerolls === undefined
+    ? {}
+    : {
+        failedSavingThrowRerolls: [
+          projectNestedPresentationLabel(options.failedSavingThrowRerolls[0]),
+        ] as const,
+      };
 }
 
 function projectMechanicalAttackRollHole(
@@ -443,8 +460,12 @@ function projectMechanicalSavingThrowHole(
   BattleMechanicalOrdinaryHole,
   { readonly kind: "savingThrowOutcome" }
 > {
-  const { label, ...mechanical } = hole;
+  const { label, ...withoutLabel } = hole;
   void label;
+  const mechanical = {
+    ...withoutLabel,
+    ...mechanicalFailedSavingThrowRerollOptions(hole),
+  };
   if (
     "d20TestNaturalOneRerolls" in hole &&
     hole.d20TestNaturalOneRerolls !== undefined
