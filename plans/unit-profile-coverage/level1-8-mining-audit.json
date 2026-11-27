@@ -32,12 +32,12 @@
       "spell-level": 561
     },
     "rowsByBattleReadinessStatus": {
-      "accepted": 533,
-      "accepted-no-battle-effect": 394
+      "accepted": 534,
+      "accepted-no-battle-effect": 393
     },
     "rowsByCatalogAdmission": {
-      "installed": 811,
-      "not-installed": 116
+      "installed": 812,
+      "not-installed": 115
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 184,
@@ -51,8 +51,8 @@
       "subclass selection": 12
     },
     "rowsByFinalDisposition": {
-      "catalog-installed-owner-evidence-present": 537,
-      "catalog-only/dead-for-now": 273,
+      "catalog-installed-owner-evidence-present": 538,
+      "catalog-only/dead-for-now": 272,
       "missing-authored-runtime-closed": 21,
       "non-runtime": 96
     },
@@ -87,9 +87,9 @@
     },
     "rowsByUnitProfileDisposition": {
       "not-recorded": 14,
-      "profile-subset-supported": 56,
+      "profile-subset-supported": 57,
       "supported-profile": 348,
-      "unsupported-profile": 509
+      "unsupported-profile": 508
     }
   },
   "rows": [
@@ -14774,7 +14774,7 @@
         "sourceInventoryRowId": "srd521:classes:level-7:class-feature-grant:rogue_reliable_talent",
         "state": "present"
       },
-      "nextAction": "A future owner must derive Reliable Talent eligibility from the selected Rogue feature ref plus the existing CharacterBuild skill and tool proficiency facts, then apply a pre-total d20 floor of 10 only when the resolved Ability Check uses an owned skill or tool proficiency. The owner must compose with Advantage/Disadvantage selected-die results and other d20 replacement/reroll effects at the Ability Check roll boundary, while leaving attack rolls, Saving Throws, Death Saving Throws, passive checks with no d20 roll, and unproficient checks untouched. The closure must not duplicate skill/tool proficiency state, store a parallel list of reliable checks, treat Expertise or Jack of All Trades as separate eligibility copies, add Rogue-name dispatch to check reducers, or modify Proficiency Bonus arithmetic instead of the underlying d20 result.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes:level-7:class-feature-grant:rogue_reliable_talent",
       "rowKind": "class-feature-grant",
       "source": {
@@ -14784,26 +14784,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/rogue_reliable_talent.json",
+          "state": "authored-record-present",
+          "unitId": "rogue_reliable_talent"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future Ability Check d20-floor owner plus existing character-sheet skill/tool proficiency projection",
-          "reason": "A future owner must derive Reliable Talent eligibility from the selected Rogue feature ref plus the existing CharacterBuild skill and tool proficiency facts, then apply a pre-total d20 floor of 10 only when the resolved Ability Check uses an owned skill or tool proficiency. The owner must compose with Advantage/Disadvantage selected-die results and other d20 replacement/reroll effects at the Ability Check roll boundary, while leaving attack rolls, Saving Throws, Death Saving Throws, passive checks with no d20 roll, and unproficient checks untouched. The closure must not duplicate skill/tool proficiency state, store a parallel list of reliable checks, treat Expertise or Jack of All Trades as separate eligibility copies, add Rogue-name dispatch to check reducers, or modify Proficiency Bonus arithmetic instead of the underlying d20 result.",
-          "source": "unit-claim",
+          "kind": "profile-subset-remaining-mechanics-closed",
+          "owner": "future tool-check and non-battle ability check procedure owners",
+          "reason": "Battle ability checks all use a skill; no battle procedure makes a tool check. Tool and non-battle ability check procedures must consume the same Unit profile and their own proficiency facts at their execution boundaries rather than adding battle-owned state.",
+          "source": "deferred-mechanics",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "rogue_reliable_talent"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "profile-subset-supported",
           "state": "recorded"
         }
       }

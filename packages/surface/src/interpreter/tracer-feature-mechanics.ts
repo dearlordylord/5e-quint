@@ -429,6 +429,18 @@ export function traceClassFeatureMechanics(
         });
         return [steadyAimId];
       },
+      d20_test_die_minimum: (m) => {
+        const minimumId = ids("d20-test-die-minimum");
+        nodes.push({
+          id: minimumId,
+          category: "resolution",
+          atomKind: "d20_test_die_minimum",
+          label:
+            `d20_test_die_minimum\n${m.appliesTo.kind}\n` +
+            `minimum d20 ${m.minimumDieFace}`,
+        });
+        return [minimumId];
+      },
       potent_cantrip: (m) => {
         const cantripId = ids("potent-cantrip");
         nodes.push({

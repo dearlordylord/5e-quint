@@ -123,6 +123,7 @@ export type {
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hide-action-obscurement-permission
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-die-minimum
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE BATTLE.SPELL.READIED_RESPONSE_PROCEDURE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
@@ -5752,6 +5753,30 @@ export type BattleHeroicInspirationRerollOption = {
 };
 export type BattleHeroicInspirationRerollDecision =
   BattleD20TestRollRerollDecision<typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND>;
+export const D20_TEST_DIE_MINIMUM_EFFECT_KIND = "d20_test_die_minimum";
+/** What a roller may decide on an offered d20 minimum. */
+export const D20_TEST_DIE_MINIMUM_DECISION_KINDS = ["use", "decline"] as const;
+/**
+ * A d20 minimum the roller may use on this D20 Test: a d20 that shows less
+ * than `minimumDieFace` counts as that face. The table's totals count it.
+ */
+export type BattleD20TestDieMinimumOption = {
+  readonly effectKind: typeof D20_TEST_DIE_MINIMUM_EFFECT_KIND;
+  readonly label: string;
+  readonly minimumDieFace: Extract<
+    UnitFeatureProcedureExecution,
+    { readonly kind: "d20TestDieMinimum" }
+  >["dieMinimum"]["minimumDieFace"];
+};
+/**
+ * The roller's decision on an offered d20 minimum. When it is used, every
+ * total the fill reports (the roll and each reroll) counts each d20 below the
+ * minimum as the minimum.
+ */
+export type BattleD20TestDieMinimumDecision = {
+  readonly kind: (typeof D20_TEST_DIE_MINIMUM_DECISION_KINDS)[number];
+  readonly effectKind: typeof D20_TEST_DIE_MINIMUM_EFFECT_KIND;
+};
 /** One reroll source's decision on an ability check's d20, named by its effect kind. */
 export type BattleAbilityCheckD20TestRerollDecision =
   | BattleD20TestNaturalOneRerollDecision
@@ -7253,6 +7278,8 @@ export type BattleAbilityCheckHole = {
   readonly dc: DifficultyClass;
   readonly rollMode?: AttackRollMode;
   readonly requiresTableSpatialFact?: boolean;
+  /** Present when the roller has a d20 minimum for this check. */
+  readonly d20TestDieMinimum?: BattleD20TestDieMinimumOption;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
@@ -8033,6 +8060,8 @@ export type BattleFill =
       readonly value: {
         readonly total: number;
         readonly d20TestRoll?: BattleD20TestRoll;
+        /** Required exactly when the hole offers a d20 minimum. */
+        readonly d20TestDieMinimum?: BattleD20TestDieMinimumDecision;
         readonly d20TestRerolls?: BattleAbilityCheckD20TestRerollDecisions;
       };
       readonly spatialFacts?: readonly BattleAbilityCheckSpatialFact[];

@@ -523,3 +523,22 @@ with or without the cover of one attack. Cover belongs to the attack's
 geometry, not the creature, so the model adds it to the creature's AC after
 the floor: a Barkskin creature with AC 12 behind Half Cover has AC 19 against
 that attack.
+
+## A67: A d20 minimum applies to the d20 that stands
+
+**Assumption:** A feature that lets a creature treat a low d20 as a higher
+face, such as Reliable Talent, applies to whichever d20 stands once every
+reroll is done: the original roll, the d20 Advantage or Disadvantage selects,
+or a reroll's new d20. The creature decides once whether to use it on the
+roll, and the decision holds for the d20 that stands. A reroll's total keeps
+the modifiers of a total that counted the minimum.
+
+**Rules basis / gap:** `.references/srd-5.2.1/classes.md`, "Reliable Talent":
+"Whenever you make an ability check that uses one of your skill or tool
+proficiencies, you can treat a d20 roll of 9 or lower as a 10."
+`.references/srd-5.2.1/playing-the-game.md`, "D20 Tests," adds modifiers to
+the d20 before comparing the total, and "Interactions with Rerolls" and A55
+let a reroll replace the d20. The SRD doesn't say whether the minimum applies
+before or after a reroll. A rerolled d20 is still the d20 roll of the check,
+so the model applies the minimum to the d20 that stands. The QNT owner is
+`unit-feature-d20-test-die-minimum-core.qnt`.

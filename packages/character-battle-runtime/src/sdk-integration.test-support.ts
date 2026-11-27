@@ -22,6 +22,7 @@ import {
   type BattleCreatureState,
   type BattleD20TestRoll,
   type BattleFill,
+  type BattleHidePrerequisite,
   type BattleHole,
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
@@ -273,6 +274,7 @@ export function battleSessionFromSheets(input: {
   readonly battleIdText: string;
   readonly characters: readonly SheetFixture[];
   readonly monsters: readonly AuthoredStatBlockBattleInitInput[];
+  readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
 }): BattleRuntimeSession {
   const characterInits = input.characters.map((character) =>
     requireSuccess(
@@ -291,6 +293,9 @@ export function battleSessionFromSheets(input: {
     startBattle({
       battleId: battleId(input.battleIdText),
       combatants: [...characterInits, ...input.monsters],
+      ...(input.hidePrerequisites === undefined
+        ? {}
+        : { hidePrerequisites: input.hidePrerequisites }),
     }),
   );
 }
