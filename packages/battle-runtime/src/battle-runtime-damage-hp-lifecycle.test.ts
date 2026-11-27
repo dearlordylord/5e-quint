@@ -50,6 +50,7 @@ import {
   battleCreatureStateWithDamageProjection,
   battleCreatureStateWithKnockOutPreservedConditions,
 } from "./battle-reducer/creature-hit-point-state.ts";
+import { effectiveHitPointMaximum } from "./battle-reducer/hit-point-maximum.ts";
 import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-ref.ts";
 
 const aidCasterId = combatantId("damage-hp-aid-caster");
@@ -347,6 +348,50 @@ describe("damage and hit point lifecycle helpers", () => {
     expect(killedByMassiveDamage.zeroHpLifecycle).toMatchObject({
       policy: "usesDeathSavingThrows",
       deathSaves: { tag: "dead" },
+    });
+  });
+
+  test("damage at 0 Hit Points counts the part Temporary Hit Points absorb", () => {
+    const fighter = fighterVsGoblinBattle().combatants.get(fighterId);
+    if (fighter === undefined || fighter.positiveHpUnconscious !== null) {
+      throw new Error("Expected the synthetic character.");
+    }
+    const atZero = applyHpDamage(fighter, Number(fighter.hp), {
+      deathFailuresAtZeroHp: 1,
+    });
+    const shielded = { ...atZero, tempHp: Hp(5) };
+
+    const absorbed = applyHpDamage(shielded, 4, { deathFailuresAtZeroHp: 1 });
+    expect(absorbed.tempHp).toBe(Hp(1));
+    expect(absorbed.hp).toBe(Hp(0));
+    expect(absorbed.zeroHpLifecycle).toMatchObject({
+      policy: "usesDeathSavingThrows",
+      deathSaves: { tag: "dying", deathSaves: { failures: 1 } },
+    });
+
+    const criticalOverflow = applyHpDamage(shielded, 7, {
+      deathFailuresAtZeroHp: 2,
+    });
+    expect(criticalOverflow.tempHp).toBe(Hp(0));
+    expect(criticalOverflow.zeroHpLifecycle).toMatchObject({
+      policy: "usesDeathSavingThrows",
+      deathSaves: { tag: "dying", deathSaves: { failures: 2 } },
+    });
+
+    const maximum = Number(effectiveHitPointMaximum(shielded));
+    expect(hpDamageProjection(shielded, maximum)).toMatchObject({
+      hpDamage: maximum - 5,
+      massiveDamageKills: true,
+    });
+    expect(
+      applyHpDamage(shielded, maximum, { deathFailuresAtZeroHp: 1 })
+        .zeroHpLifecycle,
+    ).toMatchObject({
+      policy: "usesDeathSavingThrows",
+      deathSaves: { tag: "dead" },
+    });
+    expect(hpDamageProjection(shielded, maximum - 1)).toMatchObject({
+      massiveDamageKills: false,
     });
   });
 

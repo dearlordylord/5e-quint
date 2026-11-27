@@ -11,6 +11,7 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { deathSaveStateFailures } from "@dnd/shared-algebras/death-saves-algebra";
 import { deathSaveCount } from "@dnd/shared/types";
 import { describe, expect, it } from "vitest";
 
@@ -57,6 +58,7 @@ type HitPointDamageProjection = RuleCoreComponentRoutedProjection & {
   readonly unconscious: boolean;
   readonly damageToHitPoints: number;
   readonly remainingDamageAtZero: number;
+  readonly deathSavingThrowFailuresAdded: number;
   readonly replayIndex: number;
 };
 
@@ -90,6 +92,7 @@ const initialProjection: HitPointDamageProjection = withRuleCoreComponentRoute(
     unconscious: false,
     damageToHitPoints: 0,
     remainingDamageAtZero: 0,
+    deathSavingThrowFailuresAdded: 0,
     replayIndex: 0,
   },
 );
@@ -195,7 +198,7 @@ describe("rule-core Hit Point damage deterministic QNT replay", () => {
     MBT_TEST_TIMEOUT_MS,
   );
 
-  it("does not add a death-save failure when temp HP fully absorbs damage at 0 HP", () => {
+  it("adds a death-save failure when temp HP fully absorb damage at 0 HP", () => {
     const { state, target } = battleWithTarget({
       scenario: "player-character-temp-hp-fully-absorbs-at-zero",
       creatureKind: "playerCharacter",
@@ -214,8 +217,9 @@ describe("rule-core Hit Point damage deterministic QNT replay", () => {
     const damaged = requireCombatant(afterDamage, target.combatantId);
     expect(damaged.zeroHpLifecycle).toEqual({
       policy: "usesDeathSavingThrows",
-      deathSaves: { tag: "dying", deathSaves: { successes: 0, failures: 0 } },
+      deathSaves: { tag: "dying", deathSaves: { successes: 0, failures: 1 } },
     });
+    expect(damaged.tempHp).toBe(0);
   });
 });
 
@@ -309,8 +313,18 @@ function projectHitPointDamage(
       0,
       projection.hpDamage - projection.currentHp,
     ),
+    deathSavingThrowFailuresAdded:
+      projection.currentHp > 0
+        ? 0
+        : deathSavingThrowFailures(after) - deathSavingThrowFailures(before),
     replayIndex: replayIndexForScenario(scenario),
   });
+}
+
+function deathSavingThrowFailures(combatant: BattleCreatureState): number {
+  return combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows"
+    ? Number(deathSaveStateFailures(combatant.zeroHpLifecycle.deathSaves))
+    : 0;
 }
 
 function requireCombatant(
@@ -375,6 +389,10 @@ function normalizeHitPointDamageQuintState(
     remainingDamageAtZero: numberFromQuintInt(
       state["qRemainingDamageAtZero"],
       "qRemainingDamageAtZero",
+    ),
+    deathSavingThrowFailuresAdded: numberFromQuintInt(
+      state["qDeathSavingThrowFailuresAdded"],
+      "qDeathSavingThrowFailuresAdded",
     ),
     replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
   };

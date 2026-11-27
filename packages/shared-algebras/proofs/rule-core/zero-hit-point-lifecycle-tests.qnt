@@ -36,24 +36,56 @@ module zeroHitPointLifecycleTests {
     }
   }
 
-  run test_temporary_hit_points_absorb_zero_hit_point_damage_before_failures = {
-    val vitals = {
-      kind: PlayerCharacter,
-      hitPoints: 0,
-      hitPointMaximum: 12,
-      temporaryHitPoints: 5,
-      dead: false,
-      unconscious: true,
-    }
-    val absorbed = applyDamageToZeroHitPointCreature(vitals, resetDeathSavingThrowLifecycle, 4, true)
-    val overflow = applyDamageToZeroHitPointCreature(vitals, resetDeathSavingThrowLifecycle, 7, true)
+  pure def zeroHitPointVitalsWithTemporaryHitPoints(temporaryHitPoints: int): CreatureVitals = {
+    kind: PlayerCharacter,
+    hitPoints: 0,
+    hitPointMaximum: 10,
+    temporaryHitPoints: temporaryHitPoints,
+    dead: false,
+    unconscious: true,
+  }
+
+  run test_temporary_hit_points_absorbed_damage_at_zero_still_fails = {
+    val vitals = zeroHitPointVitalsWithTemporaryHitPoints(5)
+    val absorbed = applyDamageToZeroHitPointCreature(vitals, resetDeathSavingThrowLifecycle, 4, false)
+    val criticalOverflow = applyDamageToZeroHitPointCreature(vitals, resetDeathSavingThrowLifecycle, 7, true)
     all {
       assert(absorbed.vitals.temporaryHitPoints == 1),
-      assert(deathSavingThrowFailures(absorbed.deathSavingThrows) == 0),
-      assert(overflow.vitals.temporaryHitPoints == 0),
-      assert(deathSavingThrowFailures(overflow.deathSavingThrows) == 2),
+      assert(absorbed.vitals.hitPoints == 0),
+      assert(deathSavingThrowFailures(absorbed.deathSavingThrows) == 1),
+      assert(criticalOverflow.vitals.temporaryHitPoints == 0),
+      assert(deathSavingThrowFailures(criticalOverflow.deathSavingThrows) == 2),
       assert(legalPlayerCharacterDeathSavingThrowState(absorbed.vitals, absorbed.deathSavingThrows)),
-      assert(legalPlayerCharacterDeathSavingThrowState(overflow.vitals, overflow.deathSavingThrows)),
+      assert(legalPlayerCharacterDeathSavingThrowState(criticalOverflow.vitals, criticalOverflow.deathSavingThrows)),
+    }
+  }
+
+  run test_damage_at_zero_tests_incoming_damage_against_maximum = {
+    val result = applyDamageToZeroHitPointCreature(
+      zeroHitPointVitalsWithTemporaryHitPoints(5),
+      resetDeathSavingThrowLifecycle,
+      12,
+      false
+    )
+    all {
+      assert(result.vitals.temporaryHitPoints == 0),
+      assert(result.vitals.dead),
+      assert(result.deathSavingThrows == Dead),
+      assert(legalPlayerCharacterDeathSavingThrowState(result.vitals, result.deathSavingThrows)),
+    }
+  }
+
+  run test_temporary_hit_points_absorbed_damage_ends_stable = {
+    val result = applyDamageToZeroHitPointCreature(
+      zeroHitPointVitalsWithTemporaryHitPoints(5),
+      Stable,
+      3,
+      false
+    )
+    all {
+      assert(result.vitals.temporaryHitPoints == 2),
+      assert(result.deathSavingThrows == Dying({ successes: 0, failures: 1 })),
+      assert(legalPlayerCharacterDeathSavingThrowState(result.vitals, result.deathSavingThrows)),
     }
   }
 

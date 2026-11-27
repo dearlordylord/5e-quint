@@ -83,13 +83,13 @@ module battleRuntimeHitPointLifecycleTests {
       assert(result.deathFailures == 2),
     }
   }
-  run test_character_temporary_hp_at_zero_absorbs_damage_before_death_failures = {
+  run test_character_temporary_hp_at_zero_absorb_damage_that_still_fails = {
     val absorbed = applyDamage(withFighterHp(initialState, 0, 5).fighter, 4, 2, true)
     val overflow = applyDamage(withFighterHp(initialState, 0, 5).fighter, 7, 2, true)
     all {
       assert(absorbed.hp == 0),
       assert(absorbed.tempHp == 1),
-      assert(absorbed.deathFailures == 0),
+      assert(absorbed.deathFailures == 2),
       assert(absorbed.unconscious),
       assert(overflow.hp == 0),
       assert(overflow.tempHp == 0),

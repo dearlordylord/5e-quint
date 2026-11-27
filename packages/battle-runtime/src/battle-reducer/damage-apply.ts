@@ -1264,7 +1264,10 @@ function applyDamageToZeroHitPointCreature(
     readonly deathFailuresAtZeroHp: 1 | 2;
   },
 ): BattleCreatureState {
-  if (projection.hpDamage <= 0) {
+  // Damage at 0 Hit Points counts the whole hit, including any part that
+  // Temporary Hit Points absorb (rule-core zero-hit-point-lifecycle.qnt,
+  // applyDamageToZeroHitPointCreature).
+  if (projection.effectiveDamage <= 0) {
     return combatant;
   }
   return projection.massiveDamageKills
@@ -1294,11 +1297,34 @@ export function hpDamageProjection(
     currentHp,
     hpDamage,
     nextHp,
-    massiveDamageKills:
-      hpDamage > 0 &&
-      (currentHp <= 0 ? hpDamage : hpDamage - currentHp) >=
-        Number(effectiveHitPointMaximum(combatant)),
+    massiveDamageKills: hitPointMaximumDeathTestKills({
+      currentHp,
+      effectiveDamage,
+      hpDamage,
+      hitPointMaximum: Number(effectiveHitPointMaximum(combatant)),
+    }),
   };
+}
+
+// The Hit Point maximum death test. At 0 Hit Points it compares the whole hit
+// ("Damage at 0 Hit Points"); otherwise it compares what remains after the
+// creature drops to 0 ("Massive Damage").
+function hitPointMaximumDeathTestKills(input: {
+  readonly currentHp: number;
+  readonly effectiveDamage: number;
+  readonly hpDamage: number;
+  readonly hitPointMaximum: number;
+}): boolean {
+  if (input.currentHp <= 0) {
+    return (
+      input.effectiveDamage > 0 &&
+      input.effectiveDamage >= input.hitPointMaximum
+    );
+  }
+  return (
+    input.hpDamage > 0 &&
+    input.hpDamage - input.currentHp >= input.hitPointMaximum
+  );
 }
 
 export function damageAllowsKnockOut(

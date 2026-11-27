@@ -152,11 +152,15 @@ module zeroHitPointLifecycle {
     }
 
   // playing-the-game.md:1241, "Damage at 0 Hit Points": if you take any damage
-  // while you have 0 Hit Points, you suffer a Death Saving Throw failure.
-  // "Take damage" here means damage that actually reduces Hit Points after
-  // Temporary Hit Point absorption (playing-the-game.md:1255, "Temporary Hit
-  // Points"); temp HP offset incoming damage and do not restore Hit Points, so
-  // fully temp-HP-absorbed damage adds no failure.
+  // while you have 0 Hit Points, you suffer a Death Saving Throw failure, and
+  // you die if "the damage" equals or exceeds your Hit Point maximum.
+  // playing-the-game.md:1255, "Lose Temporary Hit Points First": a creature
+  // with Temporary Hit Points still takes the damage; those points are lost
+  // first. So Temporary Hit Points absorb damage without stopping it from being
+  // damage taken: the failure and the maximum test use the incoming damage
+  // (ASSUMPTIONS.md A70).
+  // Only the positive-HP Massive Damage rule (playing-the-game.md:1221) tests
+  // a remainder.
   pure def applyDamageToZeroHitPointCreature(
     vitals: CreatureVitals,
     lifecycle: DeathSavingThrowLifecycle,
@@ -171,7 +175,6 @@ module zeroHitPointLifecycle {
     } else {
       val resolvedDamage = nonnegative(rawDamage)
       val absorbedByTemporaryHitPoints = absorbTemporaryHitPoints(vitals, resolvedDamage)
-      val damageAfterTemporaryHitPoints = resolvedDamage - absorbedByTemporaryHitPoints
       val nextVitals = {
         kind: vitals.kind,
         hitPoints: vitals.hitPoints,
@@ -180,14 +183,7 @@ module zeroHitPointLifecycle {
         dead: vitals.dead,
         unconscious: vitals.unconscious,
       }
-      if (damageAfterTemporaryHitPoints <= 0) {
-        vitals: nextVitals,
-        deathSavingThrows: lifecycle,
-        deathSavingThrowFailuresAdded: 0,
-        deathSavingThrowOutcome: DeathSavingThrowNoHitPointRecovery,
-      } else {
-        applyDamageAtZeroHitPoints(nextVitals, lifecycle, damageAfterTemporaryHitPoints, criticalHitDamage)
-      }
+      applyDamageAtZeroHitPoints(nextVitals, lifecycle, resolvedDamage, criticalHitDamage)
     }
 
   // playing-the-game.md:1233: a creature starting its turn at 0 Hit Points rolls

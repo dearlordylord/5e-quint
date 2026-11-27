@@ -13,6 +13,8 @@ module ruleCoreHitPointDamageMbt {
   var qUnconscious: bool
   var qDamageToHitPoints: int
   var qRemainingDamageAtZero: int
+  // Death Saving Throw failures that damage at 0 Hit Points adds.
+  var qDeathSavingThrowFailuresAdded: int
   var qReplayIndex: int
   var qComponentRoute: List[RuleCoreComponentRouteEvent]
 
@@ -34,6 +36,7 @@ module ruleCoreHitPointDamageMbt {
     qUnconscious' = result.vitals.unconscious,
     qDamageToHitPoints' = result.damageToHitPoints,
     qRemainingDamageAtZero' = result.remainingDamageAtZero,
+    qDeathSavingThrowFailuresAdded' = 0,
     qReplayIndex' = nextReplayIndex,
     qComponentRoute' = componentRouteEvidence,
   }
@@ -47,6 +50,7 @@ module ruleCoreHitPointDamageMbt {
     qUnconscious' = false,
     qDamageToHitPoints' = 0,
     qRemainingDamageAtZero' = 0,
+    qDeathSavingThrowFailuresAdded' = 0,
     qReplayIndex' = 0,
     qComponentRoute' = componentRouteEvidence,
   }
@@ -99,15 +103,16 @@ module ruleCoreHitPointDamageMbt {
     }, 18), 4),
   }
 
-  action recordZeroHpDamageResult(scenario: str, vitals: CreatureVitals, nextReplayIndex: int): bool = all {
+  action recordZeroHpDamageResult(scenario: str, result: ZeroHitPointLifecycleResult, nextReplayIndex: int): bool = all {
     qLastScenario' = scenario,
-    qHitPoints' = vitals.hitPoints,
-    qHitPointMaximum' = vitals.hitPointMaximum,
-    qTemporaryHitPoints' = vitals.temporaryHitPoints,
-    qDead' = vitals.dead,
-    qUnconscious' = vitals.unconscious,
+    qHitPoints' = result.vitals.hitPoints,
+    qHitPointMaximum' = result.vitals.hitPointMaximum,
+    qTemporaryHitPoints' = result.vitals.temporaryHitPoints,
+    qDead' = result.vitals.dead,
+    qUnconscious' = result.vitals.unconscious,
     qDamageToHitPoints' = 0,
     qRemainingDamageAtZero' = 0,
+    qDeathSavingThrowFailuresAdded' = result.deathSavingThrowFailuresAdded,
     qReplayIndex' = nextReplayIndex,
     qComponentRoute' = componentRouteEvidence,
   }
@@ -128,7 +133,7 @@ module ruleCoreHitPointDamageMbt {
         resetDeathSavingThrowLifecycle,
         3,
         false
-      ).vitals,
+      ),
       5
     ),
   }
