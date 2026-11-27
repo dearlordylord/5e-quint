@@ -158,7 +158,7 @@ module zeroHitPointLifecycle {
   // with Temporary Hit Points still takes the damage; those points are lost
   // first. So Temporary Hit Points absorb damage without stopping it from being
   // damage taken: the failure and the maximum test use the incoming damage
-  // (ASSUMPTIONS.md A70).
+  // (ASSUMPTIONS.md A72).
   // Only the positive-HP Massive Damage rule (playing-the-game.md:1221) tests
   // a remainder.
   pure def applyDamageToZeroHitPointCreature(
