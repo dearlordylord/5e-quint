@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module savingThrowModifierCollectorCoreExamples {
-  import d20TestCircumstanceCore.* from "./d20-test-circumstance-core"
+  import d20TestRollMode.* from "./d20-test-roll-mode"
   import savingThrowModifierCollectorCore.* from "./saving-throw-modifier-collector-core"
 
   pure val plainDexteritySave: SavingThrowCircumstances = {

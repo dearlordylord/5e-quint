@@ -3059,6 +3059,13 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-weapon-grip.test.ts"
+        },
+        {
+          "deterministicReplayRationale": "The closed six-case range table calls the shared attack-damage semantic owner for normal and long endpoints, independent Advantage and its cancellation, and beyond-range rejection. The TypeScript driver observes production target admission, offered roll mode and Action spend after a missed Shortbow attack; it does not recompute range classification or cancellation.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/battle-runtime/src/rule-core-attack-range.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-attack-range.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": ["unit-feature.light-extra-attack-damage-ability-modifier"],
@@ -3072,7 +3079,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt"
       ],
-      "reason": "The attack-roll-damage-dice core also owns Two-Handed attack hand requirements. The weapon-grip contract witnesses holding a Two-Handed weapon in one hand, rejecting its attack (including a stale advertised subject), and admitting its attack after taking the existing two-handed grip. Other mapped MBT scopes retain their existing attack/damage coverage.",
+      "reason": "The attack-roll-damage-dice core also owns Two-Handed attack hand requirements. The weapon-grip contract witnesses holding a Two-Handed weapon in one hand, rejecting its attack (including a stale advertised subject), and admitting its attack after taking the existing two-handed grip. Other mapped MBT scopes retain their existing attack/damage coverage. The deterministic range replay compares the production ranged-attack frontier and Action cost with the same attack-damage semantic owner; other mapped witnesses retain their existing coverage.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
@@ -15697,6 +15704,12 @@
       "role": "semantic-core"
     },
     {
+      "category": "pure-algebra-leaf",
+      "classification": "exempt",
+      "evidence": "Shared D20 roll-mode vocabulary and pure source reduction imported by registered attack and D20 circumstance owners; range and circumstance sources remain owned by those resolvers.",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-roll-mode.qnt"
+    },
+    {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/damage-component-adjustments-examples.qnt",
       "role": "proof-only"
@@ -19879,6 +19892,7 @@
         "import",
         "variant",
         "record",
+        "record-update",
         "pure-def",
         "int",
         "bool",

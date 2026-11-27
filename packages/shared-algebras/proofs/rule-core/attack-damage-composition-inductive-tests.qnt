@@ -12,14 +12,17 @@ module attackDamageCompositionInductiveTests {
   run melee_critical_attack_reaches_zero_hit_points = {
     val result = resolveAttackProcedure(
       ActionAvailable,
-      WithinMeleeReach,
-      5,
+      {
+        capability: MeleeReachRangeCapability({ reachFeet: 5 }),
+        distanceFeet: 5,
+      },
       {
         naturalD20: 20,
         total: 8,
         armorClass: 20,
         criticalThreshold: 20,
       },
+      { advantage: false, disadvantage: false },
       {
         kind: PlayerCharacter,
         hitPoints: 6,

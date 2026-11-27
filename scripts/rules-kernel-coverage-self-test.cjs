@@ -457,14 +457,17 @@ function runSelfTest() {
     "battle-runtime",
     "exempt-leaf.qnt",
   );
-  writeFile(exemptLeafPath, "module exemptLeaf {}\n");
+  writeFile(
+    exemptLeafPath,
+    "module exemptLeaf { pure def keep(value: int): int = value }\n",
+  );
   const exemptLeafResult = buildKernelCoverage({
     root,
     qntRegistryExemptions: [
       {
         ownerPath: "packages/battle-runtime/exempt-leaf.qnt",
-        category: "leaf-type-vocabulary",
-        evidence: "Self-test exempt vocabulary leaf.",
+        category: "pure-algebra-leaf",
+        evidence: "Self-test exempt shared pure-algebra leaf.",
       },
     ],
   });
@@ -474,7 +477,7 @@ function runSelfTest() {
       (entry) =>
         entry.ownerPath === "packages/battle-runtime/exempt-leaf.qnt" &&
         entry.classification === "exempt" &&
-        entry.category === "leaf-type-vocabulary",
+        entry.category === "pure-algebra-leaf",
     ),
     "Expected exempt-leaf.qnt to be classified exempt in the registry inventory.",
   );
