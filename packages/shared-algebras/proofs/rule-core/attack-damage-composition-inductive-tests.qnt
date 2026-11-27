@@ -31,6 +31,7 @@ module attackDamageCompositionInductiveTests {
         dead: false,
         unconscious: false,
       },
+      resetDeathSavingThrowLifecycle,
       {
         attackKind: MeleeAttack,
         damageType: SlashingDamage,

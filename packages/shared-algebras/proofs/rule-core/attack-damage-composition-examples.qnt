@@ -85,6 +85,7 @@ module attackDamageCompositionExamples {
         dead: false,
         unconscious: false,
       },
+      resetDeathSavingThrowLifecycle,
       {
         attackKind: RangedAttack,
         damageType: PiercingDamage,
@@ -339,6 +340,7 @@ module attackDamageCompositionExamples {
         dead: false,
         unconscious: false,
       },
+      resetDeathSavingThrowLifecycle,
       {
         attackKind: MeleeAttack,
         damageType: SlashingDamage,
@@ -375,6 +377,7 @@ module attackDamageCompositionExamples {
         dead: false,
         unconscious: true,
       },
+      resetDeathSavingThrowLifecycle,
       {
         attackKind: MeleeAttack,
         damageType: SlashingDamage,
@@ -405,6 +408,7 @@ module attackDamageCompositionExamples {
       { naturalD20: 2, total: 8, armorClass: 15, criticalThreshold: 20 },
       noAttackRollModeSources,
       vitals,
+      resetDeathSavingThrowLifecycle,
       {
         attackKind: MeleeAttack,
         damageType: SlashingDamage,
@@ -435,6 +439,7 @@ module attackDamageCompositionExamples {
         dead: false,
         unconscious: false,
       },
+      resetDeathSavingThrowLifecycle,
       {
         attackKind: MeleeAttack,
         damageType: SlashingDamage,
@@ -461,6 +466,7 @@ module attackDamageCompositionExamples {
         dead: false,
         unconscious: false,
       },
+      resetDeathSavingThrowLifecycle,
       {
         attackKind: MeleeAttack,
         damageType: SlashingDamage,
@@ -567,5 +573,99 @@ module attackDamageCompositionExamples {
   run test_long_range_disadvantage_cancels_with_advantage = {
     val result = rangedAttackAtDistance(60, advantageAttackRollModeSources)
     assert(result.attackRollMode == NormalD20TestRoll)
+  }
+
+  pure val dyingTarget: CreatureVitals = {
+    kind: PlayerCharacter,
+    hitPoints: 0,
+    hitPointMaximum: 12,
+    temporaryHitPoints: 0,
+    dead: false,
+    unconscious: true,
+  }
+
+  pure def ordinaryDamageFacts(attackKind: AttackKind, rolledDamage: int): AttackDamageProcedureFacts = {
+    attackKind: attackKind,
+    damageType: SlashingDamage,
+    rolledDamage: rolledDamage,
+    damageModifier: 0,
+    targetAdjustments: noDamageAdjustmentFacts,
+    disposition: OrdinaryAttackDamage,
+  }
+
+  run test_adjacent_hit_on_a_dying_target_adds_two_failures = {
+    val result = resolveAttackProcedure(
+      ActionAvailable,
+      meleeTargetRangeFacts(5),
+      { naturalD20: 10, total: 17, armorClass: 15, criticalThreshold: 20 },
+      noAttackRollModeSources,
+      dyingTarget,
+      Dying({ successes: 1, failures: 0 }),
+      ordinaryDamageFacts(MeleeAttack, 4),
+    )
+    all {
+      assert(result.actionQuota == ActionSpent),
+      assert(result.attackRollOutcome == CriticalHit),
+      assert(result.damageResult.vitals.hitPoints == 0),
+      assert(not(result.damageResult.vitals.dead)),
+      assert(result.damageResult.deathSavingThrows == Dying({ successes: 1, failures: 2 })),
+      assert(legalHitPointRecoveryState(
+        result.damageResult.vitals,
+        result.damageResult.deathSavingThrows,
+        result.damageResult.positiveHitPointUnconsciousRecovery
+      )),
+    }
+  }
+
+  run test_distant_hit_on_a_stable_target_adds_one_failure = {
+    val result = resolveAttackProcedure(
+      ActionAvailable,
+      rangedTargetRangeFacts(30),
+      { naturalD20: 10, total: 17, armorClass: 15, criticalThreshold: 20 },
+      noAttackRollModeSources,
+      dyingTarget,
+      Stable,
+      ordinaryDamageFacts(RangedAttack, 4),
+    )
+    all {
+      assert(result.actionQuota == ActionSpent),
+      assert(result.attackRollOutcome == NormalHit),
+      assert(result.damageResult.deathSavingThrows == Dying({ successes: 0, failures: 1 })),
+    }
+  }
+
+  run test_hit_on_a_dying_target_for_its_maximum_kills = {
+    val result = resolveAttackProcedure(
+      ActionAvailable,
+      rangedTargetRangeFacts(30),
+      { naturalD20: 10, total: 17, armorClass: 15, criticalThreshold: 20 },
+      noAttackRollModeSources,
+      dyingTarget,
+      resetDeathSavingThrowLifecycle,
+      ordinaryDamageFacts(RangedAttack, 12),
+    )
+    all {
+      assert(result.damageResult.vitals.dead),
+      assert(result.damageResult.deathSavingThrows == Dead),
+    }
+  }
+
+  run test_knock_out_needs_a_target_with_hit_points = {
+    val facts = ordinaryDamageFacts(MeleeAttack, 4).with("disposition", KnockOutAttackDamage)
+    val result = resolveAttackProcedure(
+      ActionAvailable,
+      meleeTargetRangeFacts(5),
+      { naturalD20: 10, total: 17, armorClass: 15, criticalThreshold: 20 },
+      noAttackRollModeSources,
+      dyingTarget,
+      resetDeathSavingThrowLifecycle,
+      facts,
+    )
+    all {
+      assert(not(attackDamageDispositionIsLegal(dyingTarget, 4, facts))),
+      assert(result.actionQuota == ActionAvailable),
+      assert(result.damageResult.vitals == dyingTarget),
+      assert(result.damageResult.deathSavingThrows == resetDeathSavingThrowLifecycle),
+    }
   }
 }

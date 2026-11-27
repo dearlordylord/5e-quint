@@ -40,6 +40,7 @@ module attackDamageCompositionInductive {
         dead: false,
         unconscious: false,
       },
+      resetDeathSavingThrowLifecycle,
       {
         attackKind: MeleeAttack,
         damageType: SlashingDamage,
@@ -72,6 +73,7 @@ module attackDamageCompositionInductive {
         dead: false,
         unconscious: false,
       },
+      resetDeathSavingThrowLifecycle,
       {
         attackKind: MeleeAttack,
         damageType: SlashingDamage,
@@ -104,6 +106,7 @@ module attackDamageCompositionInductive {
         dead: false,
         unconscious: false,
       },
+      resetDeathSavingThrowLifecycle,
       {
         attackKind: MeleeAttack,
         damageType: SlashingDamage,

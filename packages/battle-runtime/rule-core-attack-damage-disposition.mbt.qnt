@@ -6,6 +6,7 @@ module ruleCoreAttackDamageDispositionMbt {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
+  import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
 
   var qLastScenario: str
@@ -14,6 +15,7 @@ module ruleCoreAttackDamageDispositionMbt {
   var qTargetUnconscious: bool
   var qTargetDead: bool
   var qKnockOutRecovery: bool
+  var qTargetDeathSavingThrowFailures: int
   var qReplayIndex: int
   var qComponentRoute: List[RuleCoreComponentRouteEvent]
 
@@ -27,6 +29,12 @@ module ruleCoreAttackDamageDispositionMbt {
     temporaryHitPoints: 0,
     dead: false,
     unconscious: false,
+  }
+
+  pure def dyingTargetVitals: CreatureVitals = {
+    ...targetVitals,
+    hitPoints: 0,
+    unconscious: true,
   }
 
   pure def rollFacts: AttackRollProcedureFacts = {
@@ -55,6 +63,7 @@ module ruleCoreAttackDamageDispositionMbt {
     targetUnconscious: bool,
     targetDead: bool,
     knockOutRecovery: bool,
+    targetDeathSavingThrowFailures: int,
     replayIndex: int,
   ): bool = all {
     qLastScenario' = scenario,
@@ -63,11 +72,12 @@ module ruleCoreAttackDamageDispositionMbt {
     qTargetUnconscious' = targetUnconscious,
     qTargetDead' = targetDead,
     qKnockOutRecovery' = knockOutRecovery,
+    qTargetDeathSavingThrowFailures' = targetDeathSavingThrowFailures,
     qReplayIndex' = replayIndex,
     qComponentRoute' = componentRouteEvidence,
   }
 
-  action init = recordProjection("init", true, 3, false, false, false, 0)
+  action init = recordProjection("init", true, 3, false, false, false, 0, 0)
 
   action doMeleeKnockOut = {
     val result = resolveAttackProcedure(
@@ -79,6 +89,7 @@ module ruleCoreAttackDamageDispositionMbt {
       rollFacts,
       { advantage: false, disadvantage: false },
       targetVitals,
+      resetDeathSavingThrowLifecycle,
       damageFacts(MeleeAttack, KnockOutAttackDamage),
     )
     all {
@@ -90,6 +101,7 @@ module ruleCoreAttackDamageDispositionMbt {
         result.damageResult.vitals.unconscious,
         result.damageResult.vitals.dead,
         result.damageResult.positiveHitPointUnconsciousRecovery == EndsWhenHitPointsRegained,
+        deathSavingThrowFailures(result.damageResult.deathSavingThrows),
         1,
       ),
     }
@@ -104,12 +116,44 @@ module ruleCoreAttackDamageDispositionMbt {
         damageAmountBeforeHitPoints(facts),
         facts,
       )),
-      recordProjection("ranged-knock-out-rejected", false, 3, false, false, false, 2),
+      recordProjection("ranged-knock-out-rejected", false, 3, false, false, false, 0, 2),
+    }
+  }
+
+  // playing-the-game.md, "Damage at 0 Hit Points" and "Unconscious": an
+  // adjacent hit on a Dying target is a Critical Hit and adds two failures.
+  action doMeleeHitOnDyingTarget = {
+    val result = resolveAttackProcedure(
+      ActionAvailable,
+      {
+        capability: MeleeReachRangeCapability({ reachFeet: 5 }),
+        distanceFeet: 5,
+      },
+      rollFacts,
+      { advantage: false, disadvantage: false },
+      dyingTargetVitals,
+      resetDeathSavingThrowLifecycle,
+      damageFacts(MeleeAttack, OrdinaryAttackDamage),
+    )
+    all {
+      qReplayIndex == 2,
+      result.actionQuota == ActionSpent,
+      recordProjection(
+        "melee-hit-on-dying-target",
+        true,
+        result.damageResult.vitals.hitPoints,
+        result.damageResult.vitals.unconscious,
+        result.damageResult.vitals.dead,
+        false,
+        deathSavingThrowFailures(result.damageResult.deathSavingThrows),
+        3,
+      ),
     }
   }
 
   action step = any {
     doMeleeKnockOut,
     doRejectRangedKnockOut,
+    doMeleeHitOnDyingTarget,
   }
 }

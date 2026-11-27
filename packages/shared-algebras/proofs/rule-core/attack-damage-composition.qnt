@@ -203,30 +203,64 @@ module attackDamageComposition {
       or all {
         facts.attackKind == MeleeAttack,
         damageAmount > 0,
+        // "When you would reduce a creature to 0 Hit Points": a target already
+        // at 0 isn't reduced to it.
+        vitals.hitPoints > 0,
         applyResolvedDamageToPositiveHitPoints(vitals, damageAmount).vitals.hitPoints == 0,
       }
 
+  // playing-the-game.md, "Damage at 0 Hit Points": a hit on a target with 0
+  // Hit Points that still makes Death Saving Throws adds failures (two for a
+  // Critical Hit) or kills, through the zero-HP lifecycle.
+  pure def resolveAttackDamageAtZeroHitPoints(
+    vitals: CreatureVitals,
+    lifecycle: DeathSavingThrowLifecycle,
+    damageAmount: int,
+    criticalHit: bool
+  ): HitPointRecoveryResult = {
+    val result = applyDamageToZeroHitPointCreature(vitals, lifecycle, damageAmount, criticalHit)
+    {
+      vitals: result.vitals,
+      deathSavingThrows: result.deathSavingThrows,
+      positiveHitPointUnconsciousRecovery: NoPositiveHitPointUnconsciousRecovery,
+      hitPointsRegained: 0,
+    }
+  }
+
   pure def resolveAttackDamage(
     vitals: CreatureVitals,
-    facts: AttackDamageProcedureFacts
+    lifecycle: DeathSavingThrowLifecycle,
+    facts: AttackDamageProcedureFacts,
+    criticalHit: bool
   ): HitPointRecoveryResult = {
     val damageAmount = damageAmountBeforeHitPoints(facts)
-    val damageResult = applyResolvedDamageToPositiveHitPoints(vitals, damageAmount)
-    if (facts.disposition == KnockOutAttackDamage) {
-      applyKnockOutDisposition(damageResult)
+    if (canUseDeathSavingThrowLifecycle(vitals, lifecycle)) {
+      resolveAttackDamageAtZeroHitPoints(vitals, lifecycle, damageAmount, criticalHit)
     } else {
-      {
-        vitals: damageResult.vitals,
-        deathSavingThrows:
-          deathSavingThrowLifecycleAfterPositiveHitPointDamage(
-            resetDeathSavingThrowLifecycle,
-            damageResult
-          ),
-        positiveHitPointUnconsciousRecovery: NoPositiveHitPointUnconsciousRecovery,
-        hitPointsRegained: 0,
+      val damageResult = applyResolvedDamageToPositiveHitPoints(vitals, damageAmount)
+      if (facts.disposition == KnockOutAttackDamage) {
+        applyKnockOutDisposition(damageResult)
+      } else {
+        {
+          vitals: damageResult.vitals,
+          deathSavingThrows:
+            deathSavingThrowLifecycleAfterPositiveHitPointDamage(lifecycle, damageResult),
+          positiveHitPointUnconsciousRecovery: NoPositiveHitPointUnconsciousRecovery,
+          hitPointsRegained: 0,
+        }
       }
     }
   }
+
+  // A target the attack's damage can reach: dead or with positive Hit Points
+  // (the positive-HP damage procedure), or at 0 Hit Points and still making
+  // Death Saving Throws (the zero-HP lifecycle).
+  pure def attackTargetCanTakeDamage(
+    vitals: CreatureVitals,
+    lifecycle: DeathSavingThrowLifecycle
+  ): bool =
+    canApplyResolvedDamageToPositiveHitPoints(vitals)
+      or canUseDeathSavingThrowLifecycle(vitals, lifecycle)
 
   pure def resolveAttackProcedure(
     quota: ActionQuota,
@@ -234,6 +268,7 @@ module attackDamageComposition {
     rollFacts: AttackRollProcedureFacts,
     rollModeSources: D20TestRollModeSources,
     targetVitals: CreatureVitals,
+    targetDeathSavingThrows: DeathSavingThrowLifecycle,
     damageFacts: AttackDamageProcedureFacts
   ): AttackProcedureResult = {
     val rangeResolution = resolveAttackRangeFacts(damageFacts.attackKind, targetRangeFacts)
@@ -263,7 +298,7 @@ module attackDamageComposition {
         distanceFeet: targetRangeFacts.distanceFeet,
       }),
       legalAttackRollProcedureFacts(rollFacts),
-      canApplyResolvedDamageToPositiveHitPoints(targetVitals),
+      attackTargetCanTakeDamage(targetVitals, targetDeathSavingThrows),
     }
     val dispositionAdmitted =
       damageFacts.disposition == OrdinaryAttackDamage
@@ -278,10 +313,16 @@ module attackDamageComposition {
       attackRollMode: attackRollMode,
       attackRollOutcome: rollOutcome,
       damageResult:
-        if (canApplyDamage) resolveAttackDamage(targetVitals, damageFacts)
+        if (canApplyDamage)
+          resolveAttackDamage(
+            targetVitals,
+            targetDeathSavingThrows,
+            damageFacts,
+            attackRollOutcomeIsCriticalHit(rollOutcome)
+          )
         else {
           vitals: targetVitals,
-          deathSavingThrows: resetDeathSavingThrowLifecycle,
+          deathSavingThrows: targetDeathSavingThrows,
           positiveHitPointUnconsciousRecovery: NoPositiveHitPointUnconsciousRecovery,
           hitPointsRegained: 0,
         },

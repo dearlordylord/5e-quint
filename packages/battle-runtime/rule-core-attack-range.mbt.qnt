@@ -3,6 +3,7 @@
 module ruleCoreAttackRangeMbt {
   import d20TestRollMode.* from "../shared-algebras/proofs/rule-core/d20-test-roll-mode"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
+  import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
 
@@ -27,6 +28,7 @@ module ruleCoreAttackRangeMbt {
       { naturalD20: 2, total: 6, armorClass: 18, criticalThreshold: 20 },
       { advantage: advantage, disadvantage: false },
       { kind: PlayerCharacter, hitPoints: 12, hitPointMaximum: 12, temporaryHitPoints: 0, dead: false, unconscious: false },
+      resetDeathSavingThrowLifecycle,
       { attackKind: RangedAttack, damageType: PiercingDamage, rolledDamage: 0, damageModifier: 0, targetAdjustments: noDamageAdjustmentFacts, disposition: OrdinaryAttackDamage },
     )
     all {
