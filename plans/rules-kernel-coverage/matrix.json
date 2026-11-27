@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 190,
-    "covered": 179,
+    "total": 191,
+    "covered": 180,
     "open": 5,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 150,
+      "battle": 151,
       "character-creation": 20,
       "character-sheet": 15,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 179,
+      "covered": 180,
       "needs-qnt-owner": 5,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -6828,17 +6828,22 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/battle-runtime/src/combat-turn-start-heroic-inspiration.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
         }
       ],
       "profiles": [],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/turn-start-lifecycle-core.qnt"
       ],
-      "reason": "The QNT owner runs the same starting-turn steps (prepare the starting turn, then resolve its start-turn occurrences) for both entries; End Turn first finishes the outgoing turn and advances to the next participant, and ticks round durations only when the round wraps. A pending turn start admits only the Start Turn subject. turn-boundary-lifecycle shares prepareStartingTurn and the start-turn occurrence cohort between End Turn and the startTurn runtime command; battle-start starts the opening turn once Initiative is final, leaving it pending when its start needs a roll or choice. The contract tests cover the opening Heroic Warrior offer, its order with a Death Saving Throw, the refusal of other subjects while pending, and an Initiative Swap that changes the first participant.",
+      "reason": "The QNT owner runs the same starting-turn steps (prepare the starting turn, then resolve its start-turn occurrences) for both entries; End Turn first finishes the outgoing turn and advances to the next participant, and ticks round durations only when the round wraps. A pending turn start admits only the Start Turn subject. turn-boundary-lifecycle shares prepareStartingTurn and the start-turn occurrence cohort between End Turn and the startTurn runtime command; battle-start starts the opening turn once Initiative is final, leaving it pending when its start needs a roll or choice. The contract tests cover the opening Heroic Warrior offer, its order with a Death Saving Throw, the refusal of other subjects while pending, and an Initiative Swap that changes the first participant. Character Battle startup admits the complete initial companion roster and finalizes its Initiative before calling the same opening owner. The public startup contract witnesses cover a companion taking the first turn and ordinary later companion admission preserving the published actor, round, resources and pending opening question.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
-        "packages/battle-runtime/src/battle-start.ts"
+        "packages/battle-runtime/src/battle-start.ts",
+        "packages/character-battle-runtime/src/companion-handoff.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [

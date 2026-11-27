@@ -6,14 +6,14 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Summary
 
-- Total obligations: 190
-- Covered obligations: 179
+- Total obligations: 191
+- Covered obligations: 180
 - Open transitional obligations: 5
 - Boundary or unsupported obligations: 6
 
 | Status                   | Count |
 | ------------------------ | ----: |
-| covered                  |   179 |
+| covered                  |   180 |
 | needs-qnt-owner          |     5 |
 | needs-parity-witness     |     0 |
 | needs-surface-evidence   |     0 |
@@ -23,7 +23,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | Runtime            | Count |
 | ------------------ | ----: |
 | shared-algebras    |     1 |
-| battle             |   150 |
+| battle             |   151 |
 | character-creation |    20 |
 | character-sheet    |    15 |
 | character-battle   |     4 |
