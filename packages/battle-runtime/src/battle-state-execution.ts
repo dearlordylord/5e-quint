@@ -5225,7 +5225,7 @@ export type BattleSavingThrowRerollHoleOptions =
   };
 /**
  * The dice a D20 Test hole offers to add to a test that stands failed, once
- * its rerolls are decided (ASSUMPTIONS.md A67).
+ * its rerolls are decided (ASSUMPTIONS.md A68).
  */
 export type BattleD20TestAddedDieHoleOptions = {
   readonly bardicInspirationDice?: readonly [BattleBardicInspirationDieOption];
@@ -5945,7 +5945,7 @@ export type BattleAbilityCheckAddedDieDecision =
     >;
 /**
  * An ability check's added-die decisions in the order the roller made them,
- * each on the check as the decisions before it left it (ASSUMPTIONS.md A67).
+ * each on the check as the decisions before it left it (ASSUMPTIONS.md A68).
  */
 export type BattleAbilityCheckAddedDieDecisions = readonly [
   BattleAbilityCheckAddedDieDecision,
