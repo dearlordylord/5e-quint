@@ -517,6 +517,23 @@ describe("ChatGPT newcomer battle recovery", () => {
       expect(validateNonRanged({ ...nonRangedFill, spatialFacts }).valid).toBe(
         false,
       );
+    for (const foreignSight of [
+      { ...objectSight, casterId: spellTargetId },
+      { ...objectSight, sourceProcedureRef: "synthetic-foreign-spell" },
+    ]) {
+      expect(
+        validateObject({
+          ...objectFill,
+          spatialFacts: [...objectFill.spatialFacts, foreignSight],
+        }).valid,
+      ).toBe(false);
+      expect(
+        validateNonRanged({
+          ...nonRangedFill,
+          spatialFacts: [...nonRangedFill.spatialFacts, foreignSight],
+        }).valid,
+      ).toBe(false);
+    }
     const { spatialFacts: _omitted, ...withoutFacts } = nonRangedFill;
     expect(validateNonRanged(withoutFacts).valid).toBe(false);
     for (const change of [

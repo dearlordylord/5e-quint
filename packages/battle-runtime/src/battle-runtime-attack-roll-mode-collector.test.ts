@@ -384,6 +384,13 @@ describe("attack-roll mode collector: one rule on every route", () => {
         withActiveSelfAttackAdvantage(session.state),
       ),
     ).toBe("advantage");
+    expect(
+      fireBoltRollModeAgainstObject(
+        session,
+        withActiveSelfAttackAdvantage(session.state),
+        false,
+      ),
+    ).toBe("normal");
   });
 
   test("names each source, and opposite sources cancel", () => {

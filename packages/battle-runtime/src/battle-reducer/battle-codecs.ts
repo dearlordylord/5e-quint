@@ -2462,6 +2462,13 @@ const BattleSpellSaveCoverSchema = Schema.Union([
   }),
 ]);
 
+const SpellObjectTargetSpatialFactRequestFields = {
+  casterId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  rangeFeet: MovementFeet,
+  requiresAttackerSight: Schema.Literal(true),
+};
+
 const BattleSpellSavingThrowOutcomeHoleFieldsSchema = {
   ...BattleHoleBaseFieldsSchema,
   kind: Schema.Literal("savingThrowOutcome"),
@@ -2623,16 +2630,18 @@ const BattleHolePayloadMembers = [
     sourceProcedureRef: BattleProcedureExecutionRef,
     requiresTableSpatialFact: Schema.Literal(true),
     spellObjectTargetSpatialFactRequest: Schema.optionalKey(
-      Schema.Struct({
-        casterId: CombatantId,
-        sourceProcedureRef: BattleProcedureExecutionRef,
-        rangeFeet: MovementFeet,
-        requiresAttackerSight: Schema.Literal(true),
-        requiresExactDistance: Schema.optionalKey(Schema.Literal(true)),
-        requiresEnemyProximityQualification: Schema.optionalKey(
-          Schema.Literal(true),
-        ),
-      }),
+      Schema.Union([
+        Schema.Struct({
+          ...SpellObjectTargetSpatialFactRequestFields,
+          requiresExactDistance: Schema.optionalKey(Schema.Never),
+          requiresEnemyProximityQualification: Schema.optionalKey(Schema.Never),
+        }),
+        Schema.Struct({
+          ...SpellObjectTargetSpatialFactRequestFields,
+          requiresExactDistance: Schema.Literal(true),
+          requiresEnemyProximityQualification: Schema.Literal(true),
+        }),
+      ]),
     ),
   }),
   pairedBattleHoleMember({

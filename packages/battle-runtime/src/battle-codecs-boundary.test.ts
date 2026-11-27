@@ -3957,3 +3957,35 @@ describe("battle codec act ownership boundaries", () => {
     expectEnvelopeDecodeFailure(malformed);
   });
 });
+
+test("object spell requests correlate exact distance with enemy proximity", () => {
+  const request = {
+    casterId: wizardId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      "object-sight-request",
+    ),
+    rangeFeet: movementFeet(120),
+    requiresAttackerSight: true,
+  };
+  const decode = (requirements: object) =>
+    Schema.decodeUnknownResult(BattleHoleSchema)({
+      ...baseHole("spell-object-requirements"),
+      kind: "objectTargetChoice",
+      sourceProcedureRef: request.sourceProcedureRef,
+      requiresTableSpatialFact: true,
+      spellObjectTargetSpatialFactRequest: { ...request, ...requirements },
+    });
+  expect(Result.isSuccess(decode({}))).toBe(true);
+  expect(
+    Result.isSuccess(
+      decode({
+        requiresExactDistance: true,
+        requiresEnemyProximityQualification: true,
+      }),
+    ),
+  ).toBe(true);
+  expect(Result.isFailure(decode({ requiresExactDistance: true }))).toBe(true);
+  expect(
+    Result.isFailure(decode({ requiresEnemyProximityQualification: true })),
+  ).toBe(true);
+});

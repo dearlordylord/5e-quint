@@ -17,6 +17,7 @@ import {
   type DirectTargetCover,
 } from "@dnd/shared-algebras/cover-algebra";
 import { SIZES, type MovementFeet } from "@dnd/shared/types";
+import { Match, Result } from "effect";
 import {
   type BattleObjectContactTargetsHole,
   type BattleExecutableSpellInvocation,
@@ -408,18 +409,19 @@ function spellObjectAttackSpatialFactRequest(
     Extract<SingleObjectSpellInvocation, { readonly attackKind: unknown }>
   >,
 ): BattleSpellObjectTargetSpatialFactRequest {
-  return {
+  const sightRequest = {
     casterId: actorId,
     sourceProcedureRef: invocation.sourceProcedureRef,
     rangeFeet: invocation.rangeFeet,
     requiresAttackerSight: true,
-    ...(spellAttackRequiresExactDistance(invocation)
-      ? {
-          requiresExactDistance: true as const,
-          requiresEnemyProximityQualification: true as const,
-        }
-      : {}),
-  };
+  } as const;
+  return spellAttackRequiresExactDistance(invocation)
+    ? {
+        ...sightRequest,
+        requiresExactDistance: true,
+        requiresEnemyProximityQualification: true,
+      }
+    : sightRequest;
 }
 
 export function spellAttackSequencePartObjectTargetHole(
@@ -1144,19 +1146,55 @@ function admitSpellObjectTargetFact(
   return cover === null ? null : { ...fact, cover };
 }
 
-export function spellObjectTargetSightFact(
-  facts: readonly ObjectTargetSightFact[],
-  actorId: CombatantId,
-  objectId: BattleObjectId,
-  invocation: BattleExecutableSpellInvocation<SingleCreatureOrObjectSpellAttackDamageInvocation>,
-): ObjectTargetSightFact | null {
-  return (
-    facts.find(
-      (fact) =>
-        fact.casterId === actorId &&
-        fact.objectId === objectId &&
-        fact.sourceProcedureRef === invocation.sourceProcedureRef,
-    ) ?? null
+const SPELL_OBJECT_TARGET_SIGHT_FAILURES = [
+  "missing",
+  "foreign",
+  "duplicate",
+] as const;
+type SpellObjectTargetSightFailure =
+  (typeof SPELL_OBJECT_TARGET_SIGHT_FAILURES)[number];
+
+/** Admit the one table answer directed at this spell's selected object. */
+export function admitSpellObjectTargetSight(input: {
+  readonly facts: readonly BattleTargetSpatialFact[];
+  readonly casterId: CombatantId;
+  readonly objectId: BattleObjectId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+}): Result.Result<ObjectTargetSightFact, SpellObjectTargetSightFailure> {
+  const [fact, ...others] = input.facts.filter(
+    (candidate) => candidate.kind === "spellObjectTargetSight",
+  );
+  if (fact === undefined) return Result.fail("missing");
+  if (others.length > 0) return Result.fail("duplicate");
+  if (
+    fact.casterId !== input.casterId ||
+    fact.objectId !== input.objectId ||
+    fact.sourceProcedureRef !== input.sourceProcedureRef
+  )
+    return Result.fail("foreign");
+  return Result.succeed(fact);
+}
+
+export function spellObjectTargetSightFailureMessage(
+  failure: SpellObjectTargetSightFailure,
+): string {
+  return Match.value(failure).pipe(
+    Match.when(
+      "missing",
+      () =>
+        "Spell object target must include a matching table-supplied object sight fact.",
+    ),
+    Match.when(
+      "foreign",
+      () =>
+        "Spell object sight fact must name the selected caster, object, and spell procedure.",
+    ),
+    Match.when(
+      "duplicate",
+      () =>
+        "Spell object target must include exactly one table-supplied object sight fact.",
+    ),
+    Match.exhaustive,
   );
 }
 

@@ -1,3 +1,4 @@
+import { Result } from "effect";
 import { armorClassBehindCover } from "@dnd/shared-algebras/cover-algebra";
 import type { BattleCreatureState } from "../battle-state-execution.ts";
 import { prepareAttackRollInput } from "./attack-roll-admission.ts";
@@ -107,7 +108,8 @@ import {
   objectDamageComponentsFromMap,
   objectDamageOutcomeFromComponents,
   spellObjectTargetFact,
-  spellObjectTargetSightFact,
+  admitSpellObjectTargetSight,
+  spellObjectTargetSightFailureMessage,
   spellTargetIsLegal,
   spellTargetAdmission,
   spellTargetInterdictionRequests,
@@ -1099,29 +1101,20 @@ function resolveSpellAttackSequenceObjectPart(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const sightFact = spellObjectTargetSightFact(
-    input.target.spatialFacts.filter(
-      (
-        fact,
-      ): fact is Extract<
-        (typeof input.target.spatialFacts)[number],
-        { readonly kind: "spellObjectTargetSight" }
-      > => fact.kind === "spellObjectTargetSight",
-    ),
-    input.actorId,
-    input.target.objectId,
-    input.invocation,
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: every spell attack against an object asks the table whether the caster can see it. */
-  if (sightFact === null) {
-    const partName = spellAttackSequencePartName();
+  const sight = admitSpellObjectTargetSight({
+    facts: input.target.spatialFacts,
+    casterId: input.actorId,
+    objectId: input.target.objectId,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
+  });
+  if (Result.isFailure(sight)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      `Spell object ${partName} must include a matching table-supplied object sight fact.`,
+      spellObjectTargetSightFailureMessage(sight.failure),
     );
   }
-  /* v8 ignore stop -- @preserve */
+  const sightFact = sight.success;
   const calculatedRollMode = requiredSpellObjectTargetAttackRollMode(
     input.state,
     input.actorId,

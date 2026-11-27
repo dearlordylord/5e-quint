@@ -1,3 +1,4 @@
+import { Result } from "effect";
 import { armorClassBehindCover } from "@dnd/shared-algebras/cover-algebra";
 import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 // Shared object-target spell attack resolution for direct casts and readied releases.
@@ -70,7 +71,8 @@ import {
   objectDamageOutcomeFromComponents,
   spellObjectIgnitionFact,
   spellObjectTargetFact,
-  spellObjectTargetSightFact,
+  admitSpellObjectTargetSight,
+  spellObjectTargetSightFailureMessage,
   spellObjectAttackRollHole,
   spellDamageHole,
   validateSpellDamageFill,
@@ -224,28 +226,20 @@ function resolveObjectTargetSpellAttackCore(
     input.invocation,
     input.metamagicApplications,
   );
-  const sightFact = spellObjectTargetSightFact(
-    input.fillSet.objectTarget.spatialFacts.filter(
-      (
-        fact,
-      ): fact is Extract<
-        (typeof input.fillSet.objectTarget.spatialFacts)[number],
-        { readonly kind: "spellObjectTargetSight" }
-      > => fact.kind === "spellObjectTargetSight",
-    ),
-    input.actorId,
-    input.fillSet.objectTarget.objectId,
-    input.invocation,
-  );
-  // Every spell attack against an object asks the table whether the caster
-  // can see it (SRD "Unseen Attackers and Targets").
-  if (sightFact === null) {
+  const sight = admitSpellObjectTargetSight({
+    facts: input.fillSet.objectTarget.spatialFacts,
+    casterId: input.actorId,
+    objectId: input.fillSet.objectTarget.objectId,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
+  });
+  if (Result.isFailure(sight)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Spell object target must include a matching table-supplied object sight fact.",
+      spellObjectTargetSightFailureMessage(sight.failure),
     );
   }
+  const sightFact = sight.success;
   const ignitionFact =
     input.invocation.procedure === "spellAttackDamage" &&
     input.invocation.objectHitEffect.kind === "igniteFlammableUnattended"

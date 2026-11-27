@@ -5122,10 +5122,16 @@ export type BattleSpellObjectTargetSpatialFactRequest = {
   readonly rangeFeet: MovementFeet;
   /** Every spell attack against an object asks whether the caster sees it. */
   readonly requiresAttackerSight: true;
-  /** Ranged spell attacks must carry the exact caster-to-object distance. */
-  readonly requiresExactDistance?: true;
-  readonly requiresEnemyProximityQualification?: true;
-};
+} & (
+  | {
+      readonly requiresExactDistance?: never;
+      readonly requiresEnemyProximityQualification?: never;
+    }
+  | {
+      readonly requiresExactDistance: true;
+      readonly requiresEnemyProximityQualification: true;
+    }
+);
 export type BattleAttackTargetRequest = {
   readonly actorId: CombatantId;
   readonly selection: BattleAttackExecutionSelection;

@@ -429,18 +429,24 @@ function objectTargetSightConstraint(
   request: { readonly casterId: string; readonly sourceProcedureRef: string },
   definitions: McpOutputSchema,
 ): McpOutputSchema {
+  const sightFacts = facts.filter((fact) =>
+    hasKind(fact, "spellObjectTargetSight", definitions),
+  );
   return {
-    contains: {
-      anyOf: facts
-        .filter((fact) => hasKind(fact, "spellObjectTargetSight", definitions))
-        .map((fact) =>
-          pinFact(fact, {
-            kind: "spellObjectTargetSight",
-            casterId: request.casterId,
-            sourceProcedureRef: request.sourceProcedureRef,
-          }),
-        ),
-    },
+    contains: { anyOf: sightFacts },
     maxContains: 1,
+    allOf: [
+      {
+        contains: {
+          anyOf: sightFacts.map((fact) =>
+            pinFact(fact, {
+              kind: "spellObjectTargetSight",
+              casterId: request.casterId,
+              sourceProcedureRef: request.sourceProcedureRef,
+            }),
+          ),
+        },
+      },
+    ],
   };
 }
