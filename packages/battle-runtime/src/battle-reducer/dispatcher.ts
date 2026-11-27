@@ -193,7 +193,11 @@ import {
   isChangeWeaponAfterAttackSubject,
   resolveChangeWeaponAfterAttack,
 } from "./attack-weapon-change.ts";
-import { isEndTurnSubject } from "./reducer-route-subject-query.ts";
+import {
+  isStartTurnSubject,
+  isTurnBoundarySubject,
+  type TurnBoundarySubject,
+} from "./reducer-route-subject-query.ts";
 import {
   isObjectInteractionSubject,
   resolveObjectInteraction,
@@ -202,7 +206,10 @@ import {
   isWeaponGripChangeSubject,
   resolveWeaponGripChange,
 } from "./weapon-grip.ts";
-import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
+import {
+  resolveEndTurnCommand,
+  resolveStartTurnCommand,
+} from "./turn-boundary-lifecycle.ts";
 import {
   isPersistentSpatialSpellProcedureSubject,
   isPersistentAreaSubjectAllowedOutsideCurrentActorTurn,
@@ -701,10 +708,38 @@ function battleSubjectHasWrongActor(
   );
 }
 
+function resolveTurnBoundarySubject(
+  input: Parameters<typeof resolveEndTurnCommand>[0] & {
+    readonly subject: TurnBoundarySubject;
+  },
+): BattleResolutionResult {
+  const { subject } = input;
+  if (isStartTurnSubject(subject)) {
+    return resolveStartTurnCommand({ ...input, subject });
+  }
+  return input.state.currentTurnResources.compelledHalt === null
+    ? resolveEndTurnCommand(input)
+    : resolveCompelledHaltEndTurn({ ...input, subject });
+}
+
+/** While the current turn's start is pending, only Start Turn is admitted. */
+function pendingTurnStartIssue(
+  input: AdmittedBattleResolutionInput,
+): string | null {
+  return input.state.currentTurnStart === "pending" &&
+    !isStartTurnSubject(input.subject)
+    ? "The current turn must start before other battle subjects."
+    : null;
+}
+
 function battleSubjectObligationAdmissionResult(
   input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
 ): Extract<BattleResolutionResult, { readonly tag: "invalid" }> | null {
+  const turnStartIssue = pendingTurnStartIssue(input);
+  if (turnStartIssue !== null) {
+    return invalidResult(input.state, "staleSubject", turnStartIssue);
+  }
   const compelledBehaviorObligationIssue =
     pendingCompelledBehaviorObligationIssue(input.state, input.subject);
   /* v8 ignore start -- @preserve -- Defensive stale-subject rejection: rediscovery exposes the pending Command obligation instead of unrelated subjects. */
@@ -1003,19 +1038,13 @@ function resolveBattleSubjectAfterD20TestRerolls(
     if (subject.tag === "unitFeatureHeldWeaponActivation") {
       return resolveUnitFeatureHeldWeaponActivation({ ...input, subject });
     }
-    if (isEndTurnSubject(subject)) {
-      return input.state.currentTurnResources.compelledHalt === null
-        ? resolveEndTurnCommand({
-            ...input,
-            ...handledInterruptRouteOption,
-            ...replayParentRouteOption,
-          })
-        : resolveCompelledHaltEndTurn({
-            ...input,
-            subject,
-            ...handledInterruptRouteOption,
-            ...replayParentRouteOption,
-          });
+    if (isTurnBoundarySubject(subject)) {
+      return resolveTurnBoundarySubject({
+        ...input,
+        subject,
+        ...handledInterruptRouteOption,
+        ...replayParentRouteOption,
+      });
     }
     if (isCompelledBehaviorFollowUpSubject(subject)) {
       return resolveCompelledBehaviorFollowUp({

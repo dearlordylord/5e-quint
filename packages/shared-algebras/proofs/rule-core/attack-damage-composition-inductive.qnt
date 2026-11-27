@@ -21,14 +21,17 @@ module attackDamageCompositionInductive {
   pure def criticalDamageFixtureResult: AttackProcedureResult =
     resolveAttackProcedure(
       ActionAvailable,
-      WithinMeleeReach,
-      5,
+      {
+        capability: MeleeReachRangeCapability({ reachFeet: 5 }),
+        distanceFeet: 5,
+      },
       {
         naturalD20: 20,
         total: 8,
         armorClass: 20,
         criticalThreshold: 20,
       },
+      { advantage: false, disadvantage: false },
       {
         kind: PlayerCharacter,
         hitPoints: 6,
@@ -50,14 +53,17 @@ module attackDamageCompositionInductive {
   pure def missFixtureResult: AttackProcedureResult =
     resolveAttackProcedure(
       ActionAvailable,
-      WithinMeleeReach,
-      5,
+      {
+        capability: MeleeReachRangeCapability({ reachFeet: 5 }),
+        distanceFeet: 5,
+      },
       {
         naturalD20: 1,
         total: 30,
         armorClass: 10,
         criticalThreshold: 20,
       },
+      { advantage: false, disadvantage: false },
       {
         kind: PlayerCharacter,
         hitPoints: 6,
@@ -79,14 +85,17 @@ module attackDamageCompositionInductive {
   pure def invalidRangeFixtureResult: AttackProcedureResult =
     resolveAttackProcedure(
       ActionAvailable,
-      BeyondRange,
-      100,
+      {
+        capability: MeleeReachRangeCapability({ reachFeet: 5 }),
+        distanceFeet: 100,
+      },
       {
         naturalD20: 20,
         total: 8,
         armorClass: 20,
         criticalThreshold: 20,
       },
+      { advantage: false, disadvantage: false },
       {
         kind: PlayerCharacter,
         hitPoints: 6,

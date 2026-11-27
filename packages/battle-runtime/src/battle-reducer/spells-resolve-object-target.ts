@@ -1,3 +1,4 @@
+import { Result } from "effect";
 import { armorClassBehindCover } from "@dnd/shared-algebras/cover-algebra";
 import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 // Shared object-target spell attack resolution for direct casts and readied releases.
@@ -30,7 +31,6 @@ import {
 } from "./attack-roll-d20-test-rerolls.ts";
 import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
 import {
-  objectTargetAttackNeedsSightFact,
   attackRollModeMatches,
   consumeSelfAttackRollEffects,
   requiredSpellObjectTargetAttackRollMode,
@@ -71,7 +71,8 @@ import {
   objectDamageOutcomeFromComponents,
   spellObjectIgnitionFact,
   spellObjectTargetFact,
-  spellObjectTargetSightFact,
+  admitSpellObjectTargetSight,
+  spellObjectTargetSightFailureMessage,
   spellObjectAttackRollHole,
   spellDamageHole,
   validateSpellDamageFill,
@@ -225,35 +226,20 @@ function resolveObjectTargetSpellAttackCore(
     input.invocation,
     input.metamagicApplications,
   );
-  const sightFact = spellObjectTargetSightFact(
-    input.fillSet.objectTarget.spatialFacts.filter(
-      (
-        fact,
-      ): fact is Extract<
-        (typeof input.fillSet.objectTarget.spatialFacts)[number],
-        { readonly kind: "spellObjectTargetSight" }
-      > => fact.kind === "spellObjectTargetSight",
-    ),
-    input.actorId,
-    input.fillSet.objectTarget.objectId,
-    input.invocation,
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    sightFact === null &&
-    objectTargetAttackNeedsSightFact(
-      input.input.state,
-      input.fillSet.objectTarget.objectId,
-    )
-  ) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+  const sight = admitSpellObjectTargetSight({
+    facts: input.fillSet.objectTarget.spatialFacts,
+    casterId: input.actorId,
+    objectId: input.fillSet.objectTarget.objectId,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
+  });
+  if (Result.isFailure(sight)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Spell object target must include a matching table-supplied object sight fact.",
+      spellObjectTargetSightFailureMessage(sight.failure),
     );
   }
-  /* v8 ignore stop -- @preserve */
+  const sightFact = sight.success;
   const ignitionFact =
     input.invocation.procedure === "spellAttackDamage" &&
     input.invocation.objectHitEffect.kind === "igniteFlammableUnattended"

@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.SHARED_TURN_START
 import { attackActionOptionsForActor } from "../../battle-runtime/src/battle-reducer/attack-damage-apply.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource unit-feature.druid-wild-shape-known-form
@@ -172,7 +173,7 @@ import {
   characterBattleInitiativeScore,
   characterBattleResourceInitsFromBuild,
   composeBattleRoster,
-  composeBattleCompanionRoster,
+  startBattleWithCompanionRoster,
   type BattleRosterEntries,
   characterBattleLoadoutFromBuild,
   characterSpellcasting as characterSpellcastingRuntime,
@@ -1767,8 +1768,8 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("uses tagged roster and companion composition outcomes without partial products", () => {
-    const unavailableCompanion = composeBattleCompanionRoster({
-      session: undefined,
+    const unavailableCompanion = startBattleWithCompanionRoster({
+      battle: undefined,
       owners: [],
       requests: [
         {
@@ -1814,14 +1815,12 @@ describe("Character Sheet battle handoff", () => {
     });
     expect(Result.isSuccess(init)).toBe(true);
     if (Result.isFailure(init)) return;
-    const session = startBattle({
+    const initialBattle = {
       battleId: battleId("battle:companion-composition"),
       combatants: [init.success],
-    });
-    expect(Result.isSuccess(session)).toBe(true);
-    if (Result.isFailure(session)) return;
-    const rejectedCompanion = composeBattleCompanionRoster({
-      session: session.success,
+    };
+    const rejectedCompanion = startBattleWithCompanionRoster({
+      battle: initialBattle,
       owners: [
         {
           index: 0,
@@ -1864,8 +1863,8 @@ describe("Character Sheet battle handoff", () => {
       currentHp: Hp(2),
       tempHp: Hp(0),
     });
-    const collision = composeBattleCompanionRoster({
-      session: session.success,
+    const collision = startBattleWithCompanionRoster({
+      battle: initialBattle,
       owners: [
         {
           index: 0,
@@ -1904,8 +1903,8 @@ describe("Character Sheet battle handoff", () => {
       ],
     });
 
-    const duplicateOwnerSource = composeBattleCompanionRoster({
-      session: session.success,
+    const duplicateOwnerSource = startBattleWithCompanionRoster({
+      battle: initialBattle,
       owners: [
         {
           index: 0,
@@ -1941,8 +1940,8 @@ describe("Character Sheet battle handoff", () => {
     const duplicateRequestCompanionId = combatantId(
       "companion:duplicate-request",
     );
-    const duplicateRequests = composeBattleCompanionRoster({
-      session: session.success,
+    const duplicateRequests = startBattleWithCompanionRoster({
+      battle: initialBattle,
       owners: [
         {
           index: 0,
@@ -1993,8 +1992,8 @@ describe("Character Sheet battle handoff", () => {
     });
 
     expect(
-      composeBattleCompanionRoster({
-        session: undefined,
+      startBattleWithCompanionRoster({
+        battle: undefined,
         owners: [
           {
             index: 0,
@@ -2016,8 +2015,8 @@ describe("Character Sheet battle handoff", () => {
     ).toEqual({ tag: "dependentUnavailable", issues: [] });
 
     expect(
-      composeBattleCompanionRoster({
-        session: session.success,
+      startBattleWithCompanionRoster({
+        battle: initialBattle,
         owners: [
           {
             index: 0,
@@ -2031,7 +2030,214 @@ describe("Character Sheet battle handoff", () => {
         initialCombatantOrder: new Map([[init.success.combatantId, 0]]),
         statBlockCatalog,
       }),
-    ).toEqual({ tag: "admitted", session: session.success });
+    ).toMatchObject({
+      tag: "admitted",
+      session: { state: { currentTurnStart: "started" } },
+    });
+  });
+
+  test("starts the completed companion roster, while late admission preserves the active turn", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:opening-roster-owner",
+      companionIdValue: "companion:opening-roster-retained",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+    const ownerId = combatantId("combatant:opening-roster-owner");
+    const companionId = combatantId("combatant:opening-roster-companion");
+    const init = expectSuccess(
+      characterSheetBattleInit({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: ownerId,
+        displayName: "Owner",
+        initiative: initiativeScore(10),
+        ammunitionStocks: [],
+      }),
+    );
+    const battle = {
+      battleId: battleId("battle:opening-roster"),
+      combatants: [init],
+    };
+    const initialCombatantOrder = new Map([
+      [ownerId, 0],
+      [companionId, 1],
+    ]);
+    const started = startBattleWithCompanionRoster({
+      battle,
+      owners: [
+        {
+          index: 0,
+          characterId: sheet.characterId,
+          combatantId: ownerId,
+          sheet,
+        },
+      ],
+      requests: [
+        {
+          ownerCharacterId: sheet.characterId,
+          companionCombatantId: companionId,
+          initiative: initiativeScore(20),
+          ammunitionStocks: [],
+        },
+      ],
+      unitLibrary,
+      statBlockCatalog,
+      initialCombatantOrder,
+    });
+    expect(started.tag).toBe("admitted");
+    if (started.tag !== "admitted")
+      throw new Error("Expected the completed initial roster.");
+    expect(started.session.state.initiative.stillToAct[0].creature).toBe(
+      companionId,
+    );
+    expect(started.session.state.currentTurnStart).toBe("started");
+    expect(
+      discoverBattleActs(started.session).every(
+        (act) => act.subject.actorId === companionId,
+      ),
+    ).toBe(true);
+
+    const alreadyStarted = expectSuccess(startBattle(battle));
+    const admittedLate = expectSuccess(
+      admitCharacterSheetCompanionToBattle({
+        session: alreadyStarted,
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        ownerCombatantId: ownerId,
+        companionCombatantId: companionId,
+        initiative: initiativeScore(20),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+        ammunitionStocks: [],
+      }),
+    );
+    expect(admittedLate.state.initiative.stillToAct[0].creature).toBe(ownerId);
+    expect(admittedLate.state.initiative.round).toBe(
+      alreadyStarted.state.initiative.round,
+    );
+    expect(admittedLate.state.currentTurnStart).toBe("started");
+    expect(admittedLate.state.currentTurnResources).toEqual(
+      alreadyStarted.state.currentTurnResources,
+    );
+    expect(
+      admittedLate.state.initiative.alreadyActed.some(
+        (entry) => entry.creature === companionId,
+      ),
+    ).toBe(true);
+
+    const pending = startBattleWithCompanionRoster({
+      battle: {
+        ...battle,
+        combatants: [
+          { ...init, creatureInit: { ...init.creatureInit, currentHp: Hp(0) } },
+        ],
+      },
+      owners: [],
+      requests: [],
+      unitLibrary,
+      statBlockCatalog,
+      initialCombatantOrder: new Map([[ownerId, 0]]),
+    });
+    expect(pending).toMatchObject({
+      tag: "admitted",
+      session: { state: { currentTurnStart: "pending" } },
+    });
+    if (pending.tag !== "admitted")
+      throw new Error("Expected a pending opening turn.");
+    expect(
+      discoverBattleActs(pending.session).map((act) => act.subject),
+    ).toEqual([
+      { tag: "runtimeCommand", actorId: ownerId, command: "startTurn" },
+    ]);
+
+    const pendingWithLateCompanion = expectSuccess(
+      admitCharacterSheetCompanionToBattle({
+        session: pending.session,
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        ownerCombatantId: ownerId,
+        companionCombatantId: companionId,
+        initiative: initiativeScore(20),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+        ammunitionStocks: [],
+      }),
+    );
+    expect(
+      pendingWithLateCompanion.state.initiative.stillToAct[0].creature,
+    ).toBe(ownerId);
+    expect(pendingWithLateCompanion.state.initiative.round).toBe(
+      pending.session.state.initiative.round,
+    );
+    expect(pendingWithLateCompanion.state.currentTurnStart).toBe("pending");
+    expect(pendingWithLateCompanion.state.currentTurnResources).toEqual(
+      pending.session.state.currentTurnResources,
+    );
+    const pendingStart = resolveBattleSubject({
+      state: pendingWithLateCompanion.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: ownerId,
+        command: "startTurn",
+      },
+      fills: [],
+    });
+    expect(pendingStart).toMatchObject({
+      tag: "needsHoles",
+      frontier: {
+        kind: "holes",
+        pendingProcedure: {
+          kind: "turnStart",
+          sourceTurn: { actorId: ownerId },
+        },
+        holes: [{ kind: "deathSavingThrow" }],
+      },
+    });
+
+    const unavailable = startBattleWithCompanionRoster({
+      battle: undefined,
+      owners: [],
+      requests: [],
+      unitLibrary,
+      statBlockCatalog,
+      initialCombatantOrder: new Map(),
+    });
+    expect(unavailable).toEqual({ tag: "dependentUnavailable", issues: [] });
+    const invalid = startBattleWithCompanionRoster({
+      battle: { ...battle, combatants: [] },
+      owners: [],
+      requests: [],
+      unitLibrary,
+      statBlockCatalog,
+      initialCombatantOrder: new Map(),
+    });
+    expect(invalid).toMatchObject({
+      tag: "rejected",
+      issues: [{ kind: "battleInitialization" }],
+    });
+    expect(invalid).not.toHaveProperty("session");
+    const missingInitialOrder = startBattleWithCompanionRoster({
+      battle,
+      owners: [],
+      requests: [],
+      unitLibrary,
+      statBlockCatalog,
+      initialCombatantOrder: new Map(),
+    });
+    expect(missingInitialOrder).toMatchObject({
+      tag: "rejected",
+      issues: [
+        {
+          kind: "battleInitialization",
+          issue: {
+            message: "Initial combatant order must include every combatant.",
+          },
+        },
+      ],
+    });
   });
 
   test("reports durable companion identity collisions between distinct owners", () => {
@@ -2072,15 +2278,13 @@ describe("Character Sheet battle handoff", () => {
         ammunitionStocks: [],
       }),
     );
-    const session = expectSuccess(
-      startBattle({
-        battleId: battleId("battle:shared-durable-identity"),
-        combatants: [firstInit, secondInit],
-      }),
-    );
+    const initialBattle = {
+      battleId: battleId("battle:shared-durable-identity"),
+      combatants: [firstInit, secondInit],
+    };
 
-    const result = composeBattleCompanionRoster({
-      session,
+    const result = startBattleWithCompanionRoster({
+      battle: initialBattle,
       owners: [
         {
           index: 0,
@@ -3366,7 +3570,6 @@ describe("Character Sheet battle handoff", () => {
       unitLibrary,
       ownerCombatantId: ownerId,
       ammunitionStocks: [],
-      initialCombatantOrder: new Map([[ownerId, 0]]),
       statBlockCatalog,
     } as const;
 
@@ -3455,7 +3658,6 @@ describe("Character Sheet battle handoff", () => {
         unitLibrary,
         ownerCombatantId: ownerId,
         ammunitionStocks: [],
-        initialCombatantOrder: new Map([[ownerId, 0]]),
         statBlockCatalog,
       }),
     ).toMatchObject({
@@ -3548,10 +3750,6 @@ describe("Character Sheet battle handoff", () => {
       companionCombatantId: companionId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
-      initialCombatantOrder: new Map([
-        [ownerId, 0],
-        [companionId, 1],
-      ]),
       statBlockCatalog,
     };
     const admitted = expectSuccess(
@@ -3673,29 +3871,12 @@ describe("Character Sheet battle handoff", () => {
       companionCombatantId: companionId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
-      initialCombatantOrder: new Map<ReturnType<typeof combatantId>, number>(),
       statBlockCatalog,
     };
-    expect(
-      admitCharacterSheetCompanionToBattle({
-        ...embodiedAdmission,
-        state: started.state,
-      }),
-    ).toMatchObject({ _tag: "Failure" });
-    expect(
-      admitCharacterSheetCompanionToBattle({
-        ...embodiedAdmission,
-        session: started,
-      }),
-    ).toMatchObject({ _tag: "Failure" });
     const admitted = expectSuccess(
       admitCharacterSheetCompanionToBattle({
         ...embodiedAdmission,
         state: started.state,
-        initialCombatantOrder: new Map([
-          [ownerId, 0],
-          [companionId, 1],
-        ]),
       }),
     );
     const selection = {
@@ -4114,10 +4295,6 @@ describe("Character Sheet battle handoff", () => {
         companionCombatantId: companionId,
         initiative: initiativeScore(14),
         placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-        initialCombatantOrder: new Map([
-          [ownerId, 0],
-          [companionId, 1],
-        ]),
         statBlockCatalog,
       }),
     );
@@ -4413,10 +4590,6 @@ describe("Character Sheet battle handoff", () => {
       companionCombatantId: combatantId("forged-companion"),
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-      initialCombatantOrder: new Map([
-        [ownerId, 0],
-        [combatantId("forged-companion"), 1],
-      ]),
       statBlockCatalog,
     });
 
@@ -4530,10 +4703,6 @@ describe("Character Sheet battle handoff", () => {
       companionCombatantId: companionId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
-      initialCombatantOrder: new Map([
-        [ownerId, 0],
-        [companionId, 1],
-      ]),
     };
 
     expect(
@@ -4657,10 +4826,6 @@ describe("Character Sheet battle handoff", () => {
       companionCombatantId: companionId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-      initialCombatantOrder: new Map([
-        [ownerId, 0],
-        [companionId, 1],
-      ]),
       statBlockCatalog,
     });
 

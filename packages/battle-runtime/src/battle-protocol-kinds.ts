@@ -427,6 +427,7 @@ function runtimeCommandSubjectKind(
       ),
     )
     .pipe(
+      byCommand("startTurn", () => "runtimeTurnBoundary" as const),
       byCommand("movableZoneSave", () => "runtimeSavingThrow" as const),
       byCommand(
         "persistentAreaSaveDamageExit",

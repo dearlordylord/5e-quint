@@ -22,7 +22,6 @@ import {
   attackRollModeContributions,
   attackRollModeFromContributions,
   type AttackRollModeContext,
-  type ObjectTargetSight,
 } from "./battle-reducer/attack-roll-mode-collector.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
@@ -255,7 +254,7 @@ function withActiveSelfAttackAdvantage(state: BattleState): BattleState {
 function fireBoltRollModeAgainstObject(
   session: ReturnType<typeof fireBoltBattle>,
   state: BattleState,
-  attackerCanSeeObject?: boolean,
+  attackerCanSeeObject = true,
 ) {
   const subject = findAct(session, magicSubject("fire_bolt")).subject;
   const hole = findHole(
@@ -285,17 +284,13 @@ function fireBoltRollModeAgainstObject(
         procedureRef: sourceProcedureRef,
         enemies: [],
       },
-      ...(attackerCanSeeObject === undefined
-        ? []
-        : [
-            {
-              kind: "spellObjectTargetSight",
-              casterId: wizardId,
-              objectId,
-              sourceProcedureRef,
-              attackerCanSeeObject,
-            } as const,
-          ]),
+      {
+        kind: "spellObjectTargetSight",
+        casterId: wizardId,
+        objectId,
+        sourceProcedureRef,
+        attackerCanSeeObject,
+      },
       {
         kind: "spellObjectIgnition",
         casterId: wizardId,
@@ -356,6 +351,18 @@ describe("attack-roll mode collector: one rule on every route", () => {
     expect(fighterRollModeAgainstObject(hidden)).toBe("advantage");
   });
 
+  // RAW: playing-the-game.md, "Unseen Attackers and Targets": "When you make
+  // an attack roll against a target you can't see, you have Disadvantage."
+  test("a spell attack at an object the caster can't see has Disadvantage", () => {
+    const session = fireBoltBattle();
+    expect(fireBoltRollModeAgainstObject(session, session.state, false)).toBe(
+      "disadvantage",
+    );
+    expect(
+      fireBoltRollModeAgainstObject(session, session.state, true),
+    ).toBeUndefined();
+  });
+
   // RAW: playing-the-game.md, "Unseen Attackers and Targets", and the outline's
   // Advantage for an attacker that can see the object.
   test("a spell attack at an outlined object asks for sight, and either answer reaches the roll", () => {
@@ -377,6 +384,13 @@ describe("attack-roll mode collector: one rule on every route", () => {
         withActiveSelfAttackAdvantage(session.state),
       ),
     ).toBe("advantage");
+    expect(
+      fireBoltRollModeAgainstObject(
+        session,
+        withActiveSelfAttackAdvantage(session.state),
+        false,
+      ),
+    ).toBe("normal");
   });
 
   test("names each source, and opposite sources cancel", () => {
@@ -411,25 +425,22 @@ describe("attack-roll mode collector: one rule on every route", () => {
 
   // RAW: playing-the-game.md, "Unseen Attackers and Targets": "When you make
   // an attack roll against a target you can't see, you have Disadvantage."
-  test("an object the attacker can't see gives Disadvantage, and an unasked sight fact gives none", () => {
+  test("an object the attacker can't see gives Disadvantage", () => {
     const state = fighterVsGoblinBattle();
     const attack = firstMeleeAttack(state, fighterId);
-    const againstObject = (sight: ObjectTargetSight) =>
+    const againstObject = (attackerCanSeeObject: boolean) =>
       attackRollModeContributions(state, {
         attackerId: fighterId,
-        target: { kind: "object", objectId, sight },
+        target: { kind: "object", objectId, attackerCanSeeObject },
         means: { kind: "attack", attack, opportunityAttack: false },
         targetSpatialFacts: [],
         ranged: { longRange: false, closeCombat: false },
       });
 
-    expect(
-      againstObject({ kind: "sightFact", attackerCanSeeObject: false }),
-    ).toEqual([{ source: "attackerCannotSeeTarget", mode: "disadvantage" }]);
-    expect(
-      againstObject({ kind: "sightFact", attackerCanSeeObject: true }),
-    ).toEqual([]);
-    expect(againstObject({ kind: "sightNotAsked" })).toEqual([]);
+    expect(againstObject(false)).toEqual([
+      { source: "attackerCannotSeeTarget", mode: "disadvantage" },
+    ]);
+    expect(againstObject(true)).toEqual([]);
   });
 
   test("a creature-only source supplies nothing against an object", () => {
@@ -460,7 +471,7 @@ describe("attack-roll mode collector: one rule on every route", () => {
         target: {
           kind: "object",
           objectId,
-          sight: { kind: "sightFact", attackerCanSeeObject: true },
+          attackerCanSeeObject: true,
         },
         means: { kind: "attack", attack, opportunityAttack: false },
         targetSpatialFacts: [],

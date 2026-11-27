@@ -49,6 +49,7 @@ import {
   type D20TestDecisions,
   type D20TestSourceFlags,
 } from "./d20-test-decision-sequence.ts";
+import type { D20TestDieMinimumFace } from "./d20-test-die-minimum.ts";
 import {
   d20TestDieAfterReroll,
   d20TestOutcomeAfterReroll,
@@ -351,6 +352,8 @@ export function d20TestAbilityCheckRerolls(
   input: D20TestRollContext & {
     readonly value: D20TestAbilityCheckValue;
     readonly requiredRollMode: AttackRollMode | undefined;
+    /** The d20 minimum the check's totals count, when its roller uses one. */
+    readonly dieMinimum: D20TestDieMinimumFace | undefined;
   },
 ): D20TestOutcomeRerolls<D20TestAbilityCheckValue> {
   const actor = roller(input);
@@ -377,6 +380,7 @@ export function d20TestAbilityCheckRerolls(
               originalD20TestRoll: roll.d20TestRoll,
               decision: naturalOne,
               requiredRollMode: input.requiredRollMode,
+              dieMinimum: input.dieMinimum,
             }),
           }),
           [HEROIC_INSPIRATION_REROLL_EFFECT_KIND]: (heroicInspiration) => ({
@@ -387,6 +391,7 @@ export function d20TestAbilityCheckRerolls(
               originalD20TestRoll: roll.d20TestRoll,
               decision: heroicInspiration,
               requiredRollMode: input.requiredRollMode,
+              dieMinimum: input.dieMinimum,
             }),
           }),
         }),

@@ -1,0 +1,19 @@
+{
+  "acquiredAtLevel": 7,
+  "className": "rogue",
+  "id": "rogue_reliable_talent",
+  "kind": "class_feature",
+  "mechanics": {
+    "appliesTo": {
+      "kind": "ability_check_using_own_proficiency"
+    },
+    "family": "d20_test_die_minimum",
+    "minimumDieFace": 10,
+    "optional": true
+  },
+  "name": "Reliable Talent",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "classes.md:7093-7095"
+  }
+}

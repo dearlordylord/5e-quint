@@ -7,6 +7,7 @@ import type { AttackRollDefenseSelection as SharedAttackRollDefenseSelection } f
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-graze
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.combat-turn-start-heroic-inspiration
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-die-minimum
 import { optionalProperty } from "./optional-property.ts";
 import { Match, Result } from "effect";
 import { sameStringSet } from "./same-string-set.ts";
@@ -57,7 +58,10 @@ import type {
   CharacterBattleClassLevelInit,
 } from "./character-class-level.ts";
 import { type BrutalStrikeProfile } from "./procedure-execution/brutal-strike.ts";
-import { admitAtomicClassFeatureProcedure } from "./procedure-admission/atomic-class-feature.ts";
+import {
+  admitAtomicClassFeatureProcedure,
+  type AtomicClassFeatureProcedureFacts,
+} from "./procedure-admission/atomic-class-feature.ts";
 import { admitAtomicSpeciesTraitProcedure } from "./procedure-admission/atomic-species-trait-procedure.ts";
 import {
   admitDruidWildShapeProcedure,
@@ -123,6 +127,7 @@ export const PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE =
 export const PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE =
   "passiveDamageResistance";
 export const ACROBATIC_MOVEMENT_SUPPORT_PROFILE = "acrobaticMovement";
+export const D20_TEST_DIE_MINIMUM_SUPPORT_PROFILE = "d20TestDieMinimum";
 export const CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE =
   "creatureSpaceMovementPermission";
 export * from "./unit-feature-execution-constants.ts";
@@ -269,6 +274,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
+  D20_TEST_DIE_MINIMUM_SUPPORT_PROFILE,
   CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE,
   HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
@@ -665,6 +671,18 @@ export type PassiveSpeedKindGrantProfiles = readonly [
 export type BattleAcrobaticMovementSupportProfile = {
   readonly kind: typeof ACROBATIC_MOVEMENT_SUPPORT_PROFILE;
   readonly acrobaticMovement: AcrobaticMovementProfile;
+};
+/**
+ * A D20 Test die minimum: which tests it applies to and the lowest d20 face
+ * that counts for them.
+ */
+export type D20TestDieMinimumProfile = Extract<
+  AtomicClassFeatureProcedureFacts,
+  { readonly kind: "d20TestDieMinimum" }
+>["dieMinimum"];
+export type BattleD20TestDieMinimumSupportProfile = {
+  readonly kind: typeof D20_TEST_DIE_MINIMUM_SUPPORT_PROFILE;
+  readonly dieMinimum: D20TestDieMinimumProfile;
 };
 export type CreatureSpaceMovementPermissionProfile = {
   readonly moveThrough: {
@@ -1099,6 +1117,7 @@ export type BattleUnitSupportProfile =
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile
   | BattleAcrobaticMovementSupportProfile
+  | BattleD20TestDieMinimumSupportProfile
   | BattleCreatureSpaceMovementPermissionSupportProfile
   | BattleHideActionObscurementPermissionSupportProfile
   | BattleAttackActionAttackCountScalingSupportProfile
@@ -1145,6 +1164,7 @@ export type BattleUnitSupportProfile =
       | "passiveSpeedBonus"
       | "passiveSpeedKindGrants"
       | "acrobaticMovement"
+      | "d20TestDieMinimum"
       | "creatureSpaceMovementPermission"
       | "hideActionObscurementPermission"
       | "attackActionAttackCountScaling"
@@ -1404,6 +1424,7 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
             ({ actionEconomy }) => [actionEconomy],
           ),
           Match.when({ kind: "acrobaticMovement" }, (facts) => [facts]),
+          Match.when({ kind: "d20TestDieMinimum" }, (facts) => [facts]),
           Match.exhaustive,
         ),
       ),
@@ -2560,6 +2581,10 @@ export type SupportedUnitFeatureFacts =
       readonly acrobaticMovement: AcrobaticMovementProfile;
     }
   | {
+      readonly kind: "d20TestDieMinimum";
+      readonly dieMinimum: D20TestDieMinimumProfile;
+    }
+  | {
       readonly kind: "creatureSpaceMovementPermission";
       readonly permission: CreatureSpaceMovementPermissionProfile;
     }
@@ -2805,6 +2830,7 @@ export function battleBonusActionDelegatedStandardActionsSupportForUnit(
           ({ actionEconomy }) => actionEconomy,
         ),
         Match.when({ kind: "acrobaticMovement" }, () => null),
+        Match.when({ kind: "d20TestDieMinimum" }, () => null),
         Match.exhaustive,
       ),
     ),
@@ -3362,6 +3388,30 @@ export function battleAcrobaticMovementSupportForUnit(
     Match.when({ tag: "admitted" }, ({ procedure }) =>
       Match.value(procedure.facts).pipe(
         Match.when({ kind: "acrobaticMovement" }, (facts) => facts),
+        Match.when({ kind: "bonusActionDelegatedStandardActions" }, () => null),
+        Match.when({ kind: "d20TestDieMinimum" }, () => null),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+/**
+ * The D20 Test die minimum a class-feature record admits, or null for any
+ * other record. The family's fields are closed literals, so a decoded record
+ * of this family always admits.
+ */
+export function d20TestDieMinimumProfileForUnit(
+  unit: AuthoredUnitSource,
+): D20TestDieMinimumProfile | null {
+  return Match.value(admitAtomicClassFeatureProcedure(unit)).pipe(
+    Match.when({ tag: "notBattleOwned" }, () => null),
+    Match.when({ tag: "rejected" }, () => null),
+    Match.when({ tag: "admitted" }, ({ procedure }) =>
+      Match.value(procedure.facts).pipe(
+        Match.when({ kind: "d20TestDieMinimum" }, (facts) => facts.dieMinimum),
+        Match.when({ kind: "acrobaticMovement" }, () => null),
         Match.when({ kind: "bonusActionDelegatedStandardActions" }, () => null),
         Match.exhaustive,
       ),
@@ -5738,13 +5788,7 @@ export function parseSupportedUnitFeatureProfile(
           draconicAncestryDamageType: sourceFacts.draconicAncestryDamageType,
         })) ??
     d20TestNaturalOneRerollUnitFeatureProfile(unit) ??
-    parsePassiveSavingThrowRollModeUnitFeatureProfile(unit) ??
-    parsePassiveAbilityCheckRollModeUnitFeatureProfile(unit) ??
-    parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
-    parsePassiveSpeedKindGrantsUnitFeatureProfile(unit) ??
-    parseAcrobaticMovementUnitFeatureProfile(unit) ??
-    parseCreatureSpaceMovementPermissionUnitFeatureProfile(unit) ??
-    parseHideActionObscurementPermissionUnitFeatureProfile(unit) ??
+    parseStandingUnitFeatureProfile(unit) ??
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
     parseAttackDamageDieFloorUnitFeatureProfile(unit) ??
     parseLightExtraAttackDamageAbilityModifierUnitFeatureProfile(unit) ??
@@ -5771,6 +5815,26 @@ export function parseSupportedUnitFeatureProfile(
     rogueSteadyAimProfileForUnit(unit) ??
     potentCantripProfileForUnit(unit) ??
     grapplerProfileForUnit(unit)
+  );
+}
+
+/**
+ * The profiles of features that hold without activation and depend only on
+ * the Unit: passive roll modes, Speed, movement permissions and the d20
+ * minimum.
+ */
+function parseStandingUnitFeatureProfile(
+  unit: AuthoredUnitSource,
+): SupportedUnitFeatureProfile | null {
+  return (
+    parsePassiveSavingThrowRollModeUnitFeatureProfile(unit) ??
+    parsePassiveAbilityCheckRollModeUnitFeatureProfile(unit) ??
+    parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
+    parsePassiveSpeedKindGrantsUnitFeatureProfile(unit) ??
+    parseAcrobaticMovementUnitFeatureProfile(unit) ??
+    parseD20TestDieMinimumUnitFeatureProfile(unit) ??
+    parseCreatureSpaceMovementPermissionUnitFeatureProfile(unit) ??
+    parseHideActionObscurementPermissionUnitFeatureProfile(unit)
   );
 }
 
@@ -7833,6 +7897,18 @@ function parseAcrobaticMovementUnitFeatureProfile(
         unit,
         acrobaticMovement,
       };
+}
+
+function parseD20TestDieMinimumUnitFeatureProfile(
+  unit: AuthoredUnitSource,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "d20TestDieMinimum" }
+> | null {
+  const dieMinimum = d20TestDieMinimumProfileForUnit(unit);
+  return dieMinimum === null
+    ? null
+    : { kind: "d20TestDieMinimum", unit, dieMinimum };
 }
 
 function parseCreatureSpaceMovementPermissionUnitFeatureProfile(

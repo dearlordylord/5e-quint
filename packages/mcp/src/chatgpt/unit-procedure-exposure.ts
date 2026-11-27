@@ -31,6 +31,7 @@ const UNIT_PROCEDURE_EXPOSURE = {
   creatureSpaceMovementPermission: internal(),
   cunningStrike: boundContinuation(),
   cunningStrikeOptionGrant: boundContinuation(),
+  d20TestDieMinimum: boundContinuation(),
   d20TestNaturalOneReroll: boundContinuation(),
   druidWildCompanionSpellCast: tool("cast_spell"),
   druidWildShapeKnownForm: tools("assume_beast_form", "revert_beast_form"),
@@ -109,6 +110,7 @@ const SHARED_UNIT_PROCEDURE_EXPOSURE = {
     UNIT_PROCEDURE_EXPOSURE["bonusActionDelegatedStandardActions"],
   creatureSpaceMovementPermission:
     UNIT_PROCEDURE_EXPOSURE["creatureSpaceMovementPermission"],
+  d20TestDieMinimum: UNIT_PROCEDURE_EXPOSURE["d20TestDieMinimum"],
   d20TestNaturalOneReroll: UNIT_PROCEDURE_EXPOSURE["d20TestNaturalOneReroll"],
   druidWildShapeKnownForm: UNIT_PROCEDURE_EXPOSURE["druidWildShapeKnownForm"],
   enemyZeroHitPointTemporaryHitPoints:

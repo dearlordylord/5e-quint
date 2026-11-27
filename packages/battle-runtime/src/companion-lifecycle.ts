@@ -52,11 +52,7 @@ import {
   type CharacterExecutionState,
 } from "./character-execution-admission.ts";
 import { spawnedCompanionLifecycleRouteEvents } from "./battle-reducer/companion-routes.ts";
-import { createInitialInitiativeForCombatants } from "./battle-reducer/api-lifecycle.ts";
-import {
-  battleStateInitIssueLeaves,
-  battleStateInitIssueMessage,
-} from "./battle-reducer/domain-helpers.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
@@ -288,7 +284,6 @@ type CompanionBattleAdmissionInputBase = {
   readonly protocol: BattleCompanionProtocol;
   readonly catalog: StatBlockCatalog;
   readonly formEligibility: CompanionBattleAdmissionFormEligibility;
-  readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
 };
 
 export type CompanionBattleAdmissionInput =
@@ -861,12 +856,7 @@ export function admitCompanionToBattle(
     );
   }
   /* v8 ignore stop -- @preserve */
-  return withInitialInitiativeOrder(
-    nextState.state,
-    input.ownerId,
-    input.companionId,
-    input.initialCombatantOrder,
-  );
+  return Result.succeed(nextState.state);
 }
 
 function spawnedCompanionIdentityStateInitIssue(
@@ -1027,61 +1017,6 @@ function executionStoredForm(
     : {
         formAccess: "pactOfTheChain",
         resolvedStatBlockId: storedForm.resolvedStatBlockId,
-      };
-}
-
-function withInitialInitiativeOrder(
-  state: BattleState,
-  ownerId: CombatantId,
-  companionCombatantId: CombatantId,
-  initialCombatantOrder: ReadonlyMap<CombatantId, number>,
-): Result.Result<BattleState, BattleStateInitIssue> {
-  const initiative = createInitialInitiativeForCombatants({
-    combatants: [...state.combatants.values()],
-    initialCombatantOrder,
-    emptyRosterMessage: "Companion admission requires combatants.",
-  });
-  /* v8 ignore start -- @preserve -- Malformed handoff: the character-battle boundary supplies one unique initial-order entry for every admitted combatant. */
-  if (Result.isFailure(initiative)) {
-    const [firstIssue, ...restIssues] = battleStateInitIssueLeaves(
-      initiative.failure,
-    );
-    const mapIssue = (
-      issue: BattleStateInitLeafIssue,
-    ): BattleStateInitLeafIssue =>
-      issue.tag === "battleStateInitIssue" && !("kind" in issue)
-        ? {
-            tag: "battleStateInitIssue" as const,
-            kind: "companionInitialInitiativeInvalid" as const,
-            ownerId,
-            companionCombatantId,
-            requirement: "initialCombatantOrder" as const,
-            message: issue.message,
-          }
-        : issue;
-    const mappedFirstIssue = mapIssue(firstIssue);
-    const mappedRestIssues = restIssues.map(mapIssue);
-    const mappedIssue: BattleStateInitIssue =
-      companionInitializationIssueFromLeaves(
-        mappedFirstIssue,
-        mappedRestIssues,
-      );
-    return Result.fail(mappedIssue);
-  }
-  /* v8 ignore stop -- @preserve */
-  return Result.succeed({ ...state, initiative: initiative.success });
-}
-
-function companionInitializationIssueFromLeaves(
-  firstIssue: BattleStateInitLeafIssue,
-  restIssues: readonly BattleStateInitLeafIssue[],
-): BattleStateInitIssue {
-  const [secondIssue, ...remainingIssues] = restIssues;
-  return secondIssue === undefined
-    ? firstIssue
-    : {
-        tag: "battleStateInitIssues",
-        issues: [firstIssue, secondIssue, ...remainingIssues],
       };
 }
 

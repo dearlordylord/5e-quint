@@ -1,6 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
 // The rolls that stand: each D20 Test roll after the reroll decisions its
-// fill reports (ASSUMPTIONS.md A55), then the dice added to it (A67). Every
+// fill reports (ASSUMPTIONS.md A55), then the dice added to it (A68). Every
 // owner that reads a D20 Test reads it through one of these, after
 // d20-test-after-roll-decisions.ts checked the decisions. A leaf, so that any
 // owner can read a roll without importing the decision checks.

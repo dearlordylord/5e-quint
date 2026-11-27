@@ -6,7 +6,7 @@ import {
   type BattleInitializationIssue,
 } from "@dnd/battle-runtime";
 import {
-  type BattleCompanionRosterIssue,
+  type BattleRosterStartIssue,
   type CharacterBattleInitIssueFact,
   type BattleRosterIssue,
 } from "@dnd/character-battle-runtime";
@@ -226,14 +226,19 @@ function characterProjectionReasonPayload(
   );
 }
 
-export function battleCompanionRosterIssuePayload(
-  issue: BattleCompanionRosterIssue,
+export function battleRosterStartIssuePayload(
+  issue: BattleRosterStartIssue,
 ): readonly Record<string, unknown>[] {
   const firstOwnerPath = (index: number): CompanionAdmissionOwnerPath => [
     "companionAdmissions",
     index,
   ];
   return Match.value(issue).pipe(
+    Match.when(
+      { kind: "battleInitialization" },
+      ({ issue: initializationIssue }) =>
+        battleRuntimeIssuePayload(initializationIssue),
+    ),
     Match.when({ kind: "duplicateCompanionOwnerSource" }, (matched) => [
       {
         kind: matched.kind,

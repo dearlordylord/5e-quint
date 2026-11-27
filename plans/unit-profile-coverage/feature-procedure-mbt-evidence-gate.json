@@ -60,6 +60,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -456,6 +464,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -1588,6 +1604,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -1807,6 +1831,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
             }
           ],
           "profileId": "unit-feature.failed-ability-check-resource-boost",
@@ -2369,6 +2401,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
             }
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
@@ -3117,6 +3157,14 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
             }
           ],
           "profileId": "unit-feature.failed-ability-check-resource-boost",

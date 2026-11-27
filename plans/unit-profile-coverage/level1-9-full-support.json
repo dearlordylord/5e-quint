@@ -7835,6 +7835,44 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "Battle ability checks all use a skill; no battle procedure makes a tool check. Tool and non-battle ability check procedures must consume the same Unit profile and their own proficiency facts at their execution boundaries rather than adding battle-owned state.",
+      "selectedIdentity": {
+        "reason": "The Unit has selected-identity-replay evidence.",
+        "status": "witness-present"
+      },
+      "sourceRecordPath": "packages/surface/content/rogue_reliable_talent.json",
+      "sourceRows": [
+        {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
+          "category": "class feature",
+          "concept": "Rogue Reliable Talent",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
+          "id": "srd521:classes:level-7:class-feature-grant:rogue_reliable_talent",
+          "levelBand": "level-7",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 7096,
+            "lineStart": 7093,
+            "path": ".references/srd-5.2.1/classes.md"
+          },
+          "unitProfileDisposition": "profile-subset-supported"
+        }
+      ],
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
+      "unitId": "rogue_reliable_talent"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "character-fact-and-runtime-detached-split"
@@ -10504,7 +10542,7 @@
       ]
     },
     {
-      "count": 44,
+      "count": 45,
       "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
       "status": "closed-outside-battle-runtime-boundary",
       "unitIds": [
@@ -10544,6 +10582,7 @@
         "remove_curse",
         "revivify",
         "rogue_fast_hands",
+        "rogue_reliable_talent",
         "sleet_storm",
         "sorcerer_metamagic",
         "spirit_guardians",
@@ -10603,8 +10642,8 @@
       "numerator": 1070,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 640,
-        "accepted-no-battle-effect": 430
+        "accepted": 641,
+        "accepted-no-battle-effect": 429
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -10628,13 +10667,13 @@
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 352,
+      "denominator": 353,
       "numerator": 203,
-      "percent": "57.7%"
+      "percent": "57.5%"
     },
     "strictTargetClosure": {
-      "denominator": 352,
-      "numerator": 352,
+      "denominator": 353,
+      "numerator": 353,
       "percent": "100%"
     }
   },
@@ -12336,49 +12375,6 @@
           }
         ],
         "unitId": "resilient_sphere"
-      },
-      {
-        "inventoryAccounting": [
-          {
-            "battleReadinessClosure": {
-              "kind": "character-fact-and-runtime-detached-split",
-              "owner": "future Ability Check d20-floor owner plus existing character-sheet skill/tool proficiency projection",
-              "reason": "A future owner must derive Reliable Talent eligibility from the selected Rogue feature ref plus the existing CharacterBuild skill and tool proficiency facts, then apply a pre-total d20 floor of 10 only when the resolved Ability Check uses an owned skill or tool proficiency. The owner must compose with Advantage/Disadvantage selected-die results and other d20 replacement/reroll effects at the Ability Check roll boundary, while leaving attack rolls, Saving Throws, Death Saving Throws, passive checks with no d20 roll, and unproficient checks untouched. The closure must not duplicate skill/tool proficiency state, store a parallel list of reliable checks, treat Expertise or Jack of All Trades as separate eligibility copies, add Rogue-name dispatch to check reducers, or modify Proficiency Bonus arithmetic instead of the underlying d20 result.",
-              "source": "unit-claim",
-              "state": "recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Rogue Reliable Talent",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "level-7",
-            "nextAction": "A future owner must derive Reliable Talent eligibility from the selected Rogue feature ref plus the existing CharacterBuild skill and tool proficiency facts, then apply a pre-total d20 floor of 10 only when the resolved Ability Check uses an owned skill or tool proficiency. The owner must compose with Advantage/Disadvantage selected-die results and other d20 replacement/reroll effects at the Ability Check roll boundary, while leaving attack rolls, Saving Throws, Death Saving Throws, passive checks with no d20 roll, and unproficient checks untouched. The closure must not duplicate skill/tool proficiency state, store a parallel list of reliable checks, treat Expertise or Jack of All Trades as separate eligibility copies, add Rogue-name dispatch to check reducers, or modify Proficiency Bonus arithmetic instead of the underlying d20 result.",
-            "rowId": "srd521:classes:level-7:class-feature-grant:rogue_reliable_talent",
-            "rowKind": "class-feature-grant",
-            "unitProfileDisposition": "unsupported-profile"
-          }
-        ],
-        "reason": "The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "class feature",
-            "concept": "Rogue Reliable Talent",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes:level-7:class-feature-grant:rogue_reliable_talent",
-            "levelBand": "level-7",
-            "nextAction": "A future owner must derive Reliable Talent eligibility from the selected Rogue feature ref plus the existing CharacterBuild skill and tool proficiency facts, then apply a pre-total d20 floor of 10 only when the resolved Ability Check uses an owned skill or tool proficiency. The owner must compose with Advantage/Disadvantage selected-die results and other d20 replacement/reroll effects at the Ability Check roll boundary, while leaving attack rolls, Saving Throws, Death Saving Throws, passive checks with no d20 roll, and unproficient checks untouched. The closure must not duplicate skill/tool proficiency state, store a parallel list of reliable checks, treat Expertise or Jack of All Trades as separate eligibility copies, add Rogue-name dispatch to check reducers, or modify Proficiency Bonus arithmetic instead of the underlying d20 result.",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 7096,
-              "lineStart": 7093,
-              "path": ".references/srd-5.2.1/classes.md"
-            },
-            "unitProfileDisposition": "unsupported-profile"
-          }
-        ],
-        "unitId": "rogue_reliable_talent"
       },
       {
         "inventoryAccounting": [
@@ -22766,18 +22762,18 @@
     "blockingRows": [],
     "blockingRowsByStatus": {},
     "metrics": {
-      "denominator": 263,
-      "numerator": 263,
+      "denominator": 264,
+      "numerator": 264,
       "percent": "100%"
     },
     "readyRowsByStatus": {
       "not-applicable": 32,
-      "witness-present": 231
+      "witness-present": 232
     },
     "rowsByStatus": {
       "not-applicable": 32,
       "not-required": 89,
-      "witness-present": 231
+      "witness-present": 232
     }
   },
   "sourceArtifacts": {
@@ -23298,8 +23294,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 9",
         "metrics": {
-          "denominator": 97,
-          "numerator": 97,
+          "denominator": 98,
+          "numerator": 98,
           "percent": "100%"
         },
         "rows": [
@@ -24000,6 +23996,15 @@
             "kind": "class_feature",
             "ownerUnitId": "class_rogue",
             "ready": true,
+            "relation": "class.featureGrants.level-7",
+            "sourceRecordPath": "packages/surface/content/rogue_reliable_talent.json",
+            "status": "installed",
+            "unitId": "rogue_reliable_talent"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_rogue",
+            "ready": true,
             "relation": "class.featureGrants.level-8",
             "sourceRecordPath": "packages/surface/content/rogue_ability_score_improvement_l4.json",
             "status": "installed",
@@ -24178,7 +24183,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 97
+          "installed": 98
         }
       },
       {
@@ -24369,8 +24374,8 @@
       }
     ],
     "metrics": {
-      "denominator": 155,
-      "numerator": 155,
+      "denominator": 156,
+      "numerator": 156,
       "percent": "100%"
     },
     "openBlockerCount": 0
@@ -24379,7 +24384,7 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 400,
     "groupsByClaimTag": {
-      "profile-subset-supported": 60,
+      "profile-subset-supported": 61,
       "supported-profile": 203,
       "unsupported-profile": 89
     },
@@ -24387,11 +24392,11 @@
       "blocked-follow-up-split": 10,
       "closed-character-fact-and-runtime-detached-split": 4,
       "closed-companion-control-boundary": 7,
-      "closed-outside-battle-runtime-boundary": 44,
+      "closed-outside-battle-runtime-boundary": 45,
       "closed-runtime-detached-table-adjudication": 84,
       "supported-profile": 203
     },
-    "nonSupportedFrontier": 149,
-    "strictDenominator": 352
+    "nonSupportedFrontier": 150,
+    "strictDenominator": 353
   }
 }

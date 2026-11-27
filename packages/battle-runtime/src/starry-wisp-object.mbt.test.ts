@@ -886,6 +886,19 @@ function starryWispObjectTargetFill(
           hitPoints: Hp(5),
         },
       },
+      {
+        kind: "spellObjectTargetSight",
+        casterId: fighterId,
+        objectId: starryWispObjectId,
+        sourceProcedureRef,
+        attackerCanSeeObject: true,
+      },
+      {
+        kind: "rangedAttackEnemyProximity",
+        attackerId: fighterId,
+        procedureRef: sourceProcedureRef,
+        enemies: [],
+      },
     ],
   };
 }

@@ -98,34 +98,17 @@ export type AttackRollModeContribution = {
   readonly mode: Exclude<AttackRollMode, "normal">;
 };
 
-/**
- * Whether the attacker can see an object target. An ordinary object attack
- * always asks the table; a spell attack asks only when a source reads it (an
- * outlined object), so the fact may not have been asked for.
- */
-export type ObjectTargetSight =
-  | { readonly kind: "sightNotAsked" }
-  | { readonly kind: "sightFact"; readonly attackerCanSeeObject: boolean };
-
-/** The object sight a route has, from the table's fact if it asked for one. */
-export function objectTargetSight(
-  sightFact: { readonly attackerCanSeeObject: boolean } | null,
-): ObjectTargetSight {
-  return sightFact === null
-    ? { kind: "sightNotAsked" }
-    : {
-        kind: "sightFact",
-        attackerCanSeeObject: sightFact.attackerCanSeeObject,
-      };
-}
-
 /** What the attack roll is made against. */
 export type AttackRollModeTarget =
   | { readonly kind: "creature"; readonly creature: BattleCreatureState }
   | {
       readonly kind: "object";
       readonly objectId: BattleObjectId;
-      readonly sight: ObjectTargetSight;
+      /**
+       * The table's answer to whether the attacker can see the object. Every
+       * attack roll against an object asks for it; the engine never infers it.
+       */
+      readonly attackerCanSeeObject: boolean;
     };
 
 /** How the attack roll is made. */
@@ -284,7 +267,7 @@ const ATTACK_ROLL_MODE_SOURCE_CONTRIBUTIONS = {
   outlinedObject: (facts) =>
     advantageIf(
       facts.target.kind === "object" &&
-        attackerSeesObject(facts.target.sight) === true &&
+        facts.target.attackerCanSeeObject &&
         facts.state.objectOutlines.some(
           (outline) =>
             facts.target.kind === "object" &&
@@ -448,12 +431,7 @@ function attackerCannotSeeTarget(facts: CollectorFacts): boolean {
         facts.attackerId,
         facts.target.creature.combatantId,
       )
-    : attackerSeesObject(facts.target.sight) === false;
-}
-
-/** The table's answer, or undefined when the attack didn't ask. */
-function attackerSeesObject(sight: ObjectTargetSight): boolean | undefined {
-  return sight.kind === "sightFact" ? sight.attackerCanSeeObject : undefined;
+    : !facts.target.attackerCanSeeObject;
 }
 
 function creatureTargetDistanceFeet(
@@ -583,8 +561,7 @@ function activeEffectSources(facts: CollectorFacts): D20TestRollModeSources {
 }
 
 function attackerCanSeeTarget(facts: CollectorFacts): boolean | undefined {
-  if (facts.target.kind === "object")
-    return attackerSeesObject(facts.target.sight);
+  if (facts.target.kind === "object") return facts.target.attackerCanSeeObject;
   return (
     facts.attacker !== undefined &&
     !attackerCannotSeeTarget(facts) &&

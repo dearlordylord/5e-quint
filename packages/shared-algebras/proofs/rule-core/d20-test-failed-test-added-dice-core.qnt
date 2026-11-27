@@ -15,7 +15,7 @@ module d20TestFailedTestAddedDiceCore {
   //   add the number rolled to the ability check, potentially turning it into
   //   a success. If the check still fails, this use of Second Wind isn't
   //   expended."
-  // - ASSUMPTIONS.md A67: the dice are added once the test's rerolls are
+  // - ASSUMPTIONS.md A68: the dice are added once the test's rerolls are
   //   decided, to the roll that stands, in the order the roller chooses, each
   //   while the test still fails. Every added die counts before the test is
   //   judged, so the resource boost's use is spent only when the test
@@ -31,7 +31,7 @@ module d20TestFailedTestAddedDiceCore {
   // A Death Saving Throw's ruling is fixed (playing-the-game.md, Death Saving
   // Throws), so the engine judges it: the die adds to the d20 toward 10, and a
   // 1 or a 20 on the d20 decides first, whatever is added (ASSUMPTIONS.md
-  // A68). Only a Bardic Inspiration die is added to one.
+  // A69). Only a Bardic Inspiration die is added to one.
   import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
 
   type AddedDieTest =

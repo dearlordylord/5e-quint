@@ -3644,7 +3644,10 @@ describe("Cloudkill source-turn movement", () => {
                 subject,
                 parentPosition: {
                   kind: "startTurnOccurrenceSequence",
-                  endingActorId: cloudkillSecondaryTargetId,
+                  entry: {
+                    kind: "endTurn",
+                    endingActorId: cloudkillSecondaryTargetId,
+                  },
                   child: {
                     kind: "persistentAreaTranslationSaveDamageSequence",
                     targetId: cloudkillSecondaryTargetId,
@@ -3701,7 +3704,10 @@ describe("Cloudkill source-turn movement", () => {
               subject,
               parentPosition: {
                 kind: "startTurnOccurrenceSequence",
-                endingActorId: cloudkillSecondaryTargetId,
+                entry: {
+                  kind: "endTurn",
+                  endingActorId: cloudkillSecondaryTargetId,
+                },
                 child: {
                   kind: "persistentAreaTranslationSaveDamageSequence",
                   targetId: cloudkillSecondaryTargetId,
@@ -4510,9 +4516,10 @@ describe("Cloudkill source-turn movement", () => {
     expect(checkpoint.frame.continuation.parentPosition.sourceTurn).toEqual(
       sourceTurn,
     );
-    expect(checkpoint.frame.continuation.parentPosition.endingActorId).toBe(
-      cloudkillSecondaryTargetId,
-    );
+    expect(checkpoint.frame.continuation.parentPosition.entry).toEqual({
+      kind: "endTurn",
+      endingActorId: cloudkillSecondaryTargetId,
+    });
 
     const choice = interrupted.frontier.choices[0];
     if (choice === undefined || !("subject" in choice)) {

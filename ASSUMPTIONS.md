@@ -524,7 +524,26 @@ geometry, not the creature, so the model adds it to the creature's AC after
 the floor: a Barkskin creature with AC 12 behind Half Cover has AC 19 against
 that attack.
 
-## A67: Dice added to a failed D20 Test come after its rerolls
+## A67: A d20 minimum applies to the d20 that stands
+
+**Assumption:** A feature that lets a creature treat a low d20 as a higher
+face, such as Reliable Talent, applies to whichever d20 stands once every
+reroll is done: the original roll, the d20 Advantage or Disadvantage selects,
+or a reroll's new d20. The creature decides once whether to use it on the
+roll, and the decision holds for the d20 that stands. A reroll's total keeps
+the modifiers of a total that counted the minimum.
+
+**Rules basis / gap:** `.references/srd-5.2.1/classes.md`, "Reliable Talent":
+"Whenever you make an ability check that uses one of your skill or tool
+proficiencies, you can treat a d20 roll of 9 or lower as a 10."
+`.references/srd-5.2.1/playing-the-game.md`, "D20 Tests," adds modifiers to
+the d20 before comparing the total, and "Interactions with Rerolls" and A55
+let a reroll replace the d20. The SRD doesn't say whether the minimum applies
+before or after a reroll. A rerolled d20 is still the d20 roll of the check,
+so the model applies the minimum to the d20 that stands. The QNT owner is
+`unit-feature-d20-test-die-minimum-core.qnt`.
+
+## A68: Dice added to a failed D20 Test come after its rerolls
 
 **Assumption:** A D20 Test's rerolls are decided before any die is added to
 it. Once every reroll source has decided, a source that adds a die to a failed
@@ -545,7 +564,7 @@ rerolls first. The SRD also doesn't say whether Tactical Mind's "still fails"
 reads the check before or after another added die; the model judges the check
 once with every added die.
 
-## A68: A bonus to a Death Saving Throw counts toward 10 after the d20's 1 or 20
+## A69: A bonus to a Death Saving Throw counts toward 10 after the d20's 1 or 20
 
 **Assumption:** A Death Saving Throw rerolled with a bonus (Indomitable) adds
 the bonus to the new d20, and the total succeeds at 10 or higher. A 1 or a 20
@@ -553,7 +572,7 @@ on the d20 decides first, whatever the bonus: a 1 is two failures and a 20
 regains 1 Hit Point. A later reroll of that d20 by another source replaces only
 the d20 and keeps the bonus, as a reroll keeps a save's other modifiers. A die
 added to a failed Death Saving Throw (Bardic Inspiration, after its rerolls as
-A67 sets) is a bonus the same way: it counts toward 10, and it can't change a 1
+A68 sets) is a bonus the same way: it counts toward 10, and it can't change a 1
 or a 20.
 
 **Rules basis / gap:** `.references/srd-5.2.1/playing-the-game.md`, "Death
