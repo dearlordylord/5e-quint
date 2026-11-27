@@ -9,7 +9,7 @@
 // other reroll sources (ASSUMPTIONS.md A55), and spends one use when the
 // reroll is taken. On a Death Saving Throw the engine judges the new roll:
 // the bonus counts toward 10, but a 1 or a 20 on the new d20 decides first
-// (playing-the-game.md, "Rolling a 1 or 20"; ASSUMPTIONS.md A68). A later
+// (playing-the-game.md, "Rolling a 1 or 20"; ASSUMPTIONS.md A69). A later
 // reroll of that d20 keeps the bonus.
 
 import {

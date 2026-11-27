@@ -6568,7 +6568,7 @@
         ".references/srd-5.2.1/playing-the-game.md#Death-Saving-Throws",
         "UBIQUITOUS_LANGUAGE.md#D20-Rolls",
         "ASSUMPTIONS.md#A55-Different-reroll-sources-may-apply-sequentially-to-the-same-die",
-        "ASSUMPTIONS.md#A68-A-bonus-to-a-Death-Saving-Throw-counts-toward-10-after-the-d20s-1-or-20"
+        "ASSUMPTIONS.md#A69-A-bonus-to-a-Death-Saving-Throw-counts-toward-10-after-the-d20s-1-or-20"
       ],
       "title": "A creature with a failed saving throw reroll feature can reroll a saving throw that stands failed, a rolled Death Saving Throw included, with a bonus equal to its class level, must use the new roll, and spends a use"
     },

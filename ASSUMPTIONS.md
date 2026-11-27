@@ -564,7 +564,7 @@ rerolls first. The SRD also doesn't say whether Tactical Mind's "still fails"
 reads the check before or after another added die; the model judges the check
 once with every added die.
 
-## A68: A bonus to a Death Saving Throw counts toward 10 after the d20's 1 or 20
+## A69: A bonus to a Death Saving Throw counts toward 10 after the d20's 1 or 20
 
 **Assumption:** A Death Saving Throw rerolled with a bonus (Indomitable) adds
 the bonus to the new d20, and the total succeeds at 10 or higher. A 1 or a 20
