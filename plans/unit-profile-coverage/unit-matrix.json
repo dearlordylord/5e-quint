@@ -8368,7 +8368,7 @@
         "packages/battle-runtime/src/battle-reducer/turn-start-heroic-inspiration.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
-      "sourceBoundary": "Battle Unit admission consumes the authored Surface combat_turn_start_heroic_inspiration mechanics through the same Surface guard the Character Sheet uses, and retains a literal support profile on the character combatant. The turn boundary offers the choice as a start-turn occurrence the player orders with the others, only when the creature starts its turn without Heroic Inspiration, and giving it sets the battle creature's Heroic Inspiration, which settlement writes back. The battle's opening turn runs no start-turn occurrences, so it makes no offer there.",
+      "sourceBoundary": "Battle Unit admission consumes the authored Surface combat_turn_start_heroic_inspiration mechanics through the same Surface guard the Character Sheet uses, and retains a literal support profile on the character combatant. The turn boundary offers the choice as a start-turn occurrence the player orders with the others, only when the creature starts its turn without Heroic Inspiration, and giving it sets the battle creature's Heroic Inspiration, which settlement writes back. The battle's opening turn starts through the same procedure, so the first participant gets the offer too.",
       "taskRefs": [
         "GH686-HEROIC-WARRIOR-TURN-START"
       ],

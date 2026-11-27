@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.COMBAT_TURN_START_HEROIC_INSPIRATION
+// KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.SHARED_TURN_START
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.combat-turn-start-heroic-inspiration
 // RAW: .references/srd-5.2.1/classes.md, Champion, Level 10: Heroic Warrior:
 // "During combat, you can give yourself Heroic Inspiration whenever you start
@@ -16,18 +17,22 @@ import {
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
   type BattleFill,
   type BattleHole,
+  type BattleState,
 } from "./battle-state-execution.ts";
-import { d20Roll } from "@dnd/shared/types";
+import { d20Roll, Round } from "@dnd/shared/types";
 import {
   battleId,
   battleResolutionHolesForTest,
   characterSeed,
   deathSavingThrowFill,
+  discoverBattleActs,
   endTurn,
   fighterId,
   goblinId,
   requireResolved,
-  startBattleRight,
+  snapshotBattle,
+  startBattleSessionRight,
+  startTurn,
   statBlockCreatureInit,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
@@ -39,6 +44,8 @@ import {
   battleContinuationFillEquals,
   isBattleContinuationComparableFill,
 } from "./battle-reducer/battle-fill-equality.ts";
+import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
+import { admitBattle, startBattleOpeningTurn } from "./battle-start.ts";
 import { battleUnitRefWithSupportProfiles } from "./unit-feature-support.ts";
 
 function heroicWarriorRefs() {
@@ -50,17 +57,23 @@ function heroicWarriorRefs() {
   ];
 }
 
-/** The Goblin's turn, about to end into the Fighter's turn. */
-function goblinTurnBeforeFighter(input: {
+type FighterAndGoblinInput = {
+  readonly fighterInitiative: number;
   readonly heroicWarrior: boolean;
   readonly heroicInspiration: HeroicInspiration;
   readonly currentHp?: number;
-}) {
-  const state = startBattleRight({
+};
+
+function fighterAndGoblin(input: FighterAndGoblinInput) {
+  return startBattleSessionRight(fighterAndGoblinStart(input));
+}
+
+function fighterAndGoblinStart(input: FighterAndGoblinInput) {
+  return {
     battleId: battleId("battle:turn-start-heroic-inspiration"),
     combatants: [
       characterSeed({
-        initiative: 20,
+        initiative: input.fighterInitiative,
         heroicInspiration: input.heroicInspiration,
         ...(input.currentHp === undefined
           ? {}
@@ -69,10 +82,27 @@ function goblinTurnBeforeFighter(input: {
           ? { characterUnitRefs: heroicWarriorRefs() }
           : {}),
       }),
-      statBlockCreatureInit({ initiative: 10 }),
+      statBlockCreatureInit({ initiative: 15 }),
     ],
-  });
-  return requireResolved(endTurn({ state, actorId: fighterId })).state;
+  };
+}
+
+/** The Goblin's opening turn, about to end into the Fighter's turn. */
+function goblinTurnBeforeFighter(input: {
+  readonly heroicWarrior: boolean;
+  readonly heroicInspiration: HeroicInspiration;
+  readonly currentHp?: number;
+}) {
+  return fighterAndGoblin({ ...input, fighterInitiative: 10 }).state;
+}
+
+/** The battle's opening: the Fighter acts first. */
+function fighterOpening(input: {
+  readonly heroicWarrior: boolean;
+  readonly heroicInspiration: HeroicInspiration;
+  readonly currentHp?: number;
+}) {
+  return fighterAndGoblin({ ...input, fighterInitiative: 20 });
 }
 
 function holesWhenFighterTurnStarts(
@@ -85,9 +115,7 @@ function holesWhenFighterTurnStarts(
     : [];
 }
 
-function heroicInspirationOf(
-  state: ReturnType<typeof goblinTurnBeforeFighter>,
-) {
+function heroicInspirationOf(state: BattleState) {
   const fighter = state.combatants.get(fighterId);
   if (fighter?.origin.kind !== "character") {
     throw new Error("Expected the Fighter.");
@@ -464,5 +492,200 @@ describe("Heroic Warrior at the start of a combat turn", () => {
     ).toBe(true);
     expect(battleContinuationFillEquals(give, give)).toBe(true);
     expect(battleContinuationFillEquals(give, decline)).toBe(false);
+  });
+});
+
+function openingHoles(
+  state: BattleState,
+  fills: readonly BattleFill[] = [],
+): readonly BattleHole[] {
+  const result = startTurn({ state, actorId: fighterId, fills });
+  return result.tag === "needsHoles"
+    ? battleResolutionHolesForTest(result)
+    : [];
+}
+
+// RAW: the first turn of combat is a turn, so its start-of-turn effects apply:
+// playing-the-game.md, Death Saving Throws: "Whenever you start your turn with
+// 0 Hit Points, you must make a Death Saving Throw".
+describe("Heroic Warrior on the battle's opening turn", () => {
+  test("the battle opens on Start Turn, and giving or declining starts the turn", () => {
+    const session = fighterOpening({
+      heroicWarrior: true,
+      heroicInspiration: NO_HEROIC_INSPIRATION,
+    });
+
+    expect(session.state.currentTurnStart).toBe("pending");
+    expect(discoverBattleActs(session).map((act) => act.subject)).toEqual([
+      { tag: "runtimeCommand", actorId: fighterId, command: "startTurn" },
+    ]);
+    const pending = startTurn({ state: session.state, actorId: fighterId });
+    if (pending.tag !== "needsHoles" || pending.frontier.kind !== "holes") {
+      throw new Error("Expected the opening turn start to ask.");
+    }
+    expect(pending.frontier.pendingProcedure).toMatchObject({
+      kind: "turnStart",
+      sourceTurn: { actorId: fighterId, round: Round(1) },
+      request: {
+        kind: "startTurnOccurrence",
+        occurrence: { kind: "turnStartHeroicInspiration" },
+      },
+    });
+    const [hole] = battleResolutionHolesForTest(pending);
+
+    for (const [value, expected] of [
+      ["giveHeroicInspiration", HEROIC_INSPIRATION_AVAILABLE],
+      ["decline", NO_HEROIC_INSPIRATION],
+    ] as const) {
+      const started = requireResolved(
+        startTurn({
+          state: session.state,
+          actorId: fighterId,
+          fills: [choiceFill(hole, value)],
+        }),
+      ).state;
+      expect(heroicInspirationOf(started)).toEqual(expected);
+      expect(started.currentTurnStart).toBe("started");
+      expect(started.initiative).toEqual(session.state.initiative);
+      expect(
+        discoverBattleActs(
+          battleRuntimeSessionWithState(session, started),
+        ).some(
+          (act) =>
+            act.subject.tag === "runtimeCommand" &&
+            act.subject.command === "startTurn",
+        ),
+      ).toBe(false);
+    }
+  });
+
+  test("opens straight into ordinary Acts with Inspiration or without the feature", () => {
+    for (const input of [
+      { heroicWarrior: true, heroicInspiration: HEROIC_INSPIRATION_AVAILABLE },
+      { heroicWarrior: false, heroicInspiration: NO_HEROIC_INSPIRATION },
+    ]) {
+      const session = fighterOpening(input);
+      expect(session.state.currentTurnStart).toBe("started");
+      expect(snapshotBattle(session.state).round).toEqual(Round(1));
+      expect(
+        discoverBattleActs(session).some(
+          (act) =>
+            act.subject.tag === "runtimeCommand" &&
+            act.subject.command === "endTurn",
+        ),
+      ).toBe(true);
+    }
+  });
+
+  test("at 0 Hit Points, Inspiration granted before the Death Save is spent on it once", () => {
+    const { state } = fighterOpening({
+      heroicWarrior: true,
+      heroicInspiration: NO_HEROIC_INSPIRATION,
+      currentHp: 0,
+    });
+    const order = occurrenceOrderFill(
+      openingHoles(state)[0],
+      "turnStartHeroicInspiration",
+    );
+    const choice = choiceFill(
+      openingHoles(state, [order])[0],
+      "giveHeroicInspiration",
+    );
+    const [deathHole] = openingHoles(state, [order, choice]);
+    if (deathHole?.kind !== "deathSavingThrow") {
+      throw new Error("Expected the Death Save.");
+    }
+    const resolved = requireResolved(
+      startTurn({
+        state,
+        actorId: fighterId,
+        fills: [
+          order,
+          choice,
+          deathSavingThrowFill(deathHole, {
+            roll: 6,
+            d20TestRerolls: [
+              {
+                kind: "reroll",
+                effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+                replacement: d20Roll(20),
+              },
+            ],
+          }),
+        ],
+      }),
+    ).state;
+
+    expect(Number(resolved.combatants.get(fighterId)?.hp)).toBe(1);
+    expect(heroicInspirationOf(resolved)).toEqual(NO_HEROIC_INSPIRATION);
+    expect(resolved.currentTurnStart).toBe("started");
+  });
+
+  test("other subjects are refused until the turn has started", () => {
+    const { state } = fighterOpening({
+      heroicWarrior: true,
+      heroicInspiration: NO_HEROIC_INSPIRATION,
+    });
+
+    expect(endTurn({ state, actorId: fighterId })).toMatchObject({
+      tag: "invalid",
+      message: "The current turn must start before other battle subjects.",
+    });
+  });
+
+  test("an admitted battle starts its opening turn when asked, and only once", () => {
+    const admitted = Result.getOrThrow(
+      admitBattle(
+        fighterAndGoblinStart({
+          fighterInitiative: 20,
+          heroicWarrior: true,
+          heroicInspiration: NO_HEROIC_INSPIRATION,
+        }),
+      ),
+    );
+    expect(admitted.state.currentTurnStart).toBe("pending");
+    expect(heroicInspirationOf(admitted.state)).toEqual(NO_HEROIC_INSPIRATION);
+
+    // A start that asks a choice stays pending, as `startBattle` leaves it.
+    const asking = Result.getOrThrow(startBattleOpeningTurn(admitted));
+    expect(asking.state.currentTurnStart).toBe("pending");
+    expect(discoverBattleActs(asking).map((act) => act.subject)).toEqual([
+      { tag: "runtimeCommand", actorId: fighterId, command: "startTurn" },
+    ]);
+
+    const opened = Result.getOrThrow(
+      startBattleOpeningTurn(
+        Result.getOrThrow(
+          admitBattle(
+            fighterAndGoblinStart({
+              fighterInitiative: 20,
+              heroicWarrior: false,
+              heroicInspiration: NO_HEROIC_INSPIRATION,
+            }),
+          ),
+        ),
+      ),
+    );
+    expect(opened.state.currentTurnStart).toBe("started");
+    expect(startBattleOpeningTurn(opened)).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        tag: "battleStateInitIssue",
+        kind: "openingTurnStartInvalid",
+        combatantId: fighterId,
+      },
+    });
+  });
+
+  test("a started turn cannot be started again", () => {
+    const { state } = fighterOpening({
+      heroicWarrior: false,
+      heroicInspiration: NO_HEROIC_INSPIRATION,
+    });
+
+    expect(startTurn({ state, actorId: fighterId })).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
   });
 });

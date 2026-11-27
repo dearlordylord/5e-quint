@@ -154,7 +154,7 @@
       "module/binding:damageRelationshipQuestions": 14
     },
     "packages/battle-runtime/src/battle-reducer/dispatcher.ts": {
-      "module/binding:resolveBattleSubjectAfterD20TestRerolls/call:iife:argument--1": 68
+      "module/binding:resolveBattleSubjectAfterD20TestRerolls/call:iife:argument--1": 67
     },
     "packages/battle-runtime/src/battle-reducer/effect-lifecycle-routes.ts": {
       "module/binding:repeatSaveConditionEffectRouteForResolution": 10,
@@ -506,7 +506,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts": {
       "module/binding:expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames/call:[...combatants].map:argument-0": 10,
-      "module/binding:resolveEndTurnCommandForParent": 72
+      "module/binding:resolveEndTurnCommandForParent": 50
     },
     "packages/battle-runtime/src/battle-reducer/unit-feature-discovery.ts": {
       "module/binding:sacredWeaponHeldMeleeWeapons": 13,

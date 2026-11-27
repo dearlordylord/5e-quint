@@ -867,10 +867,27 @@ export type BattleAttackDamageInterruptionFrame = {
   readonly phase: "attackDamage";
   readonly continuation: BattleAttackDamageInterruptionContinuation;
 };
+/**
+ * How a turn start was reached. The battle's opening turn starts from battle
+ * start, with no earlier actor; every later turn starts from the End Turn of
+ * the actor before it.
+ */
+export type BattleTurnStartEntry =
+  | { readonly kind: "battleStart" }
+  | { readonly kind: "endTurn"; readonly endingActorId: CombatantId };
+
+/**
+ * Whether the current turn's start-of-turn procedure has run. Only the
+ * battle's opening turn can wait on it: End Turn runs the next turn's start in
+ * the same replay that ends the turn.
+ */
+export const BATTLE_TURN_START_STATUSES = ["pending", "started"] as const;
+export type BattleTurnStartStatus = (typeof BATTLE_TURN_START_STATUSES)[number];
+
 export type BattleStartTurnOccurrenceSequenceCheckpoint = {
   readonly kind: "startTurnOccurrenceSequence";
-  /** The actor whose End Turn replay opened this incoming start-turn sequence. */
-  readonly endingActorId: CombatantId;
+  /** How the turn whose start-turn sequence this is was reached. */
+  readonly entry: BattleTurnStartEntry;
   readonly sequence:
     | {
         readonly kind: "single";
@@ -4635,6 +4652,8 @@ export type BattleState = {
   readonly lightEmitters: readonly BattleStoredLightEmitter[];
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
   readonly currentTurnResources: BattleTurnResources;
+  /** Whether the current actor's start-of-turn procedure has run. */
+  readonly currentTurnStart: BattleTurnStartStatus;
   readonly subjectResolutionPhase: BattleSubjectResolutionPhase;
   readonly readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell>;
   readonly readiedResponses: ReadonlyMap<CombatantId, BattleReadiedResponse>;
@@ -4868,6 +4887,10 @@ export type BattleStateInitIssueFacts =
       readonly combatantId: CombatantId;
       readonly origin: "character" | "statBlock";
       readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "openingTurnStartInvalid";
+      readonly combatantId: CombatantId;
     }
   | {
       readonly kind: "companionOwnerMissing";

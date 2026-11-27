@@ -187,6 +187,7 @@ export function readiedAttackWeaponChangesEqual(
 }
 
 export const BATTLE_RUNTIME_COMMANDS = [
+  "startTurn",
   "endTurn",
   "endConcentration",
   "startSpellCasting",
@@ -1196,6 +1197,11 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
+    command: Schema.Literal("startTurn"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
     command: Schema.Literal("endTurn"),
   }),
   Schema.Struct({
@@ -1563,6 +1569,7 @@ function battleRuntimeCommandProcedureRefs(
 ): readonly BattleProcedureExecutionRef[] {
   return Match.value(subject).pipe(
     Match.discriminatorsExhaustive("command")({
+      startTurn: noProcedureExecutionReferences,
       endTurn: noProcedureExecutionReferences,
       endConcentration: noProcedureExecutionReferences,
       startSpellCasting: (v) => [v.procedureRef, v.invocationRef.procedureRef],
@@ -1659,6 +1666,7 @@ export function battleSubjectProcedureRefsBelongToOwners(
   ): CombatantId =>
     Match.value(value).pipe(
       Match.discriminatorsExhaustive("command")({
+        startTurn: (v) => v.actorId,
         endTurn: (v) => v.actorId,
         endConcentration: (v) => v.actorId,
         startSpellCasting: (v) => v.actorId,
@@ -1859,6 +1867,7 @@ function battleRuntimeCommandBoundExecutionReferences(
   ];
   return Match.value(subject).pipe(
     Match.discriminatorsExhaustive("command")({
+      startTurn: noBoundExecutionReferences,
       endTurn: noBoundExecutionReferences,
       endConcentration: noBoundExecutionReferences,
       startSpellCasting: noBoundExecutionReferences,

@@ -4645,6 +4645,11 @@ describe("MCP server route", () => {
       }),
     );
 
+    // The opening turn starts once the companion has joined, so it is the
+    // familiar's turn that starts, not the Wizard's.
+    expect(root.sessionStore.battleSession?.state.currentTurnStart).toBe(
+      "started",
+    );
     expect(started.envelope.checkpoint).toMatchObject({
       currentActorId: "wizard-familiar",
       turnOrder: ["wizard-familiar", "wizard"],

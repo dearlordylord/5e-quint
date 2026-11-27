@@ -105,12 +105,27 @@ reproduce that sequencing.
 
 For an ordinary `holes` frontier, `replaySubject` identifies the resolver input
 that will be replayed with the accepted fill prefix. `pendingProcedure` identifies
-the execution procedure that currently owns the Hole request. Turn-boundary
-requests carry their ending actor, canonical source turn, and (for an individual
-start-turn occurrence) its canonical kind and occurrence id. These are one
+the execution procedure that currently owns the Hole request. End Turn requests
+(`turnBoundary`) carry their ending actor, canonical source turn, and (for an
+individual start-turn occurrence) its canonical kind and occurrence id. The
+battle's opening turn start (`turnStart`) carries the same source turn and
+start-turn requests, with no ending actor. These are one
 projection of the execution request; sequence, cohort, prefix, and continuation
 facts remain in their existing runtime checkpoint structures. See
 [ADR-0010](../../docs/adr/0010-battle-pending-procedures-derive-from-execution-requests.md).
+
+Every turn starts through one procedure. End Turn finishes the outgoing turn,
+advances Initiative, then starts the next participant's turn, and ticks round
+durations only when the round wraps. `startBattle` (and
+`finishInitialInitiativeSetup`, once Initiative swaps are done) starts the first
+participant's turn the same way, with no outgoing turn and no round advance.
+When that start needs a roll or choice, such as a Death Saving Throw at 0 Hit
+Points or a Heroic Warrior's offer, the battle opens with Start Turn
+(`{ tag: "runtimeCommand", command: "startTurn" }`) as its only Act, and every
+other subject is refused until it resolves.
+A host that admits companions after the battle's combatants calls `admitBattle`
+instead, admits them (each admission rebuilds Initiative, so a companion can go
+first), then calls `startBattleOpeningTurn` once the roster is complete.
 
 The public session trace discovers `initialHoles[]` before publishing the first
 envelope. Submitting an End Turn command with no fills first returns its outgoing

@@ -12,7 +12,7 @@ import type { StatBlockProcedureEntry } from "@dnd/surface/surface/stat-block-ty
 import { isDeepStrictEqual } from "node:util";
 import { Result } from "effect";
 import { describe, it } from "vitest";
-import { startBattle } from "./battle-reducer/api-lifecycle.ts";
+import { startBattle } from "./battle-start.ts";
 import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 import { resolveBattleSubject } from "./index.ts";
 import {

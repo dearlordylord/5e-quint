@@ -241,6 +241,11 @@ function discoverBattleActCandidatesInternal(
   executionRegistry: SpellProcedureExecutionRegistry | null,
   includeReady: boolean,
 ): readonly BattleActDiscoveryCandidate[] {
+  // A turn that hasn't started yet offers only its start: nothing else may
+  // happen before the start-of-turn effects that need a choice or a roll.
+  if (state.currentTurnStart === "pending") {
+    return [startTurnAct(currentActorId(state))];
+  }
   return discoverBattleActsWithoutRouteEvents(
     state,
     executionRegistry,
@@ -1331,6 +1336,13 @@ function companionAttackActs(
           },
         ];
   });
+}
+
+function startTurnAct(actorId: CombatantId): BattleActDiscoveryCandidate {
+  return {
+    subject: { tag: "runtimeCommand", actorId, command: "startTurn" },
+    initialHoles: [],
+  };
 }
 
 function endTurnAct(actorId: CombatantId): BattleActDiscoveryCandidate {

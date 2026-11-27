@@ -1,6 +1,6 @@
 import { Result } from "effect";
 import { expect, it } from "vitest";
-import { startBattle } from "./battle-reducer/api-lifecycle.ts";
+import { startBattle } from "./battle-start.ts";
 import {
   battleId,
   statBlockCreatureInit,

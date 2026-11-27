@@ -90,6 +90,7 @@ function combatantsWithCompelledHaltMovementSpent(
 }
 
 const COMPELLED_HALT_SUPPRESSES_RUNTIME_COMMAND = {
+  startTurn: false,
   endTurn: false,
   endConcentration: false,
   startSpellCasting: false,

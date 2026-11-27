@@ -416,6 +416,11 @@ function admitBattleCompanionRosterRequests(input: {
   return session;
 }
 
+/**
+ * Admit the requested companions into a battle that `admitBattle` admitted.
+ * Each admission rebuilds Initiative, so the battle's opening turn starts only
+ * once this roster is complete (`startBattleOpeningTurn`).
+ */
 export function composeBattleCompanionRoster(input: {
   readonly session: BattleRuntimeSession | undefined;
   readonly owners: readonly BattleCompanionRosterOwner[];
