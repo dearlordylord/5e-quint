@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.SHARED_TURN_START
 import { attackActionOptionsForActor } from "../../battle-runtime/src/battle-reducer/attack-damage-apply.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource unit-feature.druid-wild-shape-known-form
