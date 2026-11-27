@@ -117,12 +117,17 @@ module unitFeaturePoolCostCore {
     if (pool.usesRemaining <= 0) pool
     else pool.with("usesRemaining", pool.usesRemaining - 1)
 
+  // playing-the-game.md, "They Don't Stack": "If you have Temporary Hit Points
+  // and receive more of them, you decide whether to keep the ones you have or to
+  // gain the new ones." The choice exists only while some are held; with none
+  // there is nothing to keep, so the creature gains the new ones whatever the
+  // choice says.
   pure def resolveTemporaryHitPointsChoice(
     existingTemporaryHitPoints: int,
     newTemporaryHitPoints: int,
     chooseNewTemporaryHitPoints: bool
   ): int =
-    if (chooseNewTemporaryHitPoints) newTemporaryHitPoints
+    if (existingTemporaryHitPoints <= 0 or chooseNewTemporaryHitPoints) newTemporaryHitPoints
     else existingTemporaryHitPoints
 
   pure def resolveBonusActionDashTemporaryHitPoints(
