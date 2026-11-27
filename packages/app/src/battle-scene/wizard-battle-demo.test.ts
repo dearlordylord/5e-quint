@@ -53,8 +53,8 @@ describe("wizard battle demo", () => {
     )
     const titles = WIZARD_BATTLE_DEMO_STEPS.map((event) => event.title)
 
-    expect(WIZARD_BATTLE_DEMO_STEPS).toHaveLength(151)
-    expect(titles.filter((title) => title === "Turn starts")).toHaveLength(34)
+    expect(WIZARD_BATTLE_DEMO_STEPS).toHaveLength(143)
+    expect(titles.filter((title) => title === "Turn starts")).toHaveLength(30)
     expect(titles.filter((title) => title === "Reaction facts")).toHaveLength(6)
     expect(titles.filter((title) => title === "Counterspell")).toHaveLength(8)
     expect(titles.filter((title) => title === "Counterspell window")).toHaveLength(9)

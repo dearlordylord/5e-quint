@@ -1129,8 +1129,8 @@ describe("end-user MCP vertical", () => {
       damageGroups: [[4]],
     });
     expect(combatant(root, "bard")).toMatchObject({ hp: 4 });
+    // Dead Skeleton A's turn passes on its own.
     endTurn(root, "goblin-b");
-    endTurn(root, "skeleton-a");
 
     resolveWeaponAttack(root, {
       actorId: "skeleton-b",
@@ -1141,8 +1141,9 @@ describe("end-user MCP vertical", () => {
       damageGroups: [[5]],
     });
     expect(combatant(root, "bard")).toMatchObject({ hp: 0 });
-    endTurn(root, "skeleton-b");
-    endTurn(root, "goblin-a", 5);
+    // Dead Goblin A's turn passes, the round wraps, and the Bard's turn in
+    // round 2 starts with a Death Saving Throw.
+    endTurn(root, "skeleton-b", 5, 2);
     expect(combatant(root, "bard").zeroHpLifecycle).toMatchObject({
       deathSaves: {
         tag: "dying",
@@ -1199,11 +1200,8 @@ describe("end-user MCP vertical", () => {
       deathSaves: { tag: "dead" },
     });
     endTurn(root, "goblin-b");
-    endTurn(root, "skeleton-a");
+    // The turns of dead Goblin A and the dead Bard pass on their own.
     endTurn(root, "skeleton-b");
-
-    endTurn(root, "goblin-a");
-    endTurn(root, "bard");
     resolveWeaponAttack(root, {
       actorId: "fighter",
       attackName: "Flail",
@@ -1244,11 +1242,8 @@ describe("end-user MCP vertical", () => {
       damageGroups: [[5]],
     });
     expect(combatant(root, "fighter")).toMatchObject({ hp: 13 });
+    // Only the Fighter, the Wizard and Goblin B are alive.
     endTurn(root, "goblin-b");
-    endTurn(root, "skeleton-a");
-    endTurn(root, "skeleton-b");
-    endTurn(root, "goblin-a");
-    endTurn(root, "bard");
 
     resolveSecondWind(root, "fighter", [5]);
     expect(combatant(root, "fighter")).toMatchObject({ hp: 20 });
@@ -2597,6 +2592,7 @@ function endTurn(
   root: ReturnType<typeof createMcpPlaySessionRoot>,
   actorId: string,
   deathSaveRoll?: number,
+  deathSaveRound?: number,
 ) {
   const result = callTool(root, "end_turn", { actorId });
   if (result.result?.tag !== "needsHoles") return result;
@@ -2622,7 +2618,7 @@ function endTurn(
       endingActorId: actorId,
       sourceTurn: {
         actorId: deathSave.combatantId,
-        round: result.envelope.checkpoint.round,
+        round: deathSaveRound ?? result.envelope.checkpoint.round,
       },
       request: {
         kind: "startTurnOccurrence",

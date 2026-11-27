@@ -492,9 +492,8 @@ function requireWizardBattleDemo(): WizardBattleDemo {
         targetId: ritualWizardId
       }),
     (builder) => passCurrentTurn(builder, ritualWizardId, "Ritual Wizard has two failures and one success."),
-    (builder) => passCurrentTurn(builder, laserWizardId, "Laser Wizard passes again."),
     (builder) =>
-      passCurrentTurn(builder, mudScampId, "Mud Scamp remains dead.", {
+      passCurrentTurn(builder, laserWizardId, "Laser Wizard passes again, and dead Mud Scamp's turn passes.", {
         roll: 1,
         targetId: forestWizardId
       }),
@@ -510,9 +509,8 @@ function requireWizardBattleDemo(): WizardBattleDemo {
         targetId: ritualWizardId
       }),
     (builder) => passCurrentTurn(builder, ritualWizardId, "Ritual Wizard is one success away from stability."),
-    (builder) => passCurrentTurn(builder, laserWizardId, "Laser Wizard passes while the field collapses."),
     (builder) =>
-      passCurrentTurn(builder, mudScampId, "Mud Scamp remains dead.", {
+      passCurrentTurn(builder, laserWizardId, "Laser Wizard passes while the field collapses.", {
         roll: 3,
         targetId: forestWizardId
       }),
@@ -528,10 +526,8 @@ function requireWizardBattleDemo(): WizardBattleDemo {
         targetId: ritualWizardId
       }),
     (builder) => passCurrentTurn(builder, ritualWizardId, "Ritual Wizard becomes stable."),
-    (builder) => passCurrentTurn(builder, laserWizardId, "Laser Wizard passes the final active turn."),
-    (builder) => passCurrentTurn(builder, mudScampId, "Mud Scamp remains dead."),
     (builder) =>
-      passCurrentTurn(builder, forestWizardId, "Forest Wizard remains dead.", {
+      passCurrentTurn(builder, laserWizardId, "Laser Wizard passes the final active turn, past the dead.", {
         roll: 12,
         targetId: grayElfId
       })

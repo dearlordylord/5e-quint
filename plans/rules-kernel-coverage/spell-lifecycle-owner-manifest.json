@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "de71a1a5e671800d4a78939a6780e623e448e38f",
+    "registryCommit": "62188870eceecbac685aa8a2f6b71194d217244e",
     "generator": {
       "path": "scripts/spell-lifecycle-owner-manifest.cjs",
       "sha256": "ba903bab8bc134d711ea81052abfbf0c0ec78df56db45a273c909adbdda6d15f"
@@ -12,7 +12,7 @@
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "fb1a40c9d2e1f6c1f116ce53795c8f3ae98a1ce7b47b1671c37f406c80762c5c"
+        "sha256": "8d2e604c1c12d04ddf78092d89da6401e85b857390a507e12e824a0fe4bb0857"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
@@ -556,6 +556,7 @@
     "packages/battle-runtime/src/battle-reducer/statblock.ts",
     "packages/battle-runtime/src/battle-reducer/targeting-save-interdiction.ts",
     "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+    "packages/battle-runtime/src/battle-reducer/turn-order-advance.ts",
     "packages/battle-runtime/src/battle-reducer/unit-features.ts",
     "packages/battle-runtime/src/battle-runtime-transaction.ts",
     "packages/battle-runtime/src/battle-state-execution.ts",
@@ -602,6 +603,7 @@
     "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
     "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts",
     "packages/battle-runtime/src/antimagic-field-ongoing-suppression.mbt.test.ts",
+    "packages/battle-runtime/src/battle-runtime-dead-creature-turns.test.ts",
     "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts",
     "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts",
     "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts",
@@ -951,8 +953,8 @@
   ],
   "pathCounts": {
     "obligationCount": 58,
-    "sourceOrPure": 248,
-    "parityOrFixture": 102,
+    "sourceOrPure": 249,
+    "parityOrFixture": 103,
     "qntFixtureSpec": 46,
     "deferredLaterIssue": 2
   },
