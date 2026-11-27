@@ -857,6 +857,14 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
@@ -3681,6 +3689,14 @@
         {
           "kind": "contract-test",
           "ownerPath": "packages/character-battle-runtime/src/fighter-champion-sdk-handoff.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
         }
       ],
       "parityWitnessScope": "rules-kernel-obligation",
