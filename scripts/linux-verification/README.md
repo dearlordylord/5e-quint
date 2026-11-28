@@ -88,6 +88,10 @@ runtime settings do not increase the container memory cap.
 This runner supports repository-contained verification inputs, not publication
 credentials or external host paths. It does not certify installed ChatGPT UX.
 
+The tools image supplies Java 21 for Quint 0.35.0 / Apalache 0.62.4.
+Dhall uses the canonical Surface toolchain pin and checksum; ARM64 runs only
+the x86-64 Dhall executable through QEMU with its isolated runtime libraries.
+
 ## Checks
 
 `pnpm check:verification-workflow` includes portable snapshot/container-plan
