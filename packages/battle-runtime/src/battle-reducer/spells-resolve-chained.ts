@@ -1,3 +1,4 @@
+import { fromNullishOr } from "effect/Array";
 import { prepareAttackRollInput } from "./attack-roll-admission.ts";
 import {
   qualifyRangedAttackEnemyProximity,
@@ -701,7 +702,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
           stepIndex,
         ),
         attackRollDependentFillHoleIds: [
-          ...(step.damageRoll === undefined ? [] : [step.damageRoll.holeId]),
+          ...fromNullishOr(step.damageRoll).map((fill) => fill.holeId),
           ...fillSet.concentrationSavingThrows
             .filter(
               (fill) =>

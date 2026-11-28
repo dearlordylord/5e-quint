@@ -1,3 +1,4 @@
+import { fromNullishOr } from "effect/Array";
 import { Result } from "effect";
 import { armorClassBehindCover } from "@dnd/shared-algebras/cover-algebra";
 import type { BattleCreatureState } from "../battle-state-execution.ts";
@@ -666,9 +667,9 @@ function resolveSpellAttackSequenceCreaturePart(input: {
           input.partIndex,
         ),
         attackRollDependentFillHoleIds: [
-          ...(input.partFill.damageRoll === undefined
-            ? []
-            : [input.partFill.damageRoll.holeId]),
+          ...fromNullishOr(input.partFill.damageRoll).map(
+            (fill) => fill.holeId,
+          ),
           ...[
             ...input.fillSet.sourceDamageRollPenaltyRolls,
             ...input.fillSet.spellDamageReductionRolls,

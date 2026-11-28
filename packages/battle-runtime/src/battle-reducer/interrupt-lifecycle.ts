@@ -836,6 +836,28 @@ function reconciledInterruptCheckpoint(
   return reconciledFrame;
 }
 
+type DamageSequenceObjectOutcomes = Pick<
+  Extract<BattleInterruptedProcedure, { readonly kind: "afterDamageSequence" }>,
+  "objectDamages" | "objectIgnitions" | "droppedObjects"
+>;
+
+function appendedDamageSequenceObjectOutcomes(
+  current: DamageSequenceObjectOutcomes,
+  source: ResolvedObjectOutcomeSource,
+): DamageSequenceObjectOutcomes {
+  return {
+    objectDamages: [...current.objectDamages, ...(source.objectDamages ?? [])],
+    objectIgnitions: [
+      ...current.objectIgnitions,
+      ...(source.objectIgnitions ?? []),
+    ],
+    droppedObjects: [
+      ...current.droppedObjects,
+      ...(source.droppedObjects ?? []),
+    ],
+  };
+}
+
 function appendObjectOutcomesToCheckpoint<
   Frame extends Exclude<
     BattleInterruptCheckpoint,
@@ -876,18 +898,7 @@ function appendObjectOutcomesToContinuation<
   ) {
     return {
       ...continuation,
-      objectDamages: [
-        ...continuation.objectDamages,
-        ...(source.objectDamages ?? []),
-      ],
-      objectIgnitions: [
-        ...continuation.objectIgnitions,
-        ...(source.objectIgnitions ?? []),
-      ],
-      droppedObjects: [
-        ...continuation.droppedObjects,
-        ...(source.droppedObjects ?? []),
-      ],
+      ...appendedDamageSequenceObjectOutcomes(continuation, source),
     };
   }
   // Readied spells are not offered for attack-damage, movement, or command
