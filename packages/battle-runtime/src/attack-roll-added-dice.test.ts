@@ -3,8 +3,8 @@
 // A Bardic Inspiration die added to an attack roll that misses, through the
 // battle: weapon attacks, Spell Attacks and Opportunity Attacks. The die comes
 // after the roll's rerolls, while the roll misses the target's Armor Class as
-// it stands (ASSUMPTIONS.md A67), and a Reaction that turns a hit into a miss
-// leaves the attacker the die to add (A69).
+// it stands (ASSUMPTIONS.md A68), and a Reaction that turns a hit into a miss
+// leaves the attacker the die to add (A70).
 import {
   HEROIC_INSPIRATION_AVAILABLE,
   type HeroicInspiration,

@@ -123,6 +123,7 @@ export type {
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hide-action-obscurement-permission
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-die-minimum
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE BATTLE.SPELL.READIED_RESPONSE_PROCEDURE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
@@ -867,10 +868,27 @@ export type BattleAttackDamageInterruptionFrame = {
   readonly phase: "attackDamage";
   readonly continuation: BattleAttackDamageInterruptionContinuation;
 };
+/**
+ * How a turn start was reached. The battle's opening turn starts from battle
+ * start, with no earlier actor; every later turn starts from the End Turn of
+ * the actor before it.
+ */
+export type BattleTurnStartEntry =
+  | { readonly kind: "battleStart" }
+  | { readonly kind: "endTurn"; readonly endingActorId: CombatantId };
+
+/**
+ * Whether the current turn's start-of-turn procedure has run. Only the
+ * battle's opening turn can wait on it: End Turn runs the next turn's start in
+ * the same replay that ends the turn.
+ */
+export const BATTLE_TURN_START_STATUSES = ["pending", "started"] as const;
+export type BattleTurnStartStatus = (typeof BATTLE_TURN_START_STATUSES)[number];
+
 export type BattleStartTurnOccurrenceSequenceCheckpoint = {
   readonly kind: "startTurnOccurrenceSequence";
-  /** The actor whose End Turn replay opened this incoming start-turn sequence. */
-  readonly endingActorId: CombatantId;
+  /** How the turn whose start-turn sequence this is was reached. */
+  readonly entry: BattleTurnStartEntry;
   readonly sequence:
     | {
         readonly kind: "single";
@@ -4666,6 +4684,8 @@ export type BattleState = {
   readonly lightEmitters: readonly BattleStoredLightEmitter[];
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
   readonly currentTurnResources: BattleTurnResources;
+  /** Whether the current actor's start-of-turn procedure has run. */
+  readonly currentTurnStart: BattleTurnStartStatus;
   readonly subjectResolutionPhase: BattleSubjectResolutionPhase;
   readonly readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell>;
   readonly readiedResponses: ReadonlyMap<CombatantId, BattleReadiedResponse>;
@@ -4836,6 +4856,10 @@ export type BattleStateInitIssueFacts =
       readonly combatantId: CombatantId;
       readonly origin: "character" | "statBlock";
       readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "openingTurnStartInvalid";
+      readonly combatantId: CombatantId;
     }
   | {
       readonly kind: "companionOwnerMissing";
@@ -5060,14 +5084,23 @@ export type BattleSpellLeapTargetSpatialFactRequest = {
   readonly previousTargetId: CombatantId;
   readonly rangeFeet: MovementFeet;
 };
+/** The table facts a spell attack against an object asks for. */
 export type BattleSpellObjectTargetSpatialFactRequest = {
   readonly casterId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly rangeFeet: MovementFeet;
-  /** Ranged spell attacks must carry the exact caster-to-object distance. */
-  readonly requiresExactDistance: true;
-  readonly requiresEnemyProximityQualification: true;
-};
+  /** Every spell attack against an object asks whether the caster sees it. */
+  readonly requiresAttackerSight: true;
+} & (
+  | {
+      readonly requiresExactDistance?: never;
+      readonly requiresEnemyProximityQualification?: never;
+    }
+  | {
+      readonly requiresExactDistance: true;
+      readonly requiresEnemyProximityQualification: true;
+    }
+);
 export type BattleAttackTargetRequest = {
   readonly actorId: CombatantId;
   readonly selection: BattleAttackExecutionSelection;
@@ -5171,7 +5204,7 @@ export type BattleSavingThrowRerollHoleOptions =
   };
 /**
  * The dice a D20 Test hole offers to add to a test that stands failed, once
- * its rerolls are decided (ASSUMPTIONS.md A67).
+ * its rerolls are decided (ASSUMPTIONS.md A68).
  */
 export type BattleD20TestAddedDieHoleOptions = {
   readonly bardicInspirationDice?: readonly [BattleBardicInspirationDieOption];
@@ -5711,6 +5744,30 @@ export type BattleHeroicInspirationRerollOption = {
 };
 export type BattleHeroicInspirationRerollDecision =
   BattleD20TestRollRerollDecision<typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND>;
+export const D20_TEST_DIE_MINIMUM_EFFECT_KIND = "d20_test_die_minimum";
+/** What a roller may decide on an offered d20 minimum. */
+export const D20_TEST_DIE_MINIMUM_DECISION_KINDS = ["use", "decline"] as const;
+/**
+ * A d20 minimum the roller may use on this D20 Test: a d20 that shows less
+ * than `minimumDieFace` counts as that face. The table's totals count it.
+ */
+export type BattleD20TestDieMinimumOption = {
+  readonly effectKind: typeof D20_TEST_DIE_MINIMUM_EFFECT_KIND;
+  readonly label: string;
+  readonly minimumDieFace: Extract<
+    UnitFeatureProcedureExecution,
+    { readonly kind: "d20TestDieMinimum" }
+  >["dieMinimum"]["minimumDieFace"];
+};
+/**
+ * The roller's decision on an offered d20 minimum. When it is used, every
+ * total the fill reports (the roll and each reroll) counts each d20 below the
+ * minimum as the minimum.
+ */
+export type BattleD20TestDieMinimumDecision = {
+  readonly kind: (typeof D20_TEST_DIE_MINIMUM_DECISION_KINDS)[number];
+  readonly effectKind: typeof D20_TEST_DIE_MINIMUM_EFFECT_KIND;
+};
 /** One reroll source's decision on an ability check's d20, named by its effect kind. */
 export type BattleAbilityCheckD20TestRerollDecision =
   | BattleD20TestNaturalOneRerollDecision
@@ -5867,7 +5924,7 @@ export type BattleAbilityCheckAddedDieDecision =
     >;
 /**
  * An ability check's added-die decisions in the order the roller made them,
- * each on the check as the decisions before it left it (ASSUMPTIONS.md A67).
+ * each on the check as the decisions before it left it (ASSUMPTIONS.md A68).
  */
 export type BattleAbilityCheckAddedDieDecisions = readonly [
   BattleAbilityCheckAddedDieDecision,
@@ -5934,7 +5991,7 @@ export type BattleDeathSavingThrowD20TestRerollDecisions = readonly [
 ];
 /**
  * A source's decision on a die added to a Death Saving Throw: the engine adds
- * the number rolled to the d20 and judges the result (ASSUMPTIONS.md A68).
+ * the number rolled to the d20 and judges the result (ASSUMPTIONS.md A69).
  */
 export type BattleDeathSavingThrowAddedDieDecision =
   BattleD20TestAddedDieDecision<typeof BARDIC_INSPIRATION_DIE_EFFECT_KIND>;
@@ -7335,6 +7392,8 @@ export type BattleAbilityCheckHole = {
   readonly dc: DifficultyClass;
   readonly rollMode?: AttackRollMode;
   readonly requiresTableSpatialFact?: boolean;
+  /** Present when the roller has a d20 minimum for this check. */
+  readonly d20TestDieMinimum?: BattleD20TestDieMinimumOption;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
@@ -8118,6 +8177,8 @@ export type BattleFill =
       readonly value: {
         readonly total: number;
         readonly d20TestRoll?: BattleD20TestRoll;
+        /** Required exactly when the hole offers a d20 minimum. */
+        readonly d20TestDieMinimum?: BattleD20TestDieMinimumDecision;
         readonly d20TestRerolls?: BattleAbilityCheckD20TestRerollDecisions;
         /** The dice added to the total the rerolls leave, while it stands failed. */
         readonly d20TestAddedDice?: BattleAbilityCheckAddedDieDecisions;

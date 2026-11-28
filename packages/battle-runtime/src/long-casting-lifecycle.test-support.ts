@@ -22,7 +22,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import { combatantId } from "./identity.ts";
 import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { startBattle } from "./battle-reducer/api-lifecycle.ts";
+import { startBattle } from "./battle-start.ts";
 import type { LongCastingTime } from "./battle-reducer/long-casting-progress.ts";
 
 export const longCastingReactorId = combatantId(

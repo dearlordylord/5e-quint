@@ -883,6 +883,23 @@ export function startBattleRight(
   return result.success.state;
 }
 
+/** Resolve the pending start of the current participant's turn. */
+export function startTurn(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly fills?: readonly BattleFill[];
+}): ReturnType<typeof resolveBattleSubjectRuntime> {
+  return resolveBattleSubjectRuntime({
+    state: input.state,
+    subject: {
+      tag: "runtimeCommand",
+      actorId: input.actorId,
+      command: "startTurn",
+    },
+    fills: input.fills ?? [],
+  });
+}
+
 export function startBattleSessionRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleRuntimeSession {
@@ -1771,29 +1788,22 @@ export function wizardTurnWithReadiedRay(
   });
 }
 
+/** The Goblin's opening turn, with the Fighter acting next. */
 export function goblinTurnBattle(
   input: { readonly fighterHp?: number } = {},
 ): BattleState {
-  const afterFighter = endTurn({
-    state: startBattleRight({
-      battleId: battleId("battle-goblin-attack"),
-      combatants: [
-        characterSeed({
-          initiative: 20,
-          ...(input.fighterHp === undefined
-            ? {}
-            : { currentHp: input.fighterHp }),
-        }),
-        statBlockCreatureInit({ initiative: 10 }),
-      ],
-    }),
-    actorId: fighterId,
+  return startBattleRight({
+    battleId: battleId("battle-goblin-attack"),
+    combatants: [
+      characterSeed({
+        initiative: 10,
+        ...(input.fighterHp === undefined
+          ? {}
+          : { currentHp: input.fighterHp }),
+      }),
+      statBlockCreatureInit({ initiative: 20 }),
+    ],
   });
-  if (afterFighter.tag !== "resolved") {
-    throw new Error(`Expected resolved End Turn, got ${afterFighter.tag}.`);
-  }
-
-  return afterFighter.state;
 }
 
 export function fighterAttackSubject(
@@ -3027,13 +3037,31 @@ function objectTargetDistanceFeet(input: {
 
 function qualifySpellObjectTargetFactsForTest(
   hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>,
+  objectId: ObjectTargetChoiceFill["value"],
   facts: ObjectTargetChoiceFill["spatialFacts"],
 ): ObjectTargetChoiceFill["spatialFacts"] {
   const request = hole.spellObjectTargetSpatialFactRequest;
-  return request?.requiresEnemyProximityQualification === true &&
-    !facts.some((fact) => fact.kind === "rangedAttackEnemyProximity")
-    ? [
+  if (request === undefined) {
+    return facts;
+  }
+  const withSight: ObjectTargetChoiceFill["spatialFacts"] = facts.some(
+    (fact) => fact.kind === "spellObjectTargetSight",
+  )
+    ? facts
+    : [
         ...facts,
+        {
+          kind: "spellObjectTargetSight",
+          casterId: request.casterId,
+          objectId,
+          sourceProcedureRef: request.sourceProcedureRef,
+          attackerCanSeeObject: true,
+        },
+      ];
+  return request.requiresEnemyProximityQualification === true &&
+    !withSight.some((fact) => fact.kind === "rangedAttackEnemyProximity")
+    ? [
+        ...withSight,
         {
           kind: "rangedAttackEnemyProximity",
           attackerId: request.casterId,
@@ -3041,7 +3069,7 @@ function qualifySpellObjectTargetFactsForTest(
           enemies: [],
         },
       ]
-    : facts;
+    : withSight;
 }
 
 export function objectTargetFill(input: {
@@ -3065,6 +3093,7 @@ export function objectTargetFill(input: {
     value: objectId,
     spatialFacts: qualifySpellObjectTargetFactsForTest(
       input.hole,
+      objectId,
       input.spatialFacts ?? [
         {
           kind: "spellObjectTarget",
@@ -3330,6 +3359,10 @@ export function abilityCheckFill(
         readonly naturalD20?: number;
         readonly rollMode?: AttackRollMode;
         readonly rolledD20s?: TestD20RolledD20s;
+        readonly d20TestDieMinimum?: Extract<
+          BattleFill,
+          { readonly kind: "abilityCheck" }
+        >["value"]["d20TestDieMinimum"];
         readonly d20TestRerolls?: Extract<
           BattleFill,
           { readonly kind: "abilityCheck" }
@@ -3351,6 +3384,9 @@ export function abilityCheckFill(
       ...(testD20TestRoll(checkValue) === undefined
         ? {}
         : { d20TestRoll: testD20TestRoll(checkValue)! }),
+      ...(checkValue.d20TestDieMinimum === undefined
+        ? {}
+        : { d20TestDieMinimum: checkValue.d20TestDieMinimum }),
       ...(checkValue.d20TestRerolls === undefined
         ? {}
         : { d20TestRerolls: checkValue.d20TestRerolls }),

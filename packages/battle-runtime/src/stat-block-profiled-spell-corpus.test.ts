@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { StatBlockProcedureOrdinalSchema } from "@dnd/surface/surface/schema";
 import { PositiveInteger } from "@dnd/shared/types";
-import { startBattle } from "./battle-reducer/api-lifecycle.ts";
+import { startBattle } from "./battle-start.ts";
 import { battleId, unitLibrary } from "./battle-runtime.test-support.ts";
 import { combatantId, initiativeScore } from "./identity.ts";
 

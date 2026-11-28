@@ -1,7 +1,9 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.HEROIC_INSPIRATION_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_SAVING_THROW_REROLL
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.DIE_MINIMUM
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-die-minimum
 // Checks the after-roll decisions on a subject's rolled D20 Test outcomes
 // (ability checks, saving throws and Concentration saves) before the subject
 // resolves: the rerolls, then the dice added to a test that stands failed. A
@@ -33,6 +35,7 @@ import {
 } from "./d20-test-natural-one-reroll.ts";
 import { Match } from "effect";
 
+import { abilityCheckD20TestDieMinimum } from "./d20-test-die-minimum.ts";
 import {
   abilityCheckAfterRollDecisions,
   abilityCheckHoleAskedAfterRoll,
@@ -326,6 +329,14 @@ function abilityCheckRollChecks(
   const scope = { kind: "subject", subject } as const;
   const fill = input.fill;
   const hole = abilityCheckHoleForFill({ ...input, fill });
+  const abilityCheckHole = hole?.kind === "abilityCheck" ? hole : undefined;
+  const dieMinimum = abilityCheckD20TestDieMinimum(
+    abilityCheckHole,
+    fill.value,
+  );
+  if (dieMinimum.tag === "invalid") {
+    return [{ tag: "invalid", message: dieMinimum.issue }];
+  }
   return [
     abilityCheckRollCheck(
       abilityCheckAfterRollDecisions({
@@ -336,8 +347,8 @@ function abilityCheckRollChecks(
           holeId: fill.holeId,
         },
         value: fill.value,
-        requiredRollMode:
-          hole?.kind === "abilityCheck" ? hole.rollMode : undefined,
+        requiredRollMode: abilityCheckHole?.rollMode,
+        dieMinimum: dieMinimum.countedMinimum,
         dc: hole?.dc,
       }),
       {

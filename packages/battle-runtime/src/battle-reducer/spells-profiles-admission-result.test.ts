@@ -16,8 +16,8 @@ import {
 import {
   addBattleRuntimeCombatant,
   battleInitializationIssueLeaves,
-  startBattle,
 } from "./api-lifecycle.ts";
+import { startBattle } from "../battle-start.ts";
 import { admittedSpellActs } from "./spells-profiles.ts";
 
 const rejectedSpellCasterId = combatantId("bad-caster");

@@ -213,7 +213,7 @@ module zeroHitPointLifecycle {
   // feature that rerolls the save with a bonus does (classes.md, Fighter,
   // Indomitable). The bonus counts toward 10, but a 1 or a 20 on the d20 decides
   // first (playing-the-game.md:1239, "When you roll a 1 on the d20";
-  // ASSUMPTIONS.md A68).
+  // ASSUMPTIONS.md A69).
   pure def resolveStartTurnDeathSavingThrow(
     vitals: CreatureVitals,
     lifecycle: DeathSavingThrowLifecycle,

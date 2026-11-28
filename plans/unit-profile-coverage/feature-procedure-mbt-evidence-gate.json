@@ -59,7 +59,15 @@
             },
             {
               "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+            },
+            {
+              "kind": "contract-test",
               "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
             },
             {
               "kind": "contract-test",
@@ -459,7 +467,15 @@
             },
             {
               "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+            },
+            {
+              "kind": "contract-test",
               "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
             },
             {
               "kind": "contract-test",
@@ -1595,7 +1611,15 @@
             },
             {
               "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+            },
+            {
+              "kind": "contract-test",
               "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
             },
             {
               "kind": "contract-test",
@@ -1818,7 +1842,15 @@
             },
             {
               "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+            },
+            {
+              "kind": "contract-test",
               "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
             },
             {
               "kind": "contract-test",
@@ -2384,7 +2416,15 @@
             },
             {
               "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+            },
+            {
+              "kind": "contract-test",
               "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
             },
             {
               "kind": "contract-test",
@@ -3136,7 +3176,15 @@
             },
             {
               "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/d20-minimum-added-dice-composition.test.ts"
+            },
+            {
+              "kind": "contract-test",
               "ownerPath": "packages/battle-runtime/src/failed-test-added-dice.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
             },
             {
               "kind": "contract-test",

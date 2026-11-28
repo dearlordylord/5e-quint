@@ -9,7 +9,7 @@
 // of Second Wind isn't expended." The ability check's added-die fold
 // (d20-test-added-dice.ts) offers it while the check stands failed and the
 // roller has a use left, and spends the use only when the check succeeds once
-// every added die is in (ASSUMPTIONS.md A67).
+// every added die is in (ASSUMPTIONS.md A68).
 
 import { Brand } from "effect";
 

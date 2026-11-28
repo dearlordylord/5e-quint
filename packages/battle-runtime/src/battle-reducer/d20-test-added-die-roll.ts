@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
-// What one added-die decision does to a D20 Test (ASSUMPTIONS.md A67). A
+// What one added-die decision does to a D20 Test (ASSUMPTIONS.md A68). A
 // leaf, so that the added-die folds and every reader of the roll that stands
 // apply a decision the same way.
 

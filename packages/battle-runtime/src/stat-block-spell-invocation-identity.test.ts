@@ -7,7 +7,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Option, Result, Schema } from "effect";
 import { expect, it } from "vitest";
 import { StatBlockExecutionSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
-import { startBattle } from "./battle-reducer/api-lifecycle.ts";
+import { startBattle } from "./battle-start.ts";
 import {
   battleId,
   statBlockCreatureInit,

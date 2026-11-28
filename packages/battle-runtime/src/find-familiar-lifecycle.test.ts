@@ -919,19 +919,6 @@ function withFamiliarHitPoints(
   };
 }
 
-function initialCombatantOrder(
-  ...ids: readonly (
-    | typeof casterId
-    | typeof familiarId
-    | typeof replacementFamiliarId
-  )[]
-): ReadonlyMap<
-  typeof casterId | typeof familiarId | typeof replacementFamiliarId,
-  number
-> {
-  return new Map(ids.map((id, index) => [id, index]));
-}
-
 function characterCreature(input: {
   readonly combatantId:
     | typeof casterId
@@ -1385,7 +1372,6 @@ describe("Find Familiar lifecycle", () => {
         },
         creatureTypeOverride: "fey",
       },
-      initialCombatantOrder: initialCombatantOrder(casterId),
     } satisfies Omit<
       Parameters<typeof admitCompanionToBattleRuntime>[0],
       "session"
@@ -1468,7 +1454,6 @@ describe("Find Familiar lifecycle", () => {
         initiative: initiativeScore(14),
         placement: { kind: "unoccupiedSpaceWithinSpellRange" },
       },
-      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
     });
     expect(Result.isSuccess(admittedFromOneCatalogResolution)).toBe(true);
     expect(admissionCatalogLookups).toBe(2);
@@ -1503,7 +1488,6 @@ describe("Find Familiar lifecycle", () => {
         initiative: initiativeScore(14),
         placement: { kind: "unoccupiedSpaceWithinSpellRange" },
       },
-      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
     });
     expect(Result.isSuccess(admitted)).toBe(true);
     if (Result.isFailure(admitted)) return;
@@ -1684,7 +1668,6 @@ describe("Find Familiar lifecycle", () => {
           tempHp: Hp(0),
         },
       },
-      initialCombatantOrder: initialCombatantOrder(casterId, otherOwnerId),
     });
     expect(Result.isSuccess(firstAdmission)).toBe(true);
     if (Result.isFailure(firstAdmission)) return;
@@ -1711,7 +1694,6 @@ describe("Find Familiar lifecycle", () => {
         },
         creatureTypeOverride: "fey",
       },
-      initialCombatantOrder: initialCombatantOrder(casterId, otherOwnerId),
     });
 
     expect(Result.isFailure(collision)).toBe(true);
@@ -1772,7 +1754,6 @@ describe("Find Familiar lifecycle", () => {
         },
         creatureTypeOverride: "fey",
       },
-      initialCombatantOrder: initialCombatantOrder(casterId),
     });
     expect(Result.isSuccess(retained)).toBe(true);
     if (Result.isFailure(retained)) return;
@@ -1829,7 +1810,6 @@ describe("Find Familiar lifecycle", () => {
         },
         creatureTypeOverride: "fey",
       },
-      initialCombatantOrder: initialCombatantOrder(casterId),
     });
 
     expect(Result.isFailure(admitted)).toBe(true);
@@ -1880,7 +1860,6 @@ describe("Find Familiar lifecycle", () => {
         },
         creatureTypeOverride: "fey",
       },
-      initialCombatantOrder: initialCombatantOrder(casterId),
     });
 
     expect(Result.isFailure(admitted)).toBe(true);
@@ -1938,7 +1917,6 @@ describe("Find Familiar lifecycle", () => {
         },
         creatureTypeOverride: "fey",
       },
-      initialCombatantOrder: initialCombatantOrder(casterId),
     });
 
     expect(Result.isFailure(admitted)).toBe(true);
@@ -1995,7 +1973,6 @@ describe("Find Familiar lifecycle", () => {
         },
         creatureTypeOverride: "celestial",
       },
-      initialCombatantOrder: initialCombatantOrder(casterId),
     });
 
     expect(Result.isSuccess(admitted)).toBe(true);
@@ -2693,7 +2670,6 @@ describe("Find Familiar lifecycle", () => {
           tempHp: Hp(0),
         },
       },
-      initialCombatantOrder: initialCombatantOrder(casterId, otherCombatantId),
     });
 
     expect(Result.isFailure(admitted)).toBe(true);
@@ -5167,7 +5143,6 @@ describe("Find Familiar lifecycle", () => {
         initiative: initiativeScore(11),
         placement: { kind: "unoccupiedSpaceWithinSpellRange" },
       },
-      initialCombatantOrder: initialCombatantOrder(casterId, enemyId),
     });
 
     expect(admitted).toEqual(

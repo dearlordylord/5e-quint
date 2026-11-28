@@ -119,6 +119,7 @@ describe("BattleSubject identity", () => {
     const effectRef = battleEffectExecutionRefForTest("runtime-command-effect");
     const areaId = "runtime-command-area";
     const runtimeCommandExtras = {
+      startTurn: {},
       endTurn: {},
       endConcentration: {},
       startSpellCasting: {

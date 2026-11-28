@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
 import { StatBlockExecutionSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
 import { restoreAuthoredStatBlockExecutionAdmission } from "./index.ts";
 import { restoreStatBlockExecutionAdmission } from "./stat-block-execution.ts";
-import { startBattle } from "./battle-reducer/api-lifecycle.ts";
+import { startBattle } from "./battle-start.ts";
 import {
   battleId,
   admittedStatBlockSource,

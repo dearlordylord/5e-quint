@@ -5,6 +5,7 @@ import type {
 } from "@dnd/battle-runtime";
 import {
   applyInitiativeSwap,
+  battleInitializationIssueMessage,
   battleStateInitIssueMessage,
   finishInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
@@ -334,9 +335,15 @@ export function createMcpSessionStore(input: {
         return invalidBattleStateTransition(battleState.tag, "activeBattle");
       }
       const session = finishInitialInitiativeSetup(battleState.setup);
-      battleState = { tag: "activeBattle", session };
+      if (Result.isFailure(session)) {
+        return Result.fail({
+          tag: "openingTurnStartRejected",
+          message: battleInitializationIssueMessage(session.failure),
+        });
+      }
+      battleState = { tag: "activeBattle", session: session.success };
       actionSelection.clear();
-      return Result.succeed(session);
+      return Result.succeed(session.success);
     },
     getPendingBattleTransaction(): BattlePendingTransaction | null {
       return actionSelection.transaction;

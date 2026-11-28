@@ -780,7 +780,9 @@ export function spellObjectTargetFill(input: {
               disposition: input.ignitionDisposition,
             },
           ]),
-      ...(input.attackerCanSeeObject === undefined
+      ...(input.attackerCanSeeObject === undefined &&
+      input.hole.spellObjectTargetSpatialFactRequest?.requiresAttackerSight !==
+        true
         ? []
         : [
             {
@@ -788,7 +790,7 @@ export function spellObjectTargetFill(input: {
               casterId: input.casterId,
               objectId,
               sourceProcedureRef,
-              attackerCanSeeObject: input.attackerCanSeeObject,
+              attackerCanSeeObject: input.attackerCanSeeObject ?? true,
             },
           ]),
     ],

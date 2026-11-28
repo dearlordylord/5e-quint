@@ -4,7 +4,7 @@
 // attack replays with its recorded fill lowered by the reduction, which the
 // replay keeps (attackRollReduction on the continuation), and a roll the replay
 // asks again (a hit turned into a miss is offered its added dice, ASSUMPTIONS.md
-// A69) is answered with the roll as it was submitted, lowered by that same
+// A70) is answered with the roll as it was submitted, lowered by that same
 // kept reduction. Both sides of that lowering live here.
 
 import { Match } from "effect";

@@ -1,5 +1,5 @@
 import { startBattleWithInitialInitiativeSetup } from "@dnd/battle-runtime";
-import { composeBattleCompanionRoster } from "@dnd/character-battle-runtime";
+import { startBattleWithCompanionRoster } from "@dnd/character-battle-runtime";
 import { Result, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -13,7 +13,7 @@ import { completeBattleStateTransition } from "./battle-state-transition.ts";
 import {
   battleRuntimeIssuePayload,
   battleStartIssuesContent,
-  battleCompanionRosterIssuePayload,
+  battleRosterStartIssuePayload,
   battleRosterIssuePayload,
 } from "./battle-start-failure.ts";
 
@@ -29,8 +29,8 @@ export function startInitialInitiativeSetup(
     ),
     Match.exhaustive,
   );
-  const companionValidation = composeBattleCompanionRoster({
-    session: undefined,
+  const companionValidation = startBattleWithCompanionRoster({
+    battle: undefined,
     owners: combatants.characterSessions.map(
       ({ index, character, session }) => ({
         index,
@@ -57,7 +57,7 @@ export function startInitialInitiativeSetup(
         code: "INITIAL_INITIATIVE_SETUP_COMPANIONS_UNSUPPORTED",
         issues: [
           ...rosterIssues,
-          ...companionIssues.flatMap(battleCompanionRosterIssuePayload),
+          ...companionIssues.flatMap(battleRosterStartIssuePayload),
           ...input.companionAdmissions.map((admission, index) => ({
             kind: "companionAdmissionUnsupported",
             ownerPath: ["companionAdmissions", index],

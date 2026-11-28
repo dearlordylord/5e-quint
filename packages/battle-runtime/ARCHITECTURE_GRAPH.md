@@ -333,7 +333,7 @@ flowchart TD
   rolls, ability checks, saving throws and Death Saving Throws are asked again
   with it after their rerolls, while the test as it stands fails. An attack
   roll that a Reaction turns into a miss is asked again when the attack
-  replays (ASSUMPTIONS.md A69).
+  replays (ASSUMPTIONS.md A70).
 - Fills are caller/session state, not durable `BattleState`. Command Drop uses
   a `heldObjectFacts` fill only when retained Character loadout facts do not
   already establish the target's held objects; resolved `droppedObjects` are

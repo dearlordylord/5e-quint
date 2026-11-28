@@ -2,14 +2,14 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bardic-inspiration-failed-d20-test
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.failed-ability-check-resource-boost
 // The dice added to a D20 Test that stands failed once its rerolls are
-// decided (ASSUMPTIONS.md A67): a Bardic Inspiration die on any D20 Test (an
+// decided (ASSUMPTIONS.md A68): a Bardic Inspiration die on any D20 Test (an
 // ability check, a saving throw, a rolled Death Saving Throw or an attack
 // roll), and a failed ability check resource boost on an ability check. Each
 // source is offered while the test as it stands fails, in the order the
 // roller chooses, and every added die counts before the test is judged. An
 // ability check's added die adds to its total, which the engine compares with
 // the DC; a saving throw's carries the table's ruling; a Death Saving Throw's
-// adds to the d20, and the engine judges it (A68); an attack roll's adds to
+// adds to the d20, and the engine judges it (A69); an attack roll's adds to
 // its total, and the engine judges the hit.
 
 import type { DifficultyClass } from "@dnd/shared/types";
@@ -182,7 +182,7 @@ export function rolledOutcomeAddedDice<T extends BattleD20TestOutcome>(
 /**
  * A rolled Death Saving Throw's added dice, on the roll its rerolls leave.
  * The engine judges it: each die adds to the d20 toward 10, and a 1 or a 20
- * on the d20 decides first (ASSUMPTIONS.md A68).
+ * on the d20 decides first (ASSUMPTIONS.md A69).
  */
 export function deathSavingThrowAddedDice(
   input: D20TestAddedDieContext & {

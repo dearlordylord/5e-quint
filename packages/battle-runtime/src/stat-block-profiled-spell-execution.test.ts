@@ -2,7 +2,7 @@ import { unitId } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import { Result } from "effect";
 import { describe, expect, it } from "vitest";
-import { startBattle } from "./battle-reducer/api-lifecycle.ts";
+import { startBattle } from "./battle-start.ts";
 import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 import { resolveBattleSubject } from "./index.ts";
 import {

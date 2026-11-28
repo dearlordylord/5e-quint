@@ -4,7 +4,7 @@ import {
   type BattleInitializationIssue,
 } from "@dnd/battle-runtime";
 import type {
-  BattleCompanionRosterIssue,
+  BattleRosterStartIssue,
   BattleRosterIssue,
 } from "@dnd/character-battle-runtime";
 import { unitId } from "@dnd/shared/game-facts";
@@ -14,7 +14,7 @@ import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
-  battleCompanionRosterIssuePayload,
+  battleRosterStartIssuePayload,
   battleRosterIssuePayload,
   battleRuntimeIssuePayload,
 } from "./battle-start-failure.ts";
@@ -35,7 +35,7 @@ describe("battle start failure projection", () => {
         ownerIndex: 2,
         firstOwnerIndex: 0,
         ownerCharacterId: characterId("character:duplicate-owner-source"),
-      } satisfies BattleCompanionRosterIssue,
+      } satisfies BattleRosterStartIssue,
       expected: {
         kind: "duplicateCompanionOwnerSource",
         ownerPath: ["initialCombatants", 2],
@@ -51,7 +51,7 @@ describe("battle start failure projection", () => {
         index: 3,
         firstIndex: 1,
         companionCombatantId: combatantId("companion:duplicate-combatant"),
-      } satisfies BattleCompanionRosterIssue,
+      } satisfies BattleRosterStartIssue,
       expected: {
         kind: "duplicateCompanionCombatantId",
         ownerPath: ["companionAdmissions", 3],
@@ -61,7 +61,7 @@ describe("battle start failure projection", () => {
       },
     },
   ])("retains $issue.kind owner paths", ({ issue, expected }) => {
-    expect(battleCompanionRosterIssuePayload(issue)).toEqual([expected]);
+    expect(battleRosterStartIssuePayload(issue)).toEqual([expected]);
   });
 
   test("retains a weapon loadout initialization leaf", () => {

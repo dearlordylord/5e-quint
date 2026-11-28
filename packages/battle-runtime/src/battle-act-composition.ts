@@ -780,6 +780,7 @@ const INTRINSIC_ACTION_LABELS = {
 >;
 
 const INTRINSIC_RUNTIME_COMMAND_LABELS = {
+  startTurn: "Start Turn",
   endTurn: "End Turn",
   endConcentration: "End Concentration",
   startSpellCasting: "Start Casting",

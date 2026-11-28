@@ -2,10 +2,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bardic-inspiration-failed-d20-test
 // Every decision an attack roll takes after its roll: its rerolls
 // (attack-roll-d20-test-rerolls.ts), then the dice added to the roll the
-// rerolls leave while it misses (d20-test-added-dice.ts, ASSUMPTIONS.md A67).
+// rerolls leave while it misses (d20-test-added-dice.ts, ASSUMPTIONS.md A68).
 // The engine judges the hit with the target's Armor Class as it stands, so a
 // roll that a Reaction later turns into a miss is offered the dice when the
-// attack resumes (A69). Each owner of an attack roll goes through here, so the
+// attack resumes (A70). Each owner of an attack roll goes through here, so the
 // two stages can't be taken out of order.
 
 import type {

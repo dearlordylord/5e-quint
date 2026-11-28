@@ -2141,6 +2141,23 @@ export const SteadyAimMechanicsSchema: SteadyAimMechanicsCodec = Schema.Struct(
   steadyAimMechanicsFields,
 );
 
+/** The d20 face every authored D20 Test die minimum sets. */
+export const D20_TEST_DIE_MINIMUM_FACE = 10;
+
+const d20TestDieMinimumMechanicsFields = codecFields({
+  family: Schema.Literal("d20_test_die_minimum"),
+  appliesTo: Schema.Struct({
+    kind: Schema.Literal("ability_check_using_own_proficiency"),
+  }),
+  minimumDieFace: Schema.Literal(D20_TEST_DIE_MINIMUM_FACE),
+  optional: Schema.Literal(true),
+});
+type D20TestDieMinimumMechanicsCodec = Schema.Struct<
+  typeof d20TestDieMinimumMechanicsFields
+>;
+export const D20TestDieMinimumMechanicsSchema: D20TestDieMinimumMechanicsCodec =
+  Schema.Struct(d20TestDieMinimumMechanicsFields);
+
 const potentCantripMechanicsFields = codecFields({
   family: Schema.Literal("potent_cantrip"),
   trigger: Schema.Struct({
@@ -2348,6 +2365,7 @@ const classFeatureMechanicsMembers = codecMembers(
   MarkedCreatureDefensesDisclosureMechanicsSchema,
   AttackRollDefenseChoiceMechanicsSchema,
   SteadyAimMechanicsSchema,
+  D20TestDieMinimumMechanicsSchema,
   PotentCantripMechanicsSchema,
   PreparedSpellListExpansionMechanicsSchema,
   UseCountResourceRecoveryMechanicsSchema,
@@ -2515,6 +2533,7 @@ const rogueClassFeatureMechanicsMembers = codecMembers(
   CunningStrikeMechanicsSchema,
   SupremeSneakMechanicsSchema,
   SteadyAimMechanicsSchema,
+  D20TestDieMinimumMechanicsSchema,
 );
 type RogueClassFeatureMechanicsCodec = Schema.Union<
   typeof rogueClassFeatureMechanicsMembers

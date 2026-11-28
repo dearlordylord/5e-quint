@@ -30,7 +30,7 @@ module unitFeatureFailedSavingThrowRerollCore {
   // the reroll is offered when the save as rolled fails, and the new d20 takes
   // the bonus on top of any bonus the roll already had. A 1 or a 20 on the new
   // d20 decides first, whatever the bonus, and a later reroll of the d20 keeps
-  // the bonus (ASSUMPTIONS.md A68). A failure from damage at 0 Hit Points
+  // the bonus (ASSUMPTIONS.md A69). A failure from damage at 0 Hit Points
   // has no roll, so nothing here offers a reroll of it.
   import unitFeatureD20TestNaturalOneRerollCore.* from "./unit-feature-d20-test-natural-one-reroll-core"
   import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
@@ -208,7 +208,7 @@ module unitFeatureFailedSavingThrowRerollCore {
     }
 
   // A reroll of the d20 by another source (the natural-1 reroll, Heroic
-  // Inspiration) replaces only the d20 and keeps the bonus (ASSUMPTIONS.md A68,
+  // Inspiration) replaces only the d20 and keeps the bonus (ASSUMPTIONS.md A69,
   // A55).
   pure def deathSavingThrowRollAfterD20Reroll(
     roll: DeathSavingThrowRoll,

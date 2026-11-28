@@ -298,6 +298,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
         casterId: wizardId,
         sourceProcedureRef,
         rangeFeet: movementFeet(120),
+        requiresAttackerSight: true,
         requiresExactDistance: true,
         requiresEnemyProximityQualification: true,
       },
@@ -354,6 +355,27 @@ describe("battle runtime: Fire Bolt object targets", () => {
         ],
       }),
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    // RAW: playing-the-game.md, "Unseen Attackers and Targets": the table
+    // must say whether the caster can see the object before the roll.
+    expect(
+      resolveBattleSubject({
+        state: state.state,
+        subject,
+        fills: [
+          {
+            ...objectTargetFillForObject,
+            spatialFacts: objectTargetFillForObject.spatialFacts.filter(
+              (fact) => fact.kind !== "spellObjectTargetSight",
+            ),
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Spell object target must include a matching table-supplied object sight fact.",
+    });
     expect(
       resolveBattleSubject({
         state: state.state,

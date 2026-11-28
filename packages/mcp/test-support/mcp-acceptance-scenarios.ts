@@ -2612,11 +2612,40 @@ export async function verifyLevelTenFighterChampionBattleHandoff(
     characterId,
   );
 
+  // The Champion starts the battle's first turn without Heroic Inspiration,
+  // so Heroic Warrior's offer comes before any other act.
+  const openingActs = await callTool(client, "discover_battle_acts", {});
+  const startTurnAct = battleActByLabel(openingActs, "Start Turn");
+  assert.ok(startTurnAct, "The opening turn must start before other acts");
+  assert.equal(
+    (get(openingActs, "envelope.frontier.acts") as readonly JsonObject[])
+      .length,
+    1,
+  );
+  const offered = await callTool(client, "resolve_battle_act", {
+    subject: startTurnAct.subject,
+  });
+  assert.equal(get(offered, "result.tag"), "needsHoles");
+  assert.equal(
+    get(offered, "envelope.frontier.pendingProcedure.kind"),
+    "turnStart",
+  );
+  const turnStarted = await callTool(client, "fill_battle_hole", {
+    subject: startTurnAct.subject,
+    fill: {
+      kind: "turnStartHeroicInspirationChoice",
+      holeId: resultHole(offered, "turnStartHeroicInspirationChoice").holeId,
+      value: "giveHeroicInspiration",
+    },
+  });
+  assert.equal(get(turnStarted, "result.tag"), "resolved");
+
   const fighterActs = await callTool(client, "discover_battle_acts", {});
   assert.equal(
     get(fighterActs, "envelope.checkpoint.currentActorId"),
     levelTenFighterChampionCombatantId,
   );
+  assert.equal(battleActByLabel(fighterActs, "Start Turn"), undefined);
   assert.ok(
     battleActByLabel(fighterActs, "Attack"),
     "Missing Fighter Attack act",

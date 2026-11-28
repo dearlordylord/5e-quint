@@ -1179,6 +1179,9 @@ export type HuntersPreyMechanics = Schema.Schema.Type<
 export type SteadyAimMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SteadyAimMechanicsSchema
 >;
+export type D20TestDieMinimumMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.D20TestDieMinimumMechanicsSchema
+>;
 export type PotentCantripMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.PotentCantripMechanicsSchema
 >;

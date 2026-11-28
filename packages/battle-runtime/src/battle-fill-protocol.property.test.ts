@@ -1061,7 +1061,7 @@ describe("battle fill protocol boundary owners", () => {
       throw new Error("Expected two spell-object target holes.");
     }
     const target = targetFill(targetHole, skeletonId);
-    const objectBase = objectTargetFill({
+    const object = objectTargetFill({
       hole: objectHole,
       casterId: wizardId,
       rangeFeet: movementFeet(120),
@@ -1069,25 +1069,6 @@ describe("battle fill protocol boundary owners", () => {
       armorClass: armorClass(13),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
     });
-    const objectSpatialFact = objectBase.spatialFacts.find(
-      (fact) => fact.kind === "spellObjectTarget",
-    );
-    if (objectSpatialFact === undefined) {
-      throw new Error("Expected object-target sight fact.");
-    }
-    const object = {
-      ...objectBase,
-      spatialFacts: [
-        ...objectBase.spatialFacts,
-        {
-          kind: "spellObjectTargetSight" as const,
-          casterId: wizardId,
-          objectId: objectBase.value,
-          sourceProcedureRef: objectSpatialFact.sourceProcedureRef,
-          attackerCanSeeObject: true,
-        },
-      ],
-    };
     const firstRoll = requireHole(
       resolveBattleSubject({
         state: session.state,
