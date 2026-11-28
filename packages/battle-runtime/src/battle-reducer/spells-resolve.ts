@@ -2784,6 +2784,14 @@ function resolveSpellActInternal(
         attackRolledStateBeforeHitContinuations,
         {
           trigger: "attackHit",
+          attackRollHoleId: ATTACK_ROLL_HOLE_ID,
+          attackRollDependentFillHoleIds: input.fills
+            .filter(
+              (fill) =>
+                fill.kind === "rolledDice" ||
+                fill.kind === "concentrationSavingThrow",
+            )
+            .map((fill) => fill.holeId),
           attackerId: subject.actorId,
           targetId: target.combatantId,
           attackRoll: effectiveAttackRoll,

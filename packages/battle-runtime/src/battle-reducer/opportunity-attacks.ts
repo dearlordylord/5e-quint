@@ -886,6 +886,8 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
       attackRolledState,
       {
         trigger: "attackHit",
+        attackRollHoleId: ATTACK_ROLL_HOLE_ID,
+        attackRollDependentFillHoleIds: [],
         attackerId: subject.reactorId,
         targetId: subject.targetId,
         attackRoll: effectiveAttackRoll,

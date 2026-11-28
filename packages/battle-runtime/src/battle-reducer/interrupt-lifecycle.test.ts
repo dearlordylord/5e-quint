@@ -1,6 +1,7 @@
 import { battleResolutionHolesForTest } from "../battle-runtime.test-support.ts";
 import { describe, expect, test, vi } from "vitest";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import type {
   BattleInterruptCheckpoint,
@@ -147,6 +148,8 @@ describe("interrupt lifecycle", () => {
     };
     const frame: BattleInterruptCheckpoint = {
       trigger: "attackHit",
+      attackRollHoleId: holeId("synthetic-interrupted-attack"),
+      attackRollDependentFillHoleIds: [],
       attackerId: fighterId,
       targetId: secondWizardId,
       attackRoll: {

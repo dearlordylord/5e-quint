@@ -8,10 +8,11 @@ import {
   sameBattleSubject,
 } from "../battle-subjects.ts";
 import { interruptChoiceResponderId } from "../battle-state-execution.ts";
-import { attackRollLoweredBy } from "./reaction-lowered-attack-roll.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleAttackDamageEvent,
+  BattleAttackRollReduction,
+  BattleAttackHitContinuation,
   BattleFill,
   BattleHandledInterruptOccurrence,
   BattleInterruptCheckpoint,
@@ -996,10 +997,11 @@ function interruptCheckpointAfterModifier(
         ...frame.attackRoll,
         total: frame.attackRoll.total - reduction,
       },
-      continuation:
-        frame.continuation.kind === "replay"
-          ? reactionLoweredReplay(frame.continuation, reduction)
-          : frame.continuation,
+      continuation: reactionLoweredContinuation(
+        frame.continuation,
+        { holeId: frame.attackRollHoleId, amount: reduction },
+        frame.attackRollDependentFillHoleIds,
+      ),
     };
     copyInterruptCheckpointIdentity(frame, modifiedFrame);
     return modifiedFrame;
@@ -1058,43 +1060,37 @@ function interruptCheckpointAfterModifier(
   return frame;
 }
 
-/**
- * The interrupted attack's replay after a Reaction lowered its roll: its fills
- * lowered, and the reduction kept with them so that a roll the replay asks
- * again is lowered by the same amount.
- */
-function reactionLoweredReplay(
-  continuation: Extract<
-    BattleInterruptedProcedure,
-    { readonly kind: "replay" }
-  >,
-  reduction: number,
-): Extract<BattleInterruptedProcedure, { readonly kind: "replay" }> {
-  return {
-    ...continuation,
-    fills: reactionModifiedAttackRollFills(continuation.fills, reduction),
-    attackRollReduction: (continuation.attackRollReduction ?? 0) + reduction,
-  };
-}
-
-/**
- * The fills an interrupted attack replays with after a Reaction lowered its
- * roll: the attack roll lowered by the reduction, without the damage and
- * Concentration fills the lowered roll no longer decides.
- */
-function reactionModifiedAttackRollFills(
-  fills: readonly BattleFill[],
-  reduction: number,
-): readonly BattleFill[] {
-  return fills.flatMap<BattleFill>((fill) => {
-    if (fill.kind === "attackRoll") {
-      return [{ ...fill, value: attackRollLoweredBy(fill.value, reduction) }];
-    }
-    return fill.kind === "rolledDice" ||
-      fill.kind === "concentrationSavingThrow"
-      ? []
-      : [fill];
+/** Retain the reduction as subject-owned evidence; accepted raw rolls do not change. */
+function reactionLoweredContinuation(
+  continuation: BattleAttackHitContinuation,
+  reduction: BattleAttackRollReduction,
+  dependentFillHoleIds: readonly BattleFill["holeId"][],
+): BattleAttackHitContinuation {
+  const withReduction = <
+    Continuation extends Exclude<
+      BattleAttackHitContinuation,
+      { readonly kind: "resolved" }
+    >,
+  >(
+    retained: Continuation,
+  ): Continuation => ({
+    ...retained,
+    fills: retained.fills.filter(
+      (fill) => !dependentFillHoleIds.includes(fill.holeId),
+    ),
+    acceptedAttackRollReductions: [
+      ...(retained.acceptedAttackRollReductions ?? []),
+      reduction,
+    ],
   });
+  return Match.value(continuation).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      replay: withReduction,
+      weaponMasteryCleave: withReduction,
+      huntersPreyHordeBreaker: withReduction,
+      resolved: (retained) => retained,
+    }),
+  );
 }
 
 type AdmittedInterruptChoice =

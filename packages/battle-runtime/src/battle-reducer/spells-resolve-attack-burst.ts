@@ -630,6 +630,14 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       attackResolvedState,
       {
         trigger: "attackHit",
+        attackRollHoleId: ATTACK_ROLL_HOLE_ID,
+        attackRollDependentFillHoleIds: input.input.fills
+          .filter(
+            (fill) =>
+              fill.kind === "rolledDice" ||
+              fill.kind === "concentrationSavingThrow",
+          )
+          .map((fill) => fill.holeId),
         attackerId: input.actorId,
         targetId: target.combatantId,
         attackRoll: effectiveAttackRoll,
