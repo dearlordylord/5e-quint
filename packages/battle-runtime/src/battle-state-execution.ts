@@ -5994,14 +5994,32 @@ export type BattleD20TestNaturalOneRerollDieDecision =
   >;
 export type BattleHeroicInspirationDieRerollDecision =
   BattleD20TestDieRerollDecision<typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND>;
+/**
+ * A failed saving throw reroll's decision on a Death Saving Throw's d20: the
+ * engine adds the reroll's bonus to the new d20 and judges the result.
+ */
+export type BattleFailedSavingThrowDieRerollDecision =
+  BattleD20TestDieRerollDecision<typeof FAILED_SAVING_THROW_REROLL_EFFECT_KIND>;
 /** One reroll source's decision on a Death Saving Throw's d20. */
 export type BattleDeathSavingThrowD20TestRerollDecision =
   | BattleD20TestNaturalOneRerollDieDecision
-  | BattleHeroicInspirationDieRerollDecision;
+  | BattleHeroicInspirationDieRerollDecision
+  | BattleFailedSavingThrowDieRerollDecision;
 /** A Death Saving Throw's D20 Test reroll decisions in the order the roller made them. */
 export type BattleDeathSavingThrowD20TestRerollDecisions = readonly [
   BattleDeathSavingThrowD20TestRerollDecision,
   ...BattleDeathSavingThrowD20TestRerollDecision[],
+];
+/**
+ * A source's decision on a die added to a Death Saving Throw: the engine adds
+ * the number rolled to the d20 and judges the result (ASSUMPTIONS.md A69).
+ */
+export type BattleDeathSavingThrowAddedDieDecision =
+  BattleD20TestAddedDieDecision<typeof BARDIC_INSPIRATION_DIE_EFFECT_KIND>;
+/** A Death Saving Throw's added-die decisions in the order the roller made them. */
+export type BattleDeathSavingThrowAddedDieDecisions = readonly [
+  BattleDeathSavingThrowAddedDieDecision,
+  ...BattleDeathSavingThrowAddedDieDecision[],
 ];
 export type BattleSpellDamageRerollOption = {
   readonly effectKind: "damage_dice_reroll";
@@ -7201,6 +7219,10 @@ export type BattleDeathSavingThrowHole = {
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
   ];
+  readonly failedSavingThrowRerolls?: readonly [
+    BattleFailedSavingThrowRerollOption,
+  ];
+  readonly bardicInspirationDice?: readonly [BattleBardicInspirationDieOption];
 };
 export type BattleStatBlockRechargeRollHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -8109,6 +8131,7 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: D20Roll;
       readonly d20TestRerolls?: BattleDeathSavingThrowD20TestRerollDecisions;
+      readonly d20TestAddedDice?: BattleDeathSavingThrowAddedDieDecisions;
     }
   | {
       readonly kind: "statBlockRechargeRoll";

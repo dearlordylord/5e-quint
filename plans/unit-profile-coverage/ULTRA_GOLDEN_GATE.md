@@ -165,9 +165,10 @@ Selected-identity replay is Unit identity wiring evidence. This audit keeps it s
 | level-1-6 | 174 | 174/174 | 0 |
 | level-1-7 | 179 | 179/179 | 0 |
 | level-1-8 | 180 | 180/180 | 0 |
-| level-1-9 | 187 | 187/187 | 0 |
-| level-1-10 | 192 | 192/192 | 0 |
+| level-1-9 | 188 | 187/188 | 1 |
+| level-1-10 | 193 | 192/193 | 1 |
 
 | Scope | Unit | Kind | Evidence task | Evidence owner | Parity witness join | Parity witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |
+| level-1-9 | `fighter_indomitable` | class_feature | `L19D-04-FIGHTER-INDOMITABLE` | `packages/character-battle-runtime/src/fighter-indomitable-sdk-handoff.test.ts` | missing-unit-profile-join | _none_ | not-applicable | _none_ | _none_ | `unit-feature.failed-saving-throw-reroll` |
+| level-1-10 | `fighter_indomitable` | class_feature | `L19D-04-FIGHTER-INDOMITABLE` | `packages/character-battle-runtime/src/fighter-indomitable-sdk-handoff.test.ts` | missing-unit-profile-join | _none_ | not-applicable | _none_ | _none_ | `unit-feature.failed-saving-throw-reroll` |

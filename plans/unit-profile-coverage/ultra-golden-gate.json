@@ -2967,39 +2967,93 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 187,
-            "numerator": 187
+            "denominator": 188,
+            "numerator": 188
           },
           "joinedEvidenceRows": {
-            "denominator": 187,
+            "denominator": 188,
             "numerator": 187
           },
           "missingJoinRows": {
-            "denominator": 187,
-            "numerator": 0
+            "denominator": 188,
+            "numerator": 1
           }
         },
-        "rowCount": 0,
-        "rows": [],
+        "rowCount": 1,
+        "rows": [
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/character-battle-runtime/src/fighter-indomitable-sdk-handoff.test.ts",
+              "tag": "selected-identity-replay",
+              "taskId": "L19D-04-FIGHTER-INDOMITABLE"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [],
+              "requiredFlowIds": [],
+              "status": "not-applicable"
+            },
+            "parityWitnessJoin": {
+              "joinedRows": [],
+              "status": "missing-unit-profile-join",
+              "unitProfileJoinRowCount": 0,
+              "unitProfileWitnessOwners": []
+            },
+            "profileIds": [
+              "unit-feature.failed-saving-throw-reroll"
+            ],
+            "sourceRecordPath": "packages/surface/content/fighter_indomitable.json",
+            "unitId": "fighter_indomitable"
+          }
+        ],
         "scopeId": "level-1-9"
       },
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 192,
-            "numerator": 192
+            "denominator": 193,
+            "numerator": 193
           },
           "joinedEvidenceRows": {
-            "denominator": 192,
+            "denominator": 193,
             "numerator": 192
           },
           "missingJoinRows": {
-            "denominator": 192,
-            "numerator": 0
+            "denominator": 193,
+            "numerator": 1
           }
         },
-        "rowCount": 0,
-        "rows": [],
+        "rowCount": 1,
+        "rows": [
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/character-battle-runtime/src/fighter-indomitable-sdk-handoff.test.ts",
+              "tag": "selected-identity-replay",
+              "taskId": "L19D-04-FIGHTER-INDOMITABLE"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [],
+              "requiredFlowIds": [],
+              "status": "not-applicable"
+            },
+            "parityWitnessJoin": {
+              "joinedRows": [],
+              "status": "missing-unit-profile-join",
+              "unitProfileJoinRowCount": 0,
+              "unitProfileWitnessOwners": []
+            },
+            "profileIds": [
+              "unit-feature.failed-saving-throw-reroll"
+            ],
+            "sourceRecordPath": "packages/surface/content/fighter_indomitable.json",
+            "unitId": "fighter_indomitable"
+          }
+        ],
         "scopeId": "level-1-10"
       }
     ]

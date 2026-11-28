@@ -84,7 +84,11 @@ module zeroHitPointLifecycleTests {
       unconscious: true,
     }
     val lifecycle = Dying({ successes: 2, failures: 1 })
-    val result = resolveStartTurnDeathSavingThrow(vitals, lifecycle, 10)
+    val result = resolveStartTurnDeathSavingThrow(
+      vitals,
+      lifecycle,
+      unmodifiedDeathSavingThrowRoll(10),
+    )
     all {
       assert(result.deathSavingThrows == Stable),
       assert(legalPlayerCharacterDeathSavingThrowState(result.vitals, result.deathSavingThrows)),
@@ -100,13 +104,50 @@ module zeroHitPointLifecycleTests {
       dead: false,
       unconscious: true,
     }
-    val result = resolveStartTurnDeathSavingThrow(vitals, resetDeathSavingThrowLifecycle, 20)
+    val result = resolveStartTurnDeathSavingThrow(
+      vitals,
+      resetDeathSavingThrowLifecycle,
+      unmodifiedDeathSavingThrowRoll(20),
+    )
     all {
       assert(result.vitals.hitPoints == 1),
       assert(not(result.vitals.unconscious)),
       assert(result.deathSavingThrows == resetDeathSavingThrowLifecycle),
       assert(result.deathSavingThrowOutcome == DeathSavingThrowRegainedHitPoint),
       assert(legalPlayerCharacterDeathSavingThrowState(result.vitals, result.deathSavingThrows)),
+    }
+  }
+
+  run test_a_bonus_counts_toward_10_but_a_1_or_a_20_decides_first = {
+    val vitals = {
+      kind: PlayerCharacter,
+      hitPoints: 0,
+      hitPointMaximum: 12,
+      temporaryHitPoints: 0,
+      dead: false,
+      unconscious: true,
+    }
+    val lifecycle = Dying({ successes: 1, failures: 0 })
+    val withBonus = resolveStartTurnDeathSavingThrow(
+      vitals,
+      lifecycle,
+      { naturalD20: 2, bonus: 9 },
+    )
+    val shortOfTen = resolveStartTurnDeathSavingThrow(
+      vitals,
+      lifecycle,
+      { naturalD20: 2, bonus: 7 },
+    )
+    val oneWithBonus = resolveStartTurnDeathSavingThrow(
+      vitals,
+      lifecycle,
+      { naturalD20: 1, bonus: 9 },
+    )
+    all {
+      assert(withBonus.deathSavingThrows == Dying({ successes: 2, failures: 0 })),
+      assert(shortOfTen.deathSavingThrows == Dying({ successes: 1, failures: 1 })),
+      assert(oneWithBonus.deathSavingThrows == Dying({ successes: 1, failures: 2 })),
+      assert(not(deathSavingThrowRollFails({ naturalD20: 20, bonus: 0 }))),
     }
   }
 

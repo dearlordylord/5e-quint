@@ -245,6 +245,10 @@ module battleRuntimeHitPoints {
   pure def applyStartTurnDeathSave(target: Combatant, deathSaveRoll: int): Combatant =
     combatantWithZeroHitPointLifecycleResult(
       target,
-      resolveStartTurnDeathSavingThrow(combatantVitals(target), combatantDeathSavingThrows(target), deathSaveRoll)
+      resolveStartTurnDeathSavingThrow(
+        combatantVitals(target),
+        combatantDeathSavingThrows(target),
+        unmodifiedDeathSavingThrowRoll(deathSaveRoll),
+      )
     )
 }

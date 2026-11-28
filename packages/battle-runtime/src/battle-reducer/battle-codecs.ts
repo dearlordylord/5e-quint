@@ -3831,7 +3831,7 @@ const BattleHolePayloadMembers = [
       combatantId: CombatantId,
       rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
     },
-    D20TestRerollHoleOptionsFields,
+    SavingThrowAfterRollHoleOptionsFields,
   ),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -4258,6 +4258,9 @@ const BattleDeathSavingThrowD20TestRerollDecisionsSchema = Schema.NonEmptyArray(
   Schema.Union([
     battleD20TestDieRerollDecisionSchema("d20_test_natural_one_reroll"),
     battleD20TestDieRerollDecisionSchema(HEROIC_INSPIRATION_REROLL_EFFECT_KIND),
+    battleD20TestDieRerollDecisionSchema(
+      FAILED_SAVING_THROW_REROLL_EFFECT_KIND,
+    ),
   ]),
 );
 
@@ -4301,6 +4304,10 @@ const BattleAbilityCheckAddedDieDecisionsSchema = Schema.NonEmptyArray(
       FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
     ),
   ]),
+);
+
+const BattleDeathSavingThrowAddedDieDecisionsSchema = Schema.NonEmptyArray(
+  battleD20TestAddedDieDecisionSchema(BARDIC_INSPIRATION_DIE_EFFECT_KIND),
 );
 
 const BattleRolledOutcomeAddedDieDecisionsSchema = Schema.NonEmptyArray(
@@ -5337,6 +5344,9 @@ type BattleFillEncoded =
       readonly value: number;
       readonly d20TestRerolls?: Schema.Codec.Encoded<
         typeof BattleDeathSavingThrowD20TestRerollDecisionsSchema
+      >;
+      readonly d20TestAddedDice?: Schema.Codec.Encoded<
+        typeof BattleDeathSavingThrowAddedDieDecisionsSchema
       >;
     }
   | {
@@ -6505,6 +6515,9 @@ export const BattleFillSchema: Schema.Codec<
       value: D20Roll,
       d20TestRerolls: Schema.optionalKey(
         BattleDeathSavingThrowD20TestRerollDecisionsSchema,
+      ),
+      d20TestAddedDice: Schema.optionalKey(
+        BattleDeathSavingThrowAddedDieDecisionsSchema,
       ),
     }),
     Schema.Struct({
