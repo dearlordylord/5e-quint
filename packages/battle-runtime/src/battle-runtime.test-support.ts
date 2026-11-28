@@ -1,19 +1,24 @@
 import type {
+  BattleActiveEffect,
   BattleInputFrontier,
   BattleOrdinaryHoleFrontier,
 } from "./battle-state-execution.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 
-export {
+import {
   battleStateWithAllocatedEffectForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-effect-occurrence-allocation.test-support.ts";
+export {
+  battleStateWithAllocatedEffectForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
+};
 
 export const SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS = 10_000;
 
 export type MembersOf<Owner, Members extends Owner> = Members;
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.grappler unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-independent-attack-sequence spell.invocation-condition-save spell.invocation-damage-save-or-attack spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.grappler unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-independent-attack-sequence spell.invocation-condition-save spell.invocation-damage-save-or-attack spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV75B sorcerer_innate_sorcery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84C spare_the_dying
@@ -307,7 +312,6 @@ import {
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   parseSupportedUnitFeatureProfile,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
-  resolveBardicInspirationFailedAttackRoll,
   resolveBattleConcentrationDamage,
   resolveBattleInterrupt,
   resolveBattleSubject as resolveBattleSubjectRuntime,
@@ -1224,19 +1228,6 @@ export function requireResolved(
     throw new Error(
       `Expected resolved battle result, got ${result.tag}${detail}.`,
     );
-  }
-
-  return result;
-}
-
-export function requireBardicInspirationAttackRollResolved(
-  result: ReturnType<typeof resolveBardicInspirationFailedAttackRoll>,
-): Extract<
-  ReturnType<typeof resolveBardicInspirationFailedAttackRoll>,
-  { readonly tag: "resolved" }
-> {
-  if (result.tag !== "resolved") {
-    throw new Error(`Expected resolved battle result, got ${result.tag}.`);
   }
 
   return result;
@@ -3420,6 +3411,10 @@ export function attackRollFill(
       BattleFill,
       { readonly kind: "attackRoll" }
     >["value"]["d20TestRerolls"];
+    readonly d20TestAddedDice?: Extract<
+      BattleFill,
+      { readonly kind: "attackRoll" }
+    >["value"]["d20TestAddedDice"];
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   if (hole.kind !== "attackRoll") {
@@ -3460,6 +3455,9 @@ export function attackRollFill(
       ...(value.d20TestRerolls === undefined
         ? {}
         : { d20TestRerolls: value.d20TestRerolls }),
+      ...(value.d20TestAddedDice === undefined
+        ? {}
+        : { d20TestAddedDice: value.d20TestAddedDice }),
     },
   };
 }
@@ -3488,6 +3486,10 @@ export function deathSavingThrowFill(
           BattleFill,
           { readonly kind: "deathSavingThrow" }
         >["d20TestRerolls"];
+        readonly d20TestAddedDice?: Extract<
+          BattleFill,
+          { readonly kind: "deathSavingThrow" }
+        >["d20TestAddedDice"];
       },
 ): BattleFill {
   if (hole.kind !== "deathSavingThrow") {
@@ -3501,6 +3503,9 @@ export function deathSavingThrowFill(
     ...(value.d20TestRerolls === undefined
       ? {}
       : { d20TestRerolls: value.d20TestRerolls }),
+    ...(value.d20TestAddedDice === undefined
+      ? {}
+      : { d20TestAddedDice: value.d20TestAddedDice }),
   };
 }
 
@@ -5735,6 +5740,33 @@ export function grantBardicInspirationToGoblin(): BattleState {
   ).state;
 }
 
+/** The state with a d6 Bardic Inspiration die, granted by a Bard, held by the creature. */
+export function withBardicInspirationDie(
+  state: BattleState,
+  holderId: CombatantId,
+): BattleState {
+  const die = grantBardicInspirationToGoblin()
+    .combatants.get(goblinId)
+    ?.activeEffects.find(
+      (
+        effect,
+      ): effect is Extract<
+        BattleActiveEffect,
+        { readonly kind: "bardicInspirationDie" }
+      > => effect.kind === "bardicInspirationDie",
+    );
+  const holder = state.combatants.get(holderId);
+  if (die === undefined || holder === undefined) {
+    throw new Error("Expected a granted die and its holder.");
+  }
+  const { effectRef: _foreignOccurrence, ...effect } = die;
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: holderId,
+    effect,
+  });
+}
+
 export function combatantHasBardicInspirationDie(
   state: BattleState,
   actorId: CombatantId,
@@ -6991,7 +7023,6 @@ export {
   pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
   removeCondition,
   requiredAbilityCheckRollMode,
-  resolveBardicInspirationFailedAttackRoll,
   resolveBattleConcentrationDamage,
   resolveBattleInterrupt,
   resolveBattleSubject,

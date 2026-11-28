@@ -1,18 +1,21 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE
-// Every decision a D20 Test other than an attack roll takes after its roll:
-// its rerolls (d20-test-outcome-rerolls.ts), then the dice added to the roll
-// the rerolls leave (d20-test-added-dice.ts, ASSUMPTIONS.md A68). A roller
-// with a reroll source to decide on is asked for that first; the hole asks
-// for the added dice only once every reroll is decided. Each owner that
-// checks a saving throw or an ability check before it resolves goes through
-// here, so the two stages can't be taken out of order.
+// Every decision a D20 Test takes after its roll: its rerolls
+// (d20-test-outcome-rerolls.ts), then the dice added to the roll the rerolls
+// leave (d20-test-added-dice.ts, ASSUMPTIONS.md A68). A roller with a reroll
+// source to decide on is asked for that first; the hole asks for the added
+// dice only once every reroll is decided. Each owner that checks a saving
+// throw, a Death Saving Throw or an ability check before it resolves goes
+// through here, and attack-roll-after-roll-decisions.ts runs every attack roll
+// through afterRollDecisions, so the two stages can't be taken out of order.
 
 import type { D20TestDieMinimumFace } from "./d20-test-die-minimum.ts";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { DifficultyClass } from "@dnd/shared/types";
+import type { DeathSavingThrowRoll } from "@dnd/shared-algebras/death-saves-algebra";
 
 import type {
   BattleAbilityCheckAddedDieHoleOptions,
+  BattleFill,
   BattleD20TestOutcome,
   BattleD20TestRerollHoleOptions,
   BattleD20TestRollKey,
@@ -23,19 +26,21 @@ import {
   abilityCheckAddedDice,
   abilityCheckHoleWithAddedDieOptions,
   battleStateAfterAbilityCheckAddedDieUses,
-  battleStateAfterSavingThrowAddedDieUses,
+  battleStateAfterD20TestAddedDieUses,
+  deathSavingThrowAddedDice,
   rolledOutcomeAddedDice,
-  savingThrowHoleWithAddedDieOptions,
+  d20TestHoleWithAddedDieOptions,
   type AbilityCheckAddedDieOptions,
   type AbilityCheckAddedDieUses,
   type D20TestAddedDice,
-  type SavingThrowAddedDieOptions,
-  type SavingThrowAddedDieUses,
+  type D20TestAddedDieOptions,
+  type D20TestAddedDieUses,
 } from "./d20-test-added-dice.ts";
 import {
   battleStateAfterD20TestRerollUses,
   battleStateAfterSavingThrowRerollUses,
   d20TestAbilityCheckRerolls,
+  d20TestDeathSavingThrowRerolls,
   d20TestHoleWithRerollOptions,
   d20TestOutcomeRerolls,
   savingThrowHoleWithRerollOptions,
@@ -53,7 +58,7 @@ export type SavingThrowAfterRollAsk =
   | { readonly stage: "rerolls"; readonly options: SavingThrowRerollOptions }
   | {
       readonly stage: "addedDice";
-      readonly options: SavingThrowAddedDieOptions;
+      readonly options: D20TestAddedDieOptions;
     };
 
 /** What an ability check hole is asked again with: its rerolls, or once they are decided, its added dice. */
@@ -70,7 +75,7 @@ export type AbilityCheckAfterRollAsk =
 /** What an admitted saving throw's after-roll decisions cost its roller. */
 export type SavingThrowAfterRollUses = {
   readonly rerolls: SavingThrowRerollUses;
-  readonly addedDice: SavingThrowAddedDieUses;
+  readonly addedDice: D20TestAddedDieUses;
 };
 
 /** What an admitted ability check's after-roll decisions cost its roller. */
@@ -101,7 +106,11 @@ type D20TestAfterRollContext = {
   readonly roll: BattleD20TestRollKey;
 };
 
-function afterRollDecisions<
+/**
+ * One roll's after-roll decisions: its rerolls, then once they are decided,
+ * the dice added to the roll they leave.
+ */
+export function afterRollDecisions<
   Roll,
   RerollOptions extends D20TestOutcomeRerollOptions,
   RerollUses extends D20TestRerollUses,
@@ -158,6 +167,31 @@ export function savingThrowAfterRollDecisions<T extends BattleD20TestOutcome>(
   );
 }
 
+/**
+ * A rolled Death Saving Throw after its after-roll decisions: the roll that
+ * stands, which the engine judges.
+ */
+export function deathSavingThrowAfterRollDecisions(
+  input: D20TestAfterRollContext & {
+    readonly fill: Extract<BattleFill, { readonly kind: "deathSavingThrow" }>;
+  },
+): D20TestAfterRoll<
+  DeathSavingThrowRoll,
+  SavingThrowAfterRollAsk,
+  SavingThrowAfterRollUses
+> {
+  return afterRollDecisions(
+    d20TestDeathSavingThrowRerolls(input),
+    input.fill.d20TestAddedDice !== undefined,
+    (deathSavingThrowRoll) =>
+      deathSavingThrowAddedDice({
+        ...input,
+        deathSavingThrowRoll,
+        decisions: input.fill.d20TestAddedDice ?? [],
+      }),
+  );
+}
+
 /** An ability check's value after its after-roll decisions: the total that stands. */
 export function abilityCheckAfterRollDecisions(
   input: D20TestAfterRollContext & {
@@ -186,7 +220,7 @@ export function battleStateAfterSavingThrowAfterRollUses(
 ): BattleState {
   return uses.reduce(
     (current, use) =>
-      battleStateAfterSavingThrowAddedDieUses(
+      battleStateAfterD20TestAddedDieUses(
         battleStateAfterSavingThrowRerollUses(current, [use.rerolls]),
         [use.addedDice],
       ),
@@ -215,7 +249,7 @@ export function savingThrowHoleAskedAfterRoll<
 >(hole: T, ask: SavingThrowAfterRollAsk): T {
   return ask.stage === "rerolls"
     ? savingThrowHoleWithRerollOptions(hole, ask.options)
-    : savingThrowHoleWithAddedDieOptions(hole, ask.options);
+    : d20TestHoleWithAddedDieOptions(hole, ask.options);
 }
 
 /** The ability check hole asked again with what its roller has to decide next. */

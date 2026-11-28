@@ -3,6 +3,8 @@
 
 module d20TestFailedTestAddedDiceCoreExamples {
   import d20TestFailedTestAddedDiceCore.* from "./d20-test-failed-test-added-dice-core"
+  import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
+  import attackRollDamageDiceCore.* from "./attack-roll-damage-dice-core"
 
   // A Fighter's Stealth check of 13 against DC 15, holding a d8 Bardic
   // Inspiration die and with one use of Second Wind left.
@@ -231,5 +233,172 @@ module d20TestFailedTestAddedDiceCoreExamples {
         decisions: [declined(BardicInspirationDie)],
       }).invalid),
     }
+  }
+
+  // A failed Death Saving Throw of 6 by a creature holding a d6 Bardic
+  // Inspiration die.
+  pure val failedDeathSave: AddedDiceFacts = {
+    ...failedSave,
+    test: RolledDeathSavingThrow(unmodifiedDeathSavingThrowRoll(6)),
+  }
+
+  run test_failed_death_save_offers_only_the_bardic_die = {
+    val result = resolveAddedDice(failedDeathSave)
+    all {
+      assert(result.bardicInspirationOffered),
+      assert(not(result.resourceBoostOffered)),
+      assert(not(result.succeeded)),
+    }
+  }
+
+  run test_the_die_counts_toward_10_on_a_death_save = {
+    val result = resolveAddedDice({
+      ...failedDeathSave,
+      decisions: [rolled(BardicInspirationDie, 4)],
+    })
+    all {
+      assert(not(result.invalid)),
+      assert(result.succeeded),
+      assert(result.test == RolledDeathSavingThrow({ naturalD20: 6, bonus: 4 })),
+      assert(result.bardicInspirationDieExpended),
+    }
+  }
+
+  run test_a_die_short_of_10_leaves_the_death_save_failed = {
+    val result = resolveAddedDice({
+      ...failedDeathSave,
+      decisions: [rolled(BardicInspirationDie, 3)],
+    })
+    all {
+      assert(not(result.invalid)),
+      assert(not(result.succeeded)),
+      assert(result.bardicInspirationDieExpended),
+    }
+  }
+
+  run test_a_1_on_the_d20_still_fails_whatever_the_die_adds = {
+    val result = resolveAddedDice({
+      ...failedDeathSave,
+      test: RolledDeathSavingThrow(unmodifiedDeathSavingThrowRoll(1)),
+      decisions: [rolled(BardicInspirationDie, 6)],
+    })
+    all {
+      assert(not(result.invalid)),
+      assert(not(result.succeeded)),
+      assert(result.bardicInspirationDieExpended),
+    }
+  }
+
+  run test_a_successful_death_save_refuses_the_die = {
+    val result = resolveAddedDice({
+      ...failedDeathSave,
+      test: RolledDeathSavingThrow(unmodifiedDeathSavingThrowRoll(12)),
+      decisions: [declined(BardicInspirationDie)],
+    })
+    all {
+      assert(result.invalid),
+      assert(not(result.bardicInspirationOffered)),
+      assert(not(result.bardicInspirationDieExpended)),
+    }
+  }
+
+  run test_the_resource_boost_is_refused_on_a_death_save = {
+    val result = resolveAddedDice({
+      ...failedDeathSave,
+      decisions: [rolled(FailedAbilityCheckResourceBoost, 5)],
+    })
+    assert(result.invalid)
+  }
+
+  // An attack roll of 14 (a 10 on the d20) against Armor Class 15, by an
+  // attacker holding a d6 Bardic Inspiration die.
+  pure def missedAttack(naturalD20: int, total: int): AddedDiceFacts = {
+    ...failedSave,
+    test: RolledAttackRoll({
+      naturalD20: naturalD20,
+      total: total,
+      armorClass: 15,
+      criticalThreshold: 20,
+    }),
+  }
+
+  run test_a_missed_attack_roll_offers_only_the_bardic_die = {
+    val result = resolveAddedDice(missedAttack(10, 14))
+    all {
+      assert(result.bardicInspirationOffered),
+      assert(not(result.resourceBoostOffered)),
+      assert(not(result.succeeded)),
+    }
+  }
+
+  run test_the_die_can_turn_the_miss_into_a_hit = {
+    val result = resolveAddedDice({
+      ...missedAttack(10, 14),
+      decisions: [rolled(BardicInspirationDie, 2)],
+    })
+    all {
+      assert(not(result.invalid)),
+      assert(result.succeeded),
+      assert(result.test == missedAttack(10, 16).test),
+      assert(result.bardicInspirationDieExpended),
+    }
+  }
+
+  run test_a_die_that_falls_short_is_expended_and_the_attack_misses = {
+    val result = resolveAddedDice({
+      ...missedAttack(6, 10),
+      decisions: [rolled(BardicInspirationDie, 3)],
+    })
+    all {
+      assert(not(result.invalid)),
+      assert(not(result.succeeded)),
+      assert(result.bardicInspirationDieExpended),
+    }
+  }
+
+  run test_a_1_on_the_d20_still_misses_whatever_the_die_adds = {
+    val result = resolveAddedDice({
+      ...missedAttack(1, 15),
+      decisions: [rolled(BardicInspirationDie, 6)],
+    })
+    all {
+      assert(not(result.invalid)),
+      assert(not(result.succeeded)),
+      assert(result.bardicInspirationDieExpended),
+    }
+  }
+
+  run test_the_die_does_not_make_a_critical_hit = {
+    val result = resolveAddedDice({
+      ...missedAttack(13, 14),
+      decisions: [rolled(BardicInspirationDie, 6)],
+    })
+    match result.test {
+      | RolledAttackRoll(roll) => all {
+          assert(result.succeeded),
+          assert(not(attackRollOutcomeIsCriticalHit(resolveAttackRoll(roll)))),
+        }
+      | _ => assert(false)
+    }
+  }
+
+  run test_a_hit_refuses_the_die = {
+    val result = resolveAddedDice({
+      ...missedAttack(15, 20),
+      decisions: [declined(BardicInspirationDie)],
+    })
+    all {
+      assert(result.invalid),
+      assert(not(result.bardicInspirationOffered)),
+      assert(not(result.bardicInspirationDieExpended)),
+    }
+  }
+
+  run test_the_resource_boost_is_refused_on_an_attack_roll = {
+    val result = resolveAddedDice({
+      ...missedAttack(10, 14),
+      decisions: [rolled(FailedAbilityCheckResourceBoost, 5)],
+    })
+    assert(result.invalid)
   }
 }

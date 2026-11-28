@@ -1,3 +1,4 @@
+import { fromNullishOr } from "effect/Array";
 import { Result } from "effect";
 import { armorClassBehindCover } from "@dnd/shared-algebras/cover-algebra";
 import type { BattleCreatureState } from "../battle-state-execution.ts";
@@ -79,11 +80,10 @@ import {
 } from "./staged-condition-repeat-save.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
-  attackRollAfterD20TestRerolls,
-  attackRollD20TestRerolls,
-  attackRollHoleWithD20TestRerollOptions,
-} from "./attack-roll-d20-test-rerolls.ts";
-import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
+  attackRollAfterRollDecisions,
+  attackRollHoleAskedAfterRoll,
+  battleStateAfterAttackRollAfterRollUses,
+} from "./attack-roll-after-roll-decisions.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   spellCastInterruptFrame,
@@ -135,7 +135,7 @@ type ResolvedSpellAttackSequencePart = {
   readonly state: ActionSpellBattleResolutionInput["state"];
   readonly objectDamages: readonly BattleObjectDamageOutcome[];
   readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
-  readonly usedExtraFillHoleIds: readonly string[];
+  readonly usedExtraFillHoleIds: readonly BattleFill["holeId"][];
 };
 
 export function resolveSpellAttackSequenceAct(input: {
@@ -217,7 +217,7 @@ export function resolveSpellAttackSequenceAct(input: {
   let state = input.input.state;
   const objectDamages: BattleObjectDamageOutcome[] = [];
   const afterDamageEvents: BattleAfterDamageEvent[] = [];
-  const usedExtraFillHoleIds = new Set<string>();
+  const usedExtraFillHoleIds = new Set<BattleFill["holeId"]>();
   for (const [
     partIndex,
     partFill,
@@ -231,6 +231,7 @@ export function resolveSpellAttackSequenceAct(input: {
       ),
       partFill,
       partIndex,
+      completedDamageLifecycleFillHoleIds: usedExtraFillHoleIds,
     });
     if (resolved.tag !== "resolved") {
       return resolved;
@@ -309,6 +310,9 @@ function resolveSpellAttackSequencePart(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly partFill: SpellAttackSequencePartFillSet;
   readonly partIndex: number;
+  readonly completedDamageLifecycleFillHoleIds: ReadonlySet<
+    BattleFill["holeId"]
+  >;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): ResolvedSpellAttackSequencePart | BattleResolutionResult {
@@ -342,6 +346,9 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly partFill: SpellAttackSequencePartFillSet;
   readonly partIndex: number;
+  readonly completedDamageLifecycleFillHoleIds: ReadonlySet<
+    BattleFill["holeId"]
+  >;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
   readonly target: Extract<
@@ -496,7 +503,8 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
   /* v8 ignore stop -- @preserve */
-  const d20TestRerolls = attackRollD20TestRerolls({
+  const targetArmorClass = armorClassAgainstAttack(input.state, target, cover);
+  const afterRoll = attackRollAfterRollDecisions({
     state: input.state,
     subject: input.input.subject,
     attackerId: input.actorId,
@@ -506,33 +514,27 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     ),
     attackRoll: input.partFill.attackRoll,
     requiredRollMode,
+    misses: (roll) => !attackRollHits(roll, targetArmorClass),
   });
-  if (d20TestRerolls.tag === "decisionsRequired") {
+  if (afterRoll.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.input.subject, [
-      attackRollHoleWithD20TestRerollOptions(
+      attackRollHoleAskedAfterRoll(
         spellAttackSequencePartAttackRollHole(
           input.invocation,
           input.partIndex,
           requiredRollMode,
         ),
-        d20TestRerolls.options,
+        afterRoll.ask,
       ),
     ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestRerolls.tag === "invalid") {
+  if (afterRoll.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      d20TestRerolls.issue,
-    );
+    return invalidResult(input.input.state, "invalidFill", afterRoll.issue);
   }
   /* v8 ignore stop -- @preserve */
-  const effectiveAttackRoll = attackRollAfterD20TestRerolls(
-    input.partFill.attackRoll,
-  );
-  const targetArmorClass = armorClassAgainstAttack(input.state, target, cover);
+  const effectiveAttackRoll = afterRoll.roll;
   const ordinaryHit = attackRollHits(effectiveAttackRoll, targetArmorClass);
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
     state: input.state,
@@ -562,10 +564,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   const attackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
-        battleStateAfterHeroicInspirationReroll(
-          input.state,
-          d20TestRerolls.heroicInspirationUse,
-        ),
+        battleStateAfterAttackRollAfterRollUses(input.state, afterRoll.uses),
         input.actorId,
         target.combatantId,
         null,
@@ -663,6 +662,26 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       attackRolledState,
       {
         trigger: "attackHit",
+        attackRollHoleId: spellAttackSequencePartAttackRollHoleId(
+          input.invocation,
+          input.partIndex,
+        ),
+        attackRollDependentFillHoleIds: [
+          ...fromNullishOr(input.partFill.damageRoll).map(
+            (fill) => fill.holeId,
+          ),
+          ...[
+            ...input.fillSet.sourceDamageRollPenaltyRolls,
+            ...input.fillSet.spellDamageReductionRolls,
+            ...input.fillSet.concentrationSavingThrows,
+            ...input.fillSet.damageDispositions,
+          ]
+            .filter(
+              (fill) =>
+                !input.completedDamageLifecycleFillHoleIds.has(fill.holeId),
+            )
+            .map((fill) => fill.holeId),
+        ],
         attackerId: input.actorId,
         targetId: target.combatantId,
         attackRoll: effectiveAttackRoll,
@@ -1065,7 +1084,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
       readonly state: ActionSpellBattleResolutionInput["state"];
       readonly objectDamages: readonly BattleObjectDamageOutcome[];
       readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
-      readonly usedExtraFillHoleIds: readonly string[];
+      readonly usedExtraFillHoleIds: readonly BattleFill["holeId"][];
     }
   | Exclude<BattleResolutionResult, { readonly tag: "resolved" }> {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -1148,7 +1167,11 @@ function resolveSpellAttackSequenceObjectPart(input: {
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
   /* v8 ignore stop -- @preserve */
-  const d20TestRerolls = attackRollD20TestRerolls({
+  const objectArmorClass = armorClassBehindCover(
+    objectFact.armorClass,
+    objectFact.cover,
+  );
+  const afterRoll = attackRollAfterRollDecisions({
     state: input.state,
     subject: input.input.subject,
     attackerId: input.actorId,
@@ -1158,27 +1181,24 @@ function resolveSpellAttackSequenceObjectPart(input: {
     ),
     attackRoll: attackRoll,
     requiredRollMode,
+    misses: (roll) => !attackRollHits(roll, objectArmorClass),
   });
-  if (d20TestRerolls.tag === "decisionsRequired") {
+  if (afterRoll.tag === "decisionsRequired") {
     return needsHolesResult(input.state, input.input.subject, [
-      attackRollHoleWithD20TestRerollOptions(
+      attackRollHoleAskedAfterRoll(
         spellAttackSequencePartAttackRollHole(
           input.invocation,
           input.partIndex,
           requiredRollMode,
         ),
-        d20TestRerolls.options,
+        afterRoll.ask,
       ),
     ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestRerolls.tag === "invalid") {
+  if (afterRoll.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      d20TestRerolls.issue,
-    );
+    return invalidResult(input.input.state, "invalidFill", afterRoll.issue);
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -1194,15 +1214,12 @@ function resolveSpellAttackSequenceObjectPart(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effectiveAttackRoll = attackRollAfterD20TestRerolls(attackRoll);
-  const hit = attackRollHits(
-    effectiveAttackRoll,
-    armorClassBehindCover(objectFact.armorClass, objectFact.cover),
-  );
+  const effectiveAttackRoll = afterRoll.roll;
+  const hit = attackRollHits(effectiveAttackRoll, objectArmorClass);
   const critical = attackRollIsCriticalHit(effectiveAttackRoll);
-  const spentState = battleStateAfterHeroicInspirationReroll(
+  const spentState = battleStateAfterAttackRollAfterRollUses(
     input.state,
-    d20TestRerolls.heroicInspirationUse,
+    afterRoll.uses,
   );
   const attackRolledState = consumeSelfAttackRollEffects(
     {

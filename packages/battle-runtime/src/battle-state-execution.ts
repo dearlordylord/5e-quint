@@ -924,6 +924,11 @@ export type BattleSpatialMeleeSpellAttackProxyCommitCheckpoint = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly operation: "createAndAttack" | "repositionAndAttack";
 };
+export type BattleAttackRollReduction = {
+  readonly holeId: BattleHoleId;
+  readonly amount: number;
+};
+
 export type BattleInterruptedProcedure = BattleAcceptedSubjectReplayEvidence &
   (
     | {
@@ -1016,6 +1021,17 @@ export type BattleInterruptedProcedure = BattleAcceptedSubjectReplayEvidence &
       }
     | BattleAttackDamageInterruptionFrame
   );
+export type BattleAttackHitContinuation = Extract<
+  BattleInterruptedProcedure,
+  {
+    readonly kind:
+      | "replay"
+      | "weaponMasteryCleave"
+      | "huntersPreyHordeBreaker"
+      | "resolved";
+  }
+>;
+
 export type BattleAttackHostSubject =
   | Extract<
       BattleSubject,
@@ -1328,6 +1344,9 @@ type BattleInterruptCheckpointWithContinuationBase =
 export type BattleInterruptCheckpoint =
   | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "attackHit";
+      readonly continuation: BattleAttackHitContinuation;
+      readonly attackRollHoleId: BattleHoleId;
+      readonly attackRollDependentFillHoleIds: readonly BattleHoleId[];
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
       readonly attackRoll: AttackRollResult;
@@ -4611,6 +4630,8 @@ export type BattleTakenFailedAbilityCheckResourceBoost =
 
 /** Accepted roll and attack outcomes owned by a subject while its resolution can replay. */
 export type BattleAcceptedSubjectReplayEvidence = {
+  /** Reaction reductions owned by the subject, keyed to their triggering roll. Raw fills stay unchanged. */
+  readonly acceptedAttackRollReductions?: ReadonlyNonEmptyArray<BattleAttackRollReduction>;
   /** The rolls of this subject that spent their roller's Heroic Inspiration. */
   readonly acceptedHeroicInspirationRerolls?: ReadonlyNonEmptyArray<BattleD20TestRollKey>;
   /** The rolls of this subject that spent a use of a failed saving throw reroll. */
@@ -4690,18 +4711,6 @@ export type BattleState = {
   readonly legendaryActionWindow: LegendaryActionWindow | null;
 };
 
-/**
- * An attack roll that missed, which a Bardic Inspiration die may turn into a
- * hit. Ability checks and saving throws take the die in battle, through the
- * D20 Test's added-die step.
- */
-export type BattleBardicInspirationFailedAttackRollFacts = {
-  readonly actorId: CombatantId;
-  readonly attackRoll: BattleAttackRollResult;
-  readonly armorClass: ArmorClass;
-  readonly criticalThreshold?: CriticalHitThreshold;
-};
-
 export type BattleSuccessfulAbilityCheckFacts = {
   readonly actorId: CombatantId;
   readonly ability: Ability;
@@ -4711,12 +4720,6 @@ export type BattleSuccessfulAbilityCheckFacts = {
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 };
 
-export type BardicInspirationFailedAttackRollResolutionInput = {
-  readonly state: BattleState;
-  readonly failedAttackRoll: BattleBardicInspirationFailedAttackRollFacts;
-  readonly bardicInspirationRoll: number;
-};
-
 export type SuccessfulAbilityCheckReactionReductionResolutionInput = {
   readonly state: BattleState;
   readonly reactorId: CombatantId;
@@ -4724,15 +4727,6 @@ export type SuccessfulAbilityCheckReactionReductionResolutionInput = {
   readonly abilityCheck: BattleSuccessfulAbilityCheckFacts;
   readonly reductionRoll: number;
 };
-
-export type BardicInspirationFailedAttackRollResolutionResult =
-  | (Extract<BattleResolutionResult, { readonly tag: "resolved" }> & {
-      readonly bardicInspirationAttackRoll: {
-        readonly boostedTotal: number;
-        readonly boostedSucceeded: boolean;
-      };
-    })
-  | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 
 export type SuccessfulAbilityCheckReactionReductionResolutionResult =
   | (Extract<BattleResolutionResult, { readonly tag: "resolved" }> & {
@@ -5692,7 +5686,7 @@ export type BattleAttackRollHole = Extract<
     BattleHeroicInspirationRerollOption,
   ];
   readonly relationshipFactRequest?: BattleAttackRollRelationshipFactRequest;
-};
+} & BattleD20TestAddedDieHoleOptions;
 export type AttackRollFeatureActivation = {
   readonly procedureRef: BattleProcedureExecutionRef;
   readonly rollMode: AttackRollMode;
@@ -5994,14 +5988,45 @@ export type BattleD20TestNaturalOneRerollDieDecision =
   >;
 export type BattleHeroicInspirationDieRerollDecision =
   BattleD20TestDieRerollDecision<typeof HEROIC_INSPIRATION_REROLL_EFFECT_KIND>;
+/**
+ * A failed saving throw reroll's decision on a Death Saving Throw's d20: the
+ * engine adds the reroll's bonus to the new d20 and judges the result.
+ */
+export type BattleFailedSavingThrowDieRerollDecision =
+  BattleD20TestDieRerollDecision<typeof FAILED_SAVING_THROW_REROLL_EFFECT_KIND>;
 /** One reroll source's decision on a Death Saving Throw's d20. */
 export type BattleDeathSavingThrowD20TestRerollDecision =
   | BattleD20TestNaturalOneRerollDieDecision
-  | BattleHeroicInspirationDieRerollDecision;
+  | BattleHeroicInspirationDieRerollDecision
+  | BattleFailedSavingThrowDieRerollDecision;
 /** A Death Saving Throw's D20 Test reroll decisions in the order the roller made them. */
 export type BattleDeathSavingThrowD20TestRerollDecisions = readonly [
   BattleDeathSavingThrowD20TestRerollDecision,
   ...BattleDeathSavingThrowD20TestRerollDecision[],
+];
+/**
+ * A source's decision on a die added to a Death Saving Throw: the engine adds
+ * the number rolled to the d20 and judges the result (ASSUMPTIONS.md A69).
+ */
+export type BattleDeathSavingThrowAddedDieDecision =
+  BattleD20TestAddedDieDecision<typeof BARDIC_INSPIRATION_DIE_EFFECT_KIND>;
+/** A Death Saving Throw's added-die decisions in the order the roller made them. */
+export type BattleDeathSavingThrowAddedDieDecisions = readonly [
+  BattleDeathSavingThrowAddedDieDecision,
+  ...BattleDeathSavingThrowAddedDieDecision[],
+];
+/**
+ * A source's decision on a die added to an attack roll that misses: the
+ * engine adds the number rolled to the total and judges the hit. The d20
+ * stays, so a die can't turn a 1 into a hit or make a Critical Hit.
+ */
+export type BattleAttackRollAddedDieDecision = BattleD20TestAddedDieDecision<
+  typeof BARDIC_INSPIRATION_DIE_EFFECT_KIND
+>;
+/** An attack roll's added-die decisions in the order the roller made them. */
+export type BattleAttackRollAddedDieDecisions = readonly [
+  BattleAttackRollAddedDieDecision,
+  ...BattleAttackRollAddedDieDecision[],
 ];
 export type BattleSpellDamageRerollOption = {
   readonly effectKind: "damage_dice_reroll";
@@ -6034,7 +6059,7 @@ export type BattleSpellAttackRollHole = Extract<
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
   ];
-};
+} & BattleD20TestAddedDieHoleOptions;
 export type BattleCunningStrikeOptionSelection = {
   readonly procedureRef: BattleProcedureExecutionRef;
   readonly optionId: CunningStrikeOptionSelectionId;
@@ -7201,6 +7226,10 @@ export type BattleDeathSavingThrowHole = {
   readonly heroicInspirationRerolls?: readonly [
     BattleHeroicInspirationRerollOption,
   ];
+  readonly failedSavingThrowRerolls?: readonly [
+    BattleFailedSavingThrowRerollOption,
+  ];
+  readonly bardicInspirationDice?: readonly [BattleBardicInspirationDieOption];
 };
 export type BattleStatBlockRechargeRollHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -7681,6 +7710,8 @@ export type BattleAttackRollResult = AttackRollResult & {
   readonly activatedOngoingFeatureProcedureRef?: BattleProcedureExecutionRef;
   readonly missToHitReplacementProcedureRef?: BattleProcedureExecutionRef;
   readonly d20TestRerolls?: BattleAttackRollD20TestRerollDecisions;
+  /** The dice added to the roll its rerolls leave, while it misses. */
+  readonly d20TestAddedDice?: BattleAttackRollAddedDieDecisions;
 };
 export type BattleRolledDiceFill = {
   readonly kind: "rolledDice";
@@ -8109,6 +8140,7 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: D20Roll;
       readonly d20TestRerolls?: BattleDeathSavingThrowD20TestRerollDecisions;
+      readonly d20TestAddedDice?: BattleDeathSavingThrowAddedDieDecisions;
     }
   | {
       readonly kind: "statBlockRechargeRoll";

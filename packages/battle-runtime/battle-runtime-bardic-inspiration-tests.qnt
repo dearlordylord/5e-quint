@@ -1,5 +1,4 @@
 module battleRuntimeBardicInspirationTests {
-  import attackRollDamageDiceCore.* from "../shared-algebras/proofs/rule-core/attack-roll-damage-dice-core"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
@@ -55,18 +54,14 @@ module battleRuntimeBardicInspirationTests {
     val granted = bardicInspirationTargetEffectsAfterGrant(Set(BlessD20RollBonus), Fighter, 1)
     val convertedAbilityCheckTotal = bardicInspirationD20TestTotal(13, 3)
     val stillFailedSavingThrowTotal = bardicInspirationD20TestTotal(10, 4)
-    val convertedAttackRollTotal = bardicInspirationD20TestTotal(14, 2)
     val expended = bardicInspirationEffectsAfterDieRoll(granted)
     all {
       assert(bardicInspirationDifficultyClassD20TestAdmitted(hasBardicInspirationDie(granted), 6, 13, 15, 3)),
       assert(bardicInspirationDifficultyClassD20TestSucceeds(convertedAbilityCheckTotal, 15)),
       assert(bardicInspirationDifficultyClassD20TestAdmitted(hasBardicInspirationDie(granted), 6, 10, 15, 4)),
       assert(not(bardicInspirationDifficultyClassD20TestSucceeds(stillFailedSavingThrowTotal, 15))),
-      assert(bardicInspirationAttackRollAdmitted(hasBardicInspirationDie(granted), 6, 14, 10, 15, 20, 2)),
-      assert(bardicInspirationAttackRollSucceeds(convertedAttackRollTotal, 10, 15, 20)),
       assert(not(bardicInspirationDifficultyClassD20TestAdmitted(hasBardicInspirationDie(granted), 6, 15, 15, 1))),
       assert(not(bardicInspirationDifficultyClassD20TestAdmitted(hasBardicInspirationDie(granted), 6, 10, 15, 7))),
-      assert(not(bardicInspirationAttackRollAdmitted(hasBardicInspirationDie(granted), 6, 15, 10, 15, 20, 1))),
       assert(not(hasBardicInspirationDie(expended))),
       assert(expended.contains(BlessD20RollBonus)),
     }

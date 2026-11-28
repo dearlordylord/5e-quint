@@ -6,7 +6,12 @@
 // after the test's rerolls, each while the test still fails, and the boost's
 // use is spent only when the check then succeeds (ASSUMPTIONS.md A68).
 import { HEROIC_INSPIRATION_AVAILABLE } from "@dnd/shared/game-facts";
-import { classLevel, DieRollResult, difficultyClass } from "@dnd/shared/types";
+import {
+  classLevel,
+  d20Roll,
+  DieRollResult,
+  difficultyClass,
+} from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -15,9 +20,9 @@ import {
   characterResourceUses,
   characterSeed,
   combatantHasBardicInspirationDie,
+  deathSavingThrowFill,
+  endTurn,
   fighterId,
-  goblinId,
-  grantBardicInspirationToGoblin,
   hidePrerequisites,
   holeId,
   requireResolved,
@@ -28,6 +33,7 @@ import {
   statBlockCreatureInit,
   supportedBattleUnitRef,
   unitLibrary,
+  withBardicInspirationDie,
   type BattleState,
   type BattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -35,7 +41,6 @@ import {
   BARDIC_INSPIRATION_DIE_EFFECT_KIND,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_EFFECT_KIND,
   HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
-  type BattleActiveEffect,
   type BattleD20TestRoll,
   type BattleFill,
   type BattleTakenFailedAbilityCheckResourceBoost,
@@ -727,6 +732,183 @@ describe("a Bardic Inspiration die on a Concentration save", () => {
   });
 });
 
+describe("Bardic Inspiration on a Death Saving Throw", () => {
+  test("a failed death save is asked again with the die", () => {
+    const dying = dyingBardicHolder();
+
+    expect(
+      requireResultHole(
+        endTurn({
+          state: dying.state,
+          actorId: spellCasterId,
+          fills: [deathSavingThrowFill(dying.deathSave, 6)],
+        }),
+        "deathSavingThrow",
+      ),
+    ).toMatchObject({
+      bardicInspirationDice: [
+        {
+          effectKind: BARDIC_INSPIRATION_DIE_EFFECT_KIND,
+          rollerId: spellTargetId,
+          dieSize: 6,
+        },
+      ],
+    });
+  });
+
+  test("the die counts toward 10 and is expended when rolled", () => {
+    const dying = dyingBardicHolder();
+    const saved = dying.resolve({ roll: 6, d20TestAddedDice: [bardicDie(4)] });
+    expect(deathSaves(saved)).toEqual({ successes: 1, failures: 0 });
+    expect(combatantHasBardicInspirationDie(saved, spellTargetId)).toBe(false);
+
+    const short = dying.resolve({ roll: 6, d20TestAddedDice: [bardicDie(3)] });
+    expect(deathSaves(short)).toEqual({ successes: 0, failures: 1 });
+    expect(combatantHasBardicInspirationDie(short, spellTargetId)).toBe(false);
+  });
+
+  test("a 1 on the d20 is still two failures, whatever the die adds", () => {
+    const dying = dyingBardicHolder();
+    const failed = dying.resolve({
+      roll: 1,
+      d20TestAddedDice: [bardicDie(6)],
+    });
+
+    expect(deathSaves(failed)).toEqual({ successes: 0, failures: 2 });
+    expect(combatantHasBardicInspirationDie(failed, spellTargetId)).toBe(false);
+  });
+
+  test("a declined die is kept", () => {
+    const dying = dyingBardicHolder();
+    const failed = dying.resolve({
+      roll: 6,
+      d20TestAddedDice: [declineBardic()],
+    });
+
+    expect(deathSaves(failed)).toEqual({ successes: 0, failures: 1 });
+    expect(combatantHasBardicInspirationDie(failed, spellTargetId)).toBe(true);
+  });
+
+  test("a successful death save is not offered the die and refuses one", () => {
+    const dying = dyingBardicHolder();
+    const saved = dying.resolve(12);
+    expect(deathSaves(saved)).toEqual({ successes: 1, failures: 0 });
+    expect(combatantHasBardicInspirationDie(saved, spellTargetId)).toBe(true);
+
+    expect(
+      dying.attempt({ roll: 12, d20TestAddedDice: [declineBardic()] }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: BARDIC_INSPIRATION_DIE_MESSAGES.notFailed,
+    });
+  });
+
+  test("a roller without a die, or a face outside it, is refused", () => {
+    expect(
+      dyingBardicHolder({ withDie: false }).attempt({
+        roll: 6,
+        d20TestAddedDice: [bardicDie(4)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: BARDIC_INSPIRATION_DIE_MESSAGES.unavailable,
+    });
+    expect(
+      dyingBardicHolder().attempt({
+        roll: 6,
+        d20TestAddedDice: [bardicDie(7)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: BARDIC_INSPIRATION_DIE_MESSAGES.dieRoll,
+    });
+  });
+
+  test("the die comes after a Heroic Inspiration reroll, on the roll it leaves", () => {
+    const dying = dyingBardicHolder({ heroicInspiration: true });
+    const askedReroll = requireResultHole(
+      endTurn({
+        state: dying.state,
+        actorId: spellCasterId,
+        fills: [deathSavingThrowFill(dying.deathSave, 6)],
+      }),
+      "deathSavingThrow",
+    );
+    expect(askedReroll).toMatchObject({
+      heroicInspirationRerolls: [
+        { effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND },
+      ],
+    });
+    expect(askedReroll).not.toHaveProperty("bardicInspirationDice");
+    expect(
+      dying.attempt({ roll: 6, d20TestAddedDice: [bardicDie(4)] }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: D20_TEST_ADDED_DIE_BEFORE_REROLLS_MESSAGE,
+    });
+
+    const saved = dying.resolve({
+      roll: 6,
+      d20TestRerolls: [
+        {
+          kind: "reroll",
+          effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+          replacement: d20Roll(5),
+        },
+      ],
+      d20TestAddedDice: [bardicDie(5)],
+    });
+    expect(deathSaves(saved)).toEqual({ successes: 1, failures: 0 });
+    expect(combatantHasBardicInspirationDie(saved, spellTargetId)).toBe(false);
+  });
+});
+
+/** A dying creature that holds a Bardic Inspiration die, at the start of its turn. */
+function dyingBardicHolder(
+  input: {
+    readonly withDie?: boolean;
+    readonly heroicInspiration?: boolean;
+  } = {},
+) {
+  const session = spellBattle({
+    targetHp: 0,
+    ...(input.heroicInspiration === true
+      ? { targetHeroicInspiration: HEROIC_INSPIRATION_AVAILABLE }
+      : {}),
+  });
+  const state =
+    input.withDie === false
+      ? session.state
+      : withBardicInspirationDie(session.state, spellTargetId);
+  const deathSave = requireResultHole(
+    endTurn({ state, actorId: spellCasterId }),
+    "deathSavingThrow",
+  );
+  const attempt = (roll: Parameters<typeof deathSavingThrowFill>[1]) =>
+    endTurn({
+      state,
+      actorId: spellCasterId,
+      fills: [deathSavingThrowFill(deathSave, roll)],
+    });
+  return {
+    state,
+    deathSave,
+    attempt,
+    resolve: (roll: Parameters<typeof deathSavingThrowFill>[1]) =>
+      requireResolved(attempt(roll)).state,
+  };
+}
+
+function deathSaves(state: BattleState) {
+  const lifecycle = state.combatants.get(spellTargetId)?.zeroHpLifecycle;
+  if (lifecycle === undefined || !("deathSaves" in lifecycle)) {
+    throw new Error("Expected a creature that makes Death Saving Throws.");
+  }
+  return lifecycle.deathSaves.tag === "dying"
+    ? lifecycle.deathSaves.deathSaves
+    : lifecycle.deathSaves;
+}
+
 function hideCheck(input: {
   readonly tacticalMindUses?: number;
   readonly bardicInspiration?: boolean;
@@ -797,34 +979,6 @@ function viciousMockerySave() {
     "savingThrowOutcome",
   );
   return { state, subject: act.subject, targetSelection, savingThrow };
-}
-
-/** The state with a d6 Bardic Inspiration die, granted by a Bard, held by the creature. */
-function withBardicInspirationDie(
-  state: BattleState,
-  holderId: CombatantId,
-): BattleState {
-  const die = grantBardicInspirationToGoblin()
-    .combatants.get(goblinId)
-    ?.activeEffects.find(
-      (
-        effect,
-      ): effect is Extract<
-        BattleActiveEffect,
-        { readonly kind: "bardicInspirationDie" }
-      > => effect.kind === "bardicInspirationDie",
-    );
-  const holder = state.combatants.get(holderId);
-  if (die === undefined || holder === undefined) {
-    throw new Error("Expected a granted die and its holder.");
-  }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(holderId, {
-      ...holder,
-      activeEffects: [...holder.activeEffects, die],
-    }),
-  };
 }
 
 function withAddedDice(

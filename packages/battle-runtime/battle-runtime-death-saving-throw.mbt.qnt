@@ -5,8 +5,9 @@
 // reducer, so the driver's import closure stays leaf-only and its MBT trace
 // generation stays fast (see scripts/check-mbt-driver-closure.cjs). The fixture
 // target begins Unconscious at 0 Hit Points with 2 death-save successes and 1
-// failure; the facts below are the SRD result for each sampled die edge. If the
-// death-save rule changes, update the literals here.
+// failure. Hit Point and lifecycle outcomes follow the sampled SRD die edges.
+// Terminal counters use deathSaveStateSuccesses/deathSaveStateFailures in
+// packages/shared-algebras/src/death-saves-algebra.ts: Dead projects 0/3.
 module battleRuntimeDeathSavingThrowMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
@@ -70,6 +71,7 @@ module battleRuntimeDeathSavingThrowMbt {
     if (roll == 1)
       resolved
         .with("targetDead", true)
+        .with("targetDeathSuccesses", 0)
         .with("targetDeathFailures", 3)
     else if (roll == 5)
       resolved.with("targetDeathFailures", 2)

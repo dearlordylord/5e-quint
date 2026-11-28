@@ -411,27 +411,41 @@ function projectMechanicalAttackRollHole(
       label,
       d20TestNaturalOneRerolls,
       heroicInspirationRerolls,
+      bardicInspirationDice,
       attack,
       ...mechanical
     } = hole;
-    void [label, d20TestNaturalOneRerolls, heroicInspirationRerolls];
+    void [
+      label,
+      d20TestNaturalOneRerolls,
+      heroicInspirationRerolls,
+      bardicInspirationDice,
+    ];
     return {
       ...mechanical,
       attack: projectMechanicalAttackActionOption(attack),
       ...mechanicalD20TestRerollOptions(hole),
+      ...mechanicalBardicInspirationDieOptions(hole),
     };
   }
   const {
     label,
     d20TestNaturalOneRerolls,
     heroicInspirationRerolls,
+    bardicInspirationDice,
     spellAttackRerolls,
     ...mechanical
   } = hole;
-  void [label, d20TestNaturalOneRerolls, heroicInspirationRerolls];
+  void [
+    label,
+    d20TestNaturalOneRerolls,
+    heroicInspirationRerolls,
+    bardicInspirationDice,
+  ];
   return {
     ...mechanical,
     ...mechanicalD20TestRerollOptions(hole),
+    ...mechanicalBardicInspirationDieOptions(hole),
     ...(spellAttackRerolls === undefined
       ? {}
       : {

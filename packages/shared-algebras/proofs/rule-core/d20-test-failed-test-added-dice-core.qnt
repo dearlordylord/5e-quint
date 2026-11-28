@@ -27,10 +27,26 @@ module d20TestFailedTestAddedDiceCore {
   // a decline is invalid too on a test that stands succeeded or from a source
   // the roller doesn't have. Each source decides once on each roll and adds
   // its die at most once; a decline decides only for the roll it was made on.
+  //
+  // A Death Saving Throw's ruling is fixed (playing-the-game.md, Death Saving
+  // Throws), so the engine judges it: the die adds to the d20 toward 10, and a
+  // 1 or a 20 on the d20 decides first, whatever is added (ASSUMPTIONS.md
+  // A69). Only a Bardic Inspiration die is added to one.
+  //
+  // An attack roll is judged against the target's Armor Class as it stands
+  // (playing-the-game.md, Attack Rolls; ASSUMPTIONS.md A70), so a die is
+  // offered on a roll that misses, and the die adds to the total. A 1 on the d20 misses and a 20 is
+  // a Critical Hit "regardless of any modifiers" (playing-the-game.md,
+  // Rolling 20 or 1), so the d20 alone decides them, whatever is added. Only
+  // a Bardic Inspiration die is added to one.
+  import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
+  import attackRollDamageDiceCore.* from "./attack-roll-damage-dice-core"
 
   type AddedDieTest =
     | AbilityCheckTest({ total: int, dc: int })
     | RuledSavingThrow({ succeeded: bool })
+    | RolledDeathSavingThrow(DeathSavingThrowRoll)
+    | RolledAttackRoll(AttackRollProcedureFacts)
 
   type AddedDieSource =
     | BardicInspirationDie
@@ -39,7 +55,8 @@ module d20TestFailedTestAddedDiceCore {
   type AddedDieChoice =
     | AddedDieDeclined
     // ruledSucceeded is the table's ruling on a saving throw; an ability
-    // check ignores it, since the engine compares the new total with the DC.
+    // check, a Death Saving Throw and an attack roll ignore it, since the
+    // engine judges them.
     | AddedDieRolled({ dieRoll: int, ruledSucceeded: bool })
 
   type AddedDieDecision = { source: AddedDieSource, choice: AddedDieChoice }
@@ -78,12 +95,16 @@ module d20TestFailedTestAddedDiceCore {
     match test {
       | AbilityCheckTest(check) => check.total >= check.dc
       | RuledSavingThrow(save) => save.succeeded
+      | RolledDeathSavingThrow(roll) => not(deathSavingThrowRollFails(roll))
+      | RolledAttackRoll(roll) => attackRollOutcomeHits(resolveAttackRoll(roll))
     }
 
   pure def addedDieTestIsAbilityCheck(test: AddedDieTest): bool =
     match test {
       | AbilityCheckTest(_) => true
       | RuledSavingThrow(_) => false
+      | RolledDeathSavingThrow(_) => false
+      | RolledAttackRoll(_) => false
     }
 
   pure def addedDieSourceDieSize(
@@ -129,6 +150,10 @@ module d20TestFailedTestAddedDiceCore {
       | AbilityCheckTest(check) =>
           AbilityCheckTest({ total: check.total + dieRoll, dc: check.dc })
       | RuledSavingThrow(_) => RuledSavingThrow({ succeeded: ruledSucceeded })
+      | RolledDeathSavingThrow(roll) =>
+          RolledDeathSavingThrow({ ...roll, bonus: roll.bonus + dieRoll })
+      | RolledAttackRoll(roll) =>
+          RolledAttackRoll({ ...roll, total: roll.total + dieRoll })
     }
 
   pure def addedDieDecisionLegal(

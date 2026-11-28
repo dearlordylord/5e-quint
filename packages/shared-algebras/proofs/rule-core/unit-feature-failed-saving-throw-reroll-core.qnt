@@ -24,7 +24,16 @@ module unitFeatureFailedSavingThrowRerollCore {
   // offered: on a roll that stands succeeded, or without a use left. The uses
   // are those the roller had when the offer was made; a decline made then
   // still stands after another roll spends the last use.
+  //
+  // A Death Saving Throw is a saving throw whose ruling is fixed
+  // (playing-the-game.md, Death Saving Throws), so the engine judges it here:
+  // the reroll is offered when the save as rolled fails, and the new d20 takes
+  // the bonus on top of any bonus the roll already had. A 1 or a 20 on the new
+  // d20 decides first, whatever the bonus, and a later reroll of the d20 keeps
+  // the bonus (ASSUMPTIONS.md A69). A failure from damage at 0 Hit Points
+  // has no roll, so nothing here offers a reroll of it.
   import unitFeatureD20TestNaturalOneRerollCore.* from "./unit-feature-d20-test-natural-one-reroll-core"
+  import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
 
   // One d20, or both d20s of a roll with Advantage or Disadvantage.
   type FailedSavingThrowRolledD20s =
@@ -144,6 +153,83 @@ module unitFeatureFailedSavingThrowRerollCore {
       usesRemainingAfter: if (admitted)
         facts.usesRemaining - 1
       else facts.usesRemaining,
+    }
+  }
+
+  // Death Saving Throw.
+
+  type DeathSavingThrowRerollDecision =
+    | DeathSavingThrowRerollDeclined
+    | DeathSavingThrowRerollSelected({ replacementD20: int })
+
+  type DeathSavingThrowRerollFacts = {
+    hasFeature: bool,
+    usesRemaining: int,
+    classLevel: int,
+    original: DeathSavingThrowRoll,
+    decision: DeathSavingThrowRerollDecision,
+  }
+
+  type DeathSavingThrowRerollResult = {
+    offered: bool,
+    admitted: bool,
+    invalid: bool,
+    effective: DeathSavingThrowRoll,
+    usesRemainingAfter: int,
+  }
+
+  pure def deathSavingThrowRerollOffered(facts: DeathSavingThrowRerollFacts): bool =
+    all {
+      facts.hasFeature,
+      facts.usesRemaining > 0,
+      deathSavingThrowRollFails(facts.original),
+    }
+
+  pure def deathSavingThrowRerollAdmitted(facts: DeathSavingThrowRerollFacts): bool =
+    all {
+      deathSavingThrowRerollOffered(facts),
+      legalD20(facts.original.naturalD20),
+      match facts.decision {
+        | DeathSavingThrowRerollDeclined => false
+        | DeathSavingThrowRerollSelected(choice) => legalD20(choice.replacementD20)
+      },
+    }
+
+  // The new roll is used whether it succeeds or fails.
+  pure def deathSavingThrowRerollEffectiveRoll(
+    facts: DeathSavingThrowRerollFacts,
+  ): DeathSavingThrowRoll =
+    match facts.decision {
+      | DeathSavingThrowRerollDeclined => facts.original
+      | DeathSavingThrowRerollSelected(choice) => {
+          naturalD20: choice.replacementD20,
+          bonus: facts.original.bonus + facts.classLevel,
+        }
+    }
+
+  // A reroll of the d20 by another source (the natural-1 reroll, Heroic
+  // Inspiration) replaces only the d20 and keeps the bonus (ASSUMPTIONS.md A69,
+  // A55).
+  pure def deathSavingThrowRollAfterD20Reroll(
+    roll: DeathSavingThrowRoll,
+    replacementD20: int,
+  ): DeathSavingThrowRoll =
+    { naturalD20: replacementD20, bonus: roll.bonus }
+
+  pure def resolveDeathSavingThrowReroll(
+    facts: DeathSavingThrowRerollFacts,
+  ): DeathSavingThrowRerollResult = {
+    val admitted = deathSavingThrowRerollAdmitted(facts)
+    val taken = match facts.decision {
+      | DeathSavingThrowRerollDeclined => false
+      | DeathSavingThrowRerollSelected(_) => true
+    }
+    {
+      offered: deathSavingThrowRerollOffered(facts),
+      admitted: admitted,
+      invalid: if (taken) not(admitted) else not(deathSavingThrowRerollOffered(facts)),
+      effective: if (admitted) deathSavingThrowRerollEffectiveRoll(facts) else facts.original,
+      usesRemainingAfter: if (admitted) facts.usesRemaining - 1 else facts.usesRemaining,
     }
   }
 }

@@ -563,3 +563,52 @@ doesn't say what an added die does to a later reroll. The model takes the
 rerolls first. The SRD also doesn't say whether Tactical Mind's "still fails"
 reads the check before or after another added die; the model judges the check
 once with every added die.
+
+## A69: A bonus to a Death Saving Throw counts toward 10 after the d20's 1 or 20
+
+**Assumption:** A Death Saving Throw rerolled with a bonus (Indomitable) adds
+the bonus to the new d20, and the total succeeds at 10 or higher. A 1 or a 20
+on the d20 decides first, whatever the bonus: a 1 is two failures and a 20
+regains 1 Hit Point. A later reroll of that d20 by another source replaces only
+the d20 and keeps the bonus, as a reroll keeps a save's other modifiers. A die
+added to a failed Death Saving Throw (Bardic Inspiration, after its rerolls as
+A68 sets) is a bonus the same way: it counts toward 10, and it can't change a 1
+or a 20.
+
+**Rules basis / gap:** `.references/srd-5.2.1/playing-the-game.md`, "Death
+Saving Throws": "Roll 1d20. If the roll is 10 or higher, you succeed" and "When
+you roll a 1 on the d20 for a Death Saving Throw, you suffer two failures. If
+you roll a 20 on the d20, you regain 1 Hit Point." `.references/srd-5.2.1/classes.md`,
+"Indomitable": "If you fail a saving throw, you can reroll it with a bonus equal
+to your Fighter level." The core rule adds nothing to the d20, so it doesn't
+say whether "the roll" that must reach 10 includes a bonus; the model counts
+the bonus, since the feature grants it to this saving throw. The 1 and the 20
+are read from the d20 ("on the d20"), so a bonus doesn't change them. The SRD
+doesn't say whether a reroll of the d20 by another source keeps a bonus
+Indomitable added; the model keeps it, since the reroll replaces the die and
+not the saving throw's modifiers. Bardic Inspiration adds "the number rolled to
+the d20", which the model reads the same way as any bonus: it adds to the roll's
+total, and the d20 still shows its face.
+
+## A70: A die added to a missed attack roll answers the Armor Class as it stands
+
+**Assumption:** A die added to an attack roll that misses (Bardic Inspiration,
+after the roll's rerolls as A68 sets) is offered while the roll misses the
+target's Armor Class as it stands, including after a Reaction raises that Armor
+Class (Shield) or lowers the roll (Cutting Words) and so turns a hit into a
+miss. The die adds to the roll's total and the d20 keeps its face, so the die
+can't make a Critical Hit, and a 1 on the d20 still misses.
+
+**Rules basis / gap:** `.references/srd-5.2.1/classes.md`, "Bardic
+Inspiration": "Once within the next hour when the creature fails a D20 Test,
+the creature can roll the Bardic Inspiration die and add the number rolled to
+the d20, potentially turning the failure into a success." `.references/srd-5.2.1/playing-the-game.md`,
+"Rolling 20 or 1": a 20 on the d20 "hits regardless of any modifiers or the
+target's AC. This is called a Critical Hit", and a 1 "misses regardless of any
+modifiers or the target's AC". `.references/srd-5.2.1/spells.md`, "Shield":
+"you gain a +5 bonus to AC, including against the triggering attack". The SRD
+doesn't say when an attack roll has failed if a Reaction to the hit changes
+the result; the model reads the failure from the result that stands, so the
+attacker may answer the Reaction's miss with the die. It reads "add the number
+rolled to the d20" as A69 does: the number adds to the total, and the d20 still
+shows its face.

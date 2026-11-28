@@ -4222,44 +4222,6 @@
       "unitId": "fear"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "outside-battle-runtime"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "A Death Saving Throw is a saving throw, so a rolled one can be rerolled; its natural 1 and natural 20 effects and its fixed DC need their own decision shape on the death save hole. A failure taken without a roll has no roll to reroll.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-replay evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/fighter_indomitable.json",
-      "sourceRows": [
-        {
-          "battleReadinessStatus": "accepted",
-          "catalogAdmissionState": "installed",
-          "category": "class feature",
-          "concept": "Fighter Indomitable",
-          "finalDisposition": "catalog-installed-owner-evidence-present",
-          "id": "srd521:classes:level-9:class-feature-grant:fighter_indomitable",
-          "levelBand": "level-9",
-          "nextAction": "Owner-specific operational evidence is classified and present.",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 4839,
-            "lineStart": 4834,
-            "path": ".references/srd-5.2.1/classes.md"
-          },
-          "unitProfileDisposition": "profile-subset-supported"
-        }
-      ],
-      "status": "closed-outside-battle-runtime-boundary",
-      "strictTargetClosed": true,
-      "unitId": "fighter_indomitable"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -10296,7 +10258,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 214,
+      "count": 215,
       "description": "An executable Unit profile exists for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -10373,6 +10335,7 @@
         "fighter_fighting_style",
         "fighter_heroic_warrior",
         "fighter_improved_critical",
+        "fighter_indomitable",
         "fighter_remarkable_athlete",
         "fighter_second_wind",
         "fighter_tactical_master",
@@ -10608,7 +10571,7 @@
       ]
     },
     {
-      "count": 46,
+      "count": 45,
       "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
       "status": "closed-outside-battle-runtime-boundary",
       "unitIds": [
@@ -10632,7 +10595,6 @@
         "dispel_evil_and_good",
         "enlarge_reduce",
         "fear",
-        "fighter_indomitable",
         "fire_shield",
         "freedom_of_movement",
         "greater_invisibility",
@@ -10735,8 +10697,8 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 365,
-      "numerator": 214,
-      "percent": "58.6%"
+      "numerator": 215,
+      "percent": "58.9%"
     },
     "strictTargetClosure": {
       "denominator": 365,
@@ -17852,7 +17814,7 @@
                 "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+                "title": "A creature that fails a D20 Test can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
               },
               {
                 "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
@@ -19281,7 +19243,7 @@
                 "obligationId": "BATTLE.D20_TEST.FAILED_D20_TEST_ADDED_DIE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "A creature that fails a D20 Test other than an attack roll can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
+                "title": "A creature that fails a D20 Test can add a Bardic Inspiration die, or on an ability check its failed ability check resource boost, once its rerolls are decided, while the test still fails"
               },
               {
                 "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
@@ -24783,19 +24745,19 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 412,
     "groupsByClaimTag": {
-      "profile-subset-supported": 62,
-      "supported-profile": 214,
+      "profile-subset-supported": 61,
+      "supported-profile": 215,
       "unsupported-profile": 89
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 10,
       "closed-character-fact-and-runtime-detached-split": 4,
       "closed-companion-control-boundary": 7,
-      "closed-outside-battle-runtime-boundary": 46,
+      "closed-outside-battle-runtime-boundary": 45,
       "closed-runtime-detached-table-adjudication": 84,
-      "supported-profile": 214
+      "supported-profile": 215
     },
-    "nonSupportedFrontier": 151,
+    "nonSupportedFrontier": 150,
     "strictDenominator": 365
   }
 }

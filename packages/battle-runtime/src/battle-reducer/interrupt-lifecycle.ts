@@ -11,6 +11,8 @@ import { interruptChoiceResponderId } from "../battle-state-execution.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleAttackDamageEvent,
+  BattleAttackRollReduction,
+  BattleAttackHitContinuation,
   BattleFill,
   BattleHandledInterruptOccurrence,
   BattleInterruptCheckpoint,
@@ -670,13 +672,11 @@ function advanceInterruptCheckpointAfterResponder(input: {
       : (() => {
           const { activeInterrupt: _completedInterrupt, ...inactiveFrame } =
             input.frame;
-          const continuation = appendObjectOutcomesToContinuation(
-            inactiveFrame.continuation,
-            input.objectOutcomes,
-          );
           return {
-            ...inactiveFrame,
-            continuation,
+            ...appendObjectOutcomesToCheckpoint(
+              inactiveFrame,
+              input.objectOutcomes,
+            ),
             offeredResponders: [
               ...input.frame.offeredResponders,
               input.responderId,
@@ -836,41 +836,49 @@ function reconciledInterruptCheckpoint(
   return reconciledFrame;
 }
 
-type DamageSequenceObjectOutcomeContinuation = Extract<
-  BattleInterruptedProcedure,
-  {
-    readonly kind:
-      | "afterDamageSequence"
-      | "afterDamageSequenceWithPrimaryAttackFollowUp"
-      | "movementThenAfterDamageSequence";
-  }
+type DamageSequenceObjectOutcomes = Pick<
+  Extract<BattleInterruptedProcedure, { readonly kind: "afterDamageSequence" }>,
+  "objectDamages" | "objectIgnitions" | "droppedObjects"
 >;
 
-function appendObjectOutcomesToDamageContinuation(
-  continuation: DamageSequenceObjectOutcomeContinuation,
+function appendedDamageSequenceObjectOutcomes(
+  current: DamageSequenceObjectOutcomes,
   source: ResolvedObjectOutcomeSource,
-): DamageSequenceObjectOutcomeContinuation {
+): DamageSequenceObjectOutcomes {
   return {
-    ...continuation,
-    objectDamages: [
-      ...continuation.objectDamages,
-      ...(source.objectDamages ?? []),
-    ],
+    objectDamages: [...current.objectDamages, ...(source.objectDamages ?? [])],
     objectIgnitions: [
-      ...continuation.objectIgnitions,
+      ...current.objectIgnitions,
       ...(source.objectIgnitions ?? []),
     ],
     droppedObjects: [
-      ...continuation.droppedObjects,
+      ...current.droppedObjects,
       ...(source.droppedObjects ?? []),
     ],
   };
 }
 
-function appendObjectOutcomesToContinuation(
-  continuation: BattleInterruptedProcedure,
+function appendObjectOutcomesToCheckpoint<
+  Frame extends Exclude<
+    BattleInterruptCheckpoint,
+    { readonly trigger: "attackDamage" }
+  >,
+>(frame: Frame, source: ResolvedObjectOutcomeSource | undefined): Frame {
+  return {
+    ...frame,
+    continuation: appendObjectOutcomesToContinuation(
+      frame.continuation,
+      source,
+    ),
+  };
+}
+
+function appendObjectOutcomesToContinuation<
+  Continuation extends BattleInterruptedProcedure,
+>(
+  continuation: Continuation,
   source: ResolvedObjectOutcomeSource | undefined,
-): BattleInterruptedProcedure {
+): Continuation {
   if (source === undefined) {
     return continuation;
   }
@@ -888,7 +896,10 @@ function appendObjectOutcomesToContinuation(
     continuation.kind === "afterDamageSequenceWithPrimaryAttackFollowUp" ||
     continuation.kind === "movementThenAfterDamageSequence"
   ) {
-    return appendObjectOutcomesToDamageContinuation(continuation, source);
+    return {
+      ...continuation,
+      ...appendedDamageSequenceObjectOutcomes(continuation, source),
+    };
   }
   // Readied spells are not offered for attack-damage, movement, or command
   // continuations, so those variants have no legal object outcome payload to
@@ -995,16 +1006,11 @@ function interruptCheckpointAfterModifier(
         ...frame.attackRoll,
         total: frame.attackRoll.total - reduction,
       },
-      continuation:
-        frame.continuation.kind === "replay"
-          ? {
-              ...frame.continuation,
-              fills: reactionModifiedAttackRollFills(
-                frame.continuation.fills,
-                frame.attackRoll.total - reduction,
-              ),
-            }
-          : frame.continuation,
+      continuation: reactionLoweredContinuation(
+        frame.continuation,
+        { holeId: frame.attackRollHoleId, amount: reduction },
+        frame.attackRollDependentFillHoleIds,
+      ),
     };
     copyInterruptCheckpointIdentity(frame, modifiedFrame);
     return modifiedFrame;
@@ -1063,19 +1069,37 @@ function interruptCheckpointAfterModifier(
   return frame;
 }
 
-function reactionModifiedAttackRollFills(
-  fills: readonly BattleFill[],
-  total: number,
-): readonly BattleFill[] {
-  return fills.flatMap<BattleFill>((fill) => {
-    if (fill.kind === "attackRoll") {
-      return [{ ...fill, value: { ...fill.value, total } }];
-    }
-    return fill.kind === "rolledDice" ||
-      fill.kind === "concentrationSavingThrow"
-      ? []
-      : [fill];
+/** Retain the reduction as subject-owned evidence; accepted raw rolls do not change. */
+function reactionLoweredContinuation(
+  continuation: BattleAttackHitContinuation,
+  reduction: BattleAttackRollReduction,
+  dependentFillHoleIds: readonly BattleFill["holeId"][],
+): BattleAttackHitContinuation {
+  const withReduction = <
+    Continuation extends Exclude<
+      BattleAttackHitContinuation,
+      { readonly kind: "resolved" }
+    >,
+  >(
+    retained: Continuation,
+  ): Continuation => ({
+    ...retained,
+    fills: retained.fills.filter(
+      (fill) => !dependentFillHoleIds.includes(fill.holeId),
+    ),
+    acceptedAttackRollReductions: [
+      ...(retained.acceptedAttackRollReductions ?? []),
+      reduction,
+    ],
   });
+  return Match.value(continuation).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      replay: withReduction,
+      weaponMasteryCleave: withReduction,
+      huntersPreyHordeBreaker: withReduction,
+      resolved: (retained) => retained,
+    }),
+  );
 }
 
 type AdmittedInterruptChoice =
