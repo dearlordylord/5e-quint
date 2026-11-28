@@ -45,6 +45,7 @@ import {
   reactionChoiceWithSubject,
   reactionModifierChoice,
   requireHole,
+  requireNeedsHoles,
   requireResolved,
   resolveBattleInterrupt,
   resolveBattleSubject,
@@ -600,7 +601,7 @@ describe("a Bardic Inspiration die after Cutting Words", () => {
     const cleave = greataxeCleave();
     const fills = cleave.cleaveFills({ total: 15, naturalD20: 10 });
     const roll = cleave.cleaveRollFill({ total: 12, naturalD20: 10 });
-    const control = cleave.attempt([...fills, roll]);
+    const control = requireNeedsHoles(cleave.attempt([...fills, roll]));
     expect(requireHole(control, "rolledDice")).toBeDefined();
     const subject = fighterAttackSubject(cleave.state, "Greataxe");
     // Enter after the reduction was accepted; this isolates continuation
@@ -613,29 +614,33 @@ describe("a Bardic Inspiration die after Cutting Words", () => {
         acceptedAttackRollReductions: [{ holeId: roll.holeId, amount: 3 }],
       },
     };
-    const reduced = resolveBattleSubject({
-      state,
-      subject,
-      fills: [...fills, roll],
-    });
+    const reduced = requireNeedsHoles(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [...fills, roll],
+      }),
+    );
     expect(requireHole(reduced, "attackRoll")).toMatchObject({
       holeId: roll.holeId,
       bardicInspirationDice: [{}],
     });
     expect(roll.value.total).toBe(12);
     expect(hp(reduced.state, goblinId)).toBe(hp(control.state, goblinId));
-    const withDie = resolveBattleSubject({
-      state,
-      subject,
-      fills: [
-        ...fills,
-        cleave.cleaveRollFill({
-          total: 12,
-          naturalD20: 10,
-          d20TestAddedDice: [bardicDie(1)],
-        }),
-      ],
-    });
+    const withDie = requireNeedsHoles(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...fills,
+          cleave.cleaveRollFill({
+            total: 12,
+            naturalD20: 10,
+            d20TestAddedDice: [bardicDie(1)],
+          }),
+        ],
+      }),
+    );
     expect(requireHole(withDie, "rolledDice")).toBeDefined();
     expect(combatantHasBardicInspirationDie(withDie.state, fighterId)).toBe(
       false,

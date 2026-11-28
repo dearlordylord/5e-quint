@@ -672,13 +672,11 @@ function advanceInterruptCheckpointAfterResponder(input: {
       : (() => {
           const { activeInterrupt: _completedInterrupt, ...inactiveFrame } =
             input.frame;
-          const continuation = appendObjectOutcomesToContinuation(
-            inactiveFrame.continuation,
-            input.objectOutcomes,
-          );
           return {
-            ...inactiveFrame,
-            continuation,
+            ...appendObjectOutcomesToCheckpoint(
+              inactiveFrame,
+              input.objectOutcomes,
+            ),
             offeredResponders: [
               ...input.frame.offeredResponders,
               input.responderId,
@@ -838,41 +836,27 @@ function reconciledInterruptCheckpoint(
   return reconciledFrame;
 }
 
-type DamageSequenceObjectOutcomeContinuation = Extract<
-  BattleInterruptedProcedure,
-  {
-    readonly kind:
-      | "afterDamageSequence"
-      | "afterDamageSequenceWithPrimaryAttackFollowUp"
-      | "movementThenAfterDamageSequence";
-  }
->;
-
-function appendObjectOutcomesToDamageContinuation(
-  continuation: DamageSequenceObjectOutcomeContinuation,
-  source: ResolvedObjectOutcomeSource,
-): DamageSequenceObjectOutcomeContinuation {
+function appendObjectOutcomesToCheckpoint<
+  Frame extends Exclude<
+    BattleInterruptCheckpoint,
+    { readonly trigger: "attackDamage" }
+  >,
+>(frame: Frame, source: ResolvedObjectOutcomeSource | undefined): Frame {
   return {
-    ...continuation,
-    objectDamages: [
-      ...continuation.objectDamages,
-      ...(source.objectDamages ?? []),
-    ],
-    objectIgnitions: [
-      ...continuation.objectIgnitions,
-      ...(source.objectIgnitions ?? []),
-    ],
-    droppedObjects: [
-      ...continuation.droppedObjects,
-      ...(source.droppedObjects ?? []),
-    ],
+    ...frame,
+    continuation: appendObjectOutcomesToContinuation(
+      frame.continuation,
+      source,
+    ),
   };
 }
 
-function appendObjectOutcomesToContinuation(
-  continuation: BattleInterruptedProcedure,
+function appendObjectOutcomesToContinuation<
+  Continuation extends BattleInterruptedProcedure,
+>(
+  continuation: Continuation,
   source: ResolvedObjectOutcomeSource | undefined,
-): BattleInterruptedProcedure {
+): Continuation {
   if (source === undefined) {
     return continuation;
   }
@@ -890,7 +874,21 @@ function appendObjectOutcomesToContinuation(
     continuation.kind === "afterDamageSequenceWithPrimaryAttackFollowUp" ||
     continuation.kind === "movementThenAfterDamageSequence"
   ) {
-    return appendObjectOutcomesToDamageContinuation(continuation, source);
+    return {
+      ...continuation,
+      objectDamages: [
+        ...continuation.objectDamages,
+        ...(source.objectDamages ?? []),
+      ],
+      objectIgnitions: [
+        ...continuation.objectIgnitions,
+        ...(source.objectIgnitions ?? []),
+      ],
+      droppedObjects: [
+        ...continuation.droppedObjects,
+        ...(source.droppedObjects ?? []),
+      ],
+    };
   }
   // Readied spells are not offered for attack-damage, movement, or command
   // continuations, so those variants have no legal object outcome payload to
