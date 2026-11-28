@@ -2722,7 +2722,7 @@ function appendFills(
 
 /**
  * The fills after answering the pending ordinary frontier. When that frontier
- * asks a hole again (an attack roll asked again with its reroll decision), the
+ * asks a hole again (a roll asked again with its after-roll decisions), the
  * submitted fill for that hole replaces the accepted one instead of filling
  * the hole twice.
  */
@@ -2747,12 +2747,12 @@ function fillsAnsweringPendingFrontier(
 }
 
 export const PENDING_FRONTIER_RESUBMISSION_CHANGED_MESSAGE =
-  "A hole asked again keeps its accepted fill; only reroll decisions may be added to it.";
+  "A hole asked again keeps its accepted fill; only after-roll decisions may be added to it.";
 
 /**
  * The issue with fills that answer holes the pending frontier asks again: each
- * must keep the accepted fill for that hole, adding only reroll decisions
- * after the accepted ones.
+ * must keep the accepted fill for that hole, adding only after-roll decisions
+ * (rerolls and added dice) after the accepted ones.
  */
 function pendingFrontierResubmissionIssue(
   accepted: readonly BattleFill[],

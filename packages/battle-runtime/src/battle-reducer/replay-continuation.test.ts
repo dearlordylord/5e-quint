@@ -9,7 +9,11 @@ import {
   startBattleRight,
   statBlockCreatureInit,
 } from "../battle-runtime.test-support.ts";
-import type { BattleFill } from "../battle-state-execution.ts";
+import { DieRollResult } from "@dnd/shared/types";
+import {
+  BARDIC_INSPIRATION_DIE_EFFECT_KIND,
+  type BattleFill,
+} from "../battle-state-execution.ts";
 import {
   reconstructReplayContinuationFills,
   ReplayContinuationExecution,
@@ -40,7 +44,11 @@ describe("reconstructReplayContinuationFills", () => {
     } satisfies BattleFill;
 
     expect(
-      reconstructReplayContinuationFills([target], [{ ...target }, damageType]),
+      reconstructReplayContinuationFills(
+        [target],
+        [{ ...target }, damageType],
+        undefined,
+      ),
     ).toEqual([target, damageType]);
   });
 
@@ -52,7 +60,11 @@ describe("reconstructReplayContinuationFills", () => {
     } satisfies BattleFill;
 
     expect(
-      reconstructReplayContinuationFills([damageType], [{ ...damageType }]),
+      reconstructReplayContinuationFills(
+        [damageType],
+        [{ ...damageType }],
+        undefined,
+      ),
     ).toEqual([damageType, { ...damageType }]);
   });
 
@@ -72,8 +84,85 @@ describe("reconstructReplayContinuationFills", () => {
       reconstructReplayContinuationFills(
         [firstTarget, secondTarget],
         [{ ...secondTarget }, { ...firstTarget }],
+        undefined,
       ),
     ).toEqual([firstTarget, secondTarget, { ...firstTarget }]);
+  });
+});
+
+describe("a recorded roll the replay asks again", () => {
+  const attackRoll = (
+    total: number,
+    naturalD20: number,
+    d20TestAddedDice?: NonNullable<
+      Extract<
+        BattleFill,
+        { readonly kind: "attackRoll" }
+      >["value"]["d20TestAddedDice"]
+    >,
+  ) =>
+    ({
+      kind: "attackRoll",
+      holeId: holeId("replay-attack-roll"),
+      value: {
+        total,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(naturalD20) },
+        ...(d20TestAddedDice === undefined ? {} : { d20TestAddedDice }),
+      },
+    }) satisfies BattleFill;
+  const addedDie = [
+    {
+      kind: "addDie",
+      effectKind: BARDIC_INSPIRATION_DIE_EFFECT_KIND,
+      dieRoll: DieRollResult(4),
+    },
+  ] as const;
+
+  test("takes the later added dice, on the roll a Reaction lowered", () => {
+    expect(
+      reconstructReplayContinuationFills(
+        [attackRoll(9, 10)],
+        [attackRoll(12, 10, addedDie)],
+        3,
+      ),
+    ).toEqual([attackRoll(9, 10, addedDie)]);
+  });
+
+  test("takes the later added dice, on a roll no Reaction lowered", () => {
+    expect(
+      reconstructReplayContinuationFills(
+        [attackRoll(13, 11)],
+        [attackRoll(13, 11, addedDie)],
+        undefined,
+      ),
+    ).toEqual([attackRoll(13, 11, addedDie)]);
+  });
+
+  test("lowers the roll asked again by the kept reduction, not by its total", () => {
+    expect(
+      reconstructReplayContinuationFills(
+        [attackRoll(13, 11)],
+        [attackRoll(25, 11, addedDie)],
+        undefined,
+      ),
+    ).toEqual([attackRoll(13, 11), attackRoll(25, 11, addedDie)]);
+    expect(
+      reconstructReplayContinuationFills(
+        [attackRoll(9, 10)],
+        [attackRoll(20, 10, addedDie)],
+        3,
+      ),
+    ).toEqual([attackRoll(9, 10), attackRoll(20, 10, addedDie)]);
+  });
+
+  test("leaves a changed roll to fill the hole twice", () => {
+    expect(
+      reconstructReplayContinuationFills(
+        [attackRoll(9, 10)],
+        [attackRoll(12, 11, addedDie)],
+        3,
+      ),
+    ).toEqual([attackRoll(9, 10), attackRoll(12, 11, addedDie)]);
   });
 });
 

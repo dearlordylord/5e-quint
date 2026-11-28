@@ -80,11 +80,10 @@ import {
   sourceDamageRollPenaltyRollForDamageRoll,
 } from "./damage-helpers.ts";
 import {
-  attackRollAfterD20TestRerolls,
-  attackRollD20TestRerolls,
-  attackRollHoleWithD20TestRerollOptions,
-} from "./attack-roll-d20-test-rerolls.ts";
-import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
+  attackRollAfterRollDecisions,
+  attackRollHoleAskedAfterRoll,
+  battleStateAfterAttackRollAfterRollUses,
+} from "./attack-roll-after-roll-decisions.ts";
 import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
@@ -551,7 +550,12 @@ export function resolveChainedSpellAttackDamageAct(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
-    const d20TestRerolls = attackRollD20TestRerolls({
+    const targetArmorClass = armorClassAgainstAttack(
+      replayState,
+      target,
+      targetAdmission.cover,
+    );
+    const afterRoll = attackRollAfterRollDecisions({
       state: replayState,
       subject: input.input.subject,
       attackerId: input.actorId,
@@ -561,10 +565,11 @@ export function resolveChainedSpellAttackDamageAct(input: {
       ),
       attackRoll: attackRoll.value,
       requiredRollMode,
+      misses: (roll) => !attackRollHits(roll, targetArmorClass),
     });
-    if (d20TestRerolls.tag === "decisionsRequired") {
+    if (afterRoll.tag === "decisionsRequired") {
       return needsHolesResult(input.input.state, input.input.subject, [
-        attackRollHoleWithD20TestRerollOptions(
+        attackRollHoleAskedAfterRoll(
           chainedSpellAttackRollHole(
             replayState,
             input.actorId,
@@ -572,26 +577,19 @@ export function resolveChainedSpellAttackDamageAct(input: {
             stepIndex,
             requiredRollMode,
           ),
-          d20TestRerolls.options,
+          afterRoll.ask,
         ),
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (d20TestRerolls.tag === "invalid") {
+    if (afterRoll.tag === "invalid") {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.input.state,
-        "invalidFill",
-        d20TestRerolls.issue,
-      );
+      return invalidResult(input.input.state, "invalidFill", afterRoll.issue);
     }
     /* v8 ignore stop -- @preserve */
-    const effectiveAttackRoll = attackRollAfterD20TestRerolls(attackRoll.value);
+    const effectiveAttackRoll = afterRoll.roll;
 
-    const ordinaryHit = attackRollHits(
-      effectiveAttackRoll,
-      armorClassAgainstAttack(replayState, target, targetAdmission.cover),
-    );
+    const ordinaryHit = attackRollHits(effectiveAttackRoll, targetArmorClass);
     const missToHitReplacement = selectedAttackRollMissToHitReplacement({
       state: replayState,
       subject: input.input.subject,
@@ -618,10 +616,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     const attackRolledState = recordAttackRollMissToHitReplacementUsed(
       consumeHelpAttackForAttackRoll(
         recordAttackRollOngoingFeatures(
-          battleStateAfterHeroicInspirationReroll(
-            replayState,
-            d20TestRerolls.heroicInspirationUse,
-          ),
+          battleStateAfterAttackRollAfterRollUses(replayState, afterRoll.uses),
           input.actorId,
           target.combatantId,
           null,

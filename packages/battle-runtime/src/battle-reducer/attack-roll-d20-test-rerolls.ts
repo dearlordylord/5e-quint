@@ -28,7 +28,6 @@ import {
 } from "./d20-test-natural-one-reroll.ts";
 import {
   d20TestDecisions,
-  d20TestRollAfterDecisions,
   type D20TestSourceFlags,
 } from "./d20-test-decision-sequence.ts";
 import { d20TestRollAfterReroll } from "./d20-test-roll-reroll.ts";
@@ -38,8 +37,11 @@ import {
   heroicInspirationRerollAvailabilityForRoll,
   heroicInspirationRerollRollIssue,
   heroicInspirationUseForRoll,
-  type HeroicInspirationUse,
 } from "./heroic-inspiration-reroll.ts";
+import type {
+  D20TestOutcomeRerolls,
+  D20TestRerollUses,
+} from "./d20-test-outcome-rerolls.ts";
 import { SEEKING_METAMAGIC_EFFECT_KIND } from "./metamagic-support.ts";
 import { SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE } from "./spell-reroll-issues.ts";
 
@@ -70,22 +72,20 @@ export type MissedSpellAttackRerollSource = {
   ) => string | null;
 };
 
-/** Where an attack roll's D20 Test rerolls stand. */
-export type AttackRollD20TestRerolls =
-  | {
-      readonly tag: "decisionsRequired";
-      readonly options: AttackRollD20TestRerollOptions;
-    }
-  | { readonly tag: "invalid"; readonly issue: string }
-  | {
-      readonly tag: "resolved";
-      readonly effectiveAttackRoll: BattleAttackRollResult;
-      readonly heroicInspirationUse: HeroicInspirationUse;
-      /** Whether Seeking Spell rerolled the roll, which spends its Sorcery Points. */
-      readonly missedSpellAttackRerollTaken: boolean;
-    };
+/** What the reroll sources an admitted attack roll took cost its roller. */
+export type AttackRollRerollUses = D20TestRerollUses & {
+  /** Whether Seeking Spell rerolled the roll, which spends its Sorcery Points. */
+  readonly missedSpellAttackRerollTaken: boolean;
+};
 
-type AttackRollD20TestRerollInput = {
+/** Where an attack roll's D20 Test rerolls stand. */
+export type AttackRollD20TestRerolls = D20TestOutcomeRerolls<
+  BattleAttackRollResult,
+  AttackRollD20TestRerollOptions,
+  AttackRollRerollUses
+>;
+
+export type AttackRollD20TestRerollInput = {
   readonly state: BattleState;
   readonly subject: BattleSubject;
   readonly attackerId: CombatantId;
@@ -168,29 +168,17 @@ export function attackRollD20TestRerolls(
   if (rerolls.tag !== "resolved") return rerolls;
   return {
     tag: "resolved",
-    effectiveAttackRoll: rerolls.roll,
-    heroicInspirationUse: heroicInspirationUseForRoll({
-      state: input.state,
-      scope,
-      roll,
-      rerolledWithHeroicInspiration: rerolls.taken.heroicInspiration,
-    }),
-    missedSpellAttackRerollTaken: rerolls.taken.missedSpellAttack,
+    roll: rerolls.roll,
+    uses: {
+      heroicInspiration: heroicInspirationUseForRoll({
+        state: input.state,
+        scope,
+        roll,
+        rerolledWithHeroicInspiration: rerolls.taken.heroicInspiration,
+      }),
+      missedSpellAttackRerollTaken: rerolls.taken.missedSpellAttack,
+    },
   };
-}
-
-/**
- * The attack roll after its D20 Test reroll decisions, each applied to the
- * roll the decisions before it left.
- */
-export function attackRollAfterD20TestRerolls(
-  attackRoll: BattleAttackRollResult,
-): BattleAttackRollResult {
-  return d20TestRollAfterDecisions(
-    attackRoll,
-    attackRoll.d20TestRerolls ?? [],
-    d20TestRollAfterReroll,
-  );
 }
 
 /** The attack roll hole with the reroll options it is asked again with. */

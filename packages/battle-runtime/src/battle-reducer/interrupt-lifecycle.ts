@@ -8,6 +8,7 @@ import {
   sameBattleSubject,
 } from "../battle-subjects.ts";
 import { interruptChoiceResponderId } from "../battle-state-execution.ts";
+import { attackRollLoweredBy } from "./reaction-lowered-attack-roll.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleAttackDamageEvent,
@@ -997,13 +998,7 @@ function interruptCheckpointAfterModifier(
       },
       continuation:
         frame.continuation.kind === "replay"
-          ? {
-              ...frame.continuation,
-              fills: reactionModifiedAttackRollFills(
-                frame.continuation.fills,
-                frame.attackRoll.total - reduction,
-              ),
-            }
+          ? reactionLoweredReplay(frame.continuation, reduction)
           : frame.continuation,
     };
     copyInterruptCheckpointIdentity(frame, modifiedFrame);
@@ -1063,13 +1058,37 @@ function interruptCheckpointAfterModifier(
   return frame;
 }
 
+/**
+ * The interrupted attack's replay after a Reaction lowered its roll: its fills
+ * lowered, and the reduction kept with them so that a roll the replay asks
+ * again is lowered by the same amount.
+ */
+function reactionLoweredReplay(
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "replay" }
+  >,
+  reduction: number,
+): Extract<BattleInterruptedProcedure, { readonly kind: "replay" }> {
+  return {
+    ...continuation,
+    fills: reactionModifiedAttackRollFills(continuation.fills, reduction),
+    attackRollReduction: (continuation.attackRollReduction ?? 0) + reduction,
+  };
+}
+
+/**
+ * The fills an interrupted attack replays with after a Reaction lowered its
+ * roll: the attack roll lowered by the reduction, without the damage and
+ * Concentration fills the lowered roll no longer decides.
+ */
 function reactionModifiedAttackRollFills(
   fills: readonly BattleFill[],
-  total: number,
+  reduction: number,
 ): readonly BattleFill[] {
   return fills.flatMap<BattleFill>((fill) => {
     if (fill.kind === "attackRoll") {
-      return [{ ...fill, value: { ...fill.value, total } }];
+      return [{ ...fill, value: attackRollLoweredBy(fill.value, reduction) }];
     }
     return fill.kind === "rolledDice" ||
       fill.kind === "concentrationSavingThrow"

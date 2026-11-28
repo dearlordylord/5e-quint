@@ -79,11 +79,11 @@ import {
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 import {
-  attackRollAfterD20TestRerolls,
-  attackRollD20TestRerolls,
-  attackRollHoleWithD20TestRerollOptions,
-} from "./attack-roll-d20-test-rerolls.ts";
-import { battleStateAfterHeroicInspirationReroll } from "./heroic-inspiration-reroll.ts";
+  attackRollAfterRollDecisions,
+  attackRollHoleAskedAfterRoll,
+  battleStateAfterAttackRollAfterRollUses,
+} from "./attack-roll-after-roll-decisions.ts";
+import { attackRollThatStands } from "./d20-test-rolls-that-stand.ts";
 import { revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -1144,9 +1144,7 @@ type TargetedSpellAttackRollPreparation =
   | { readonly tag: "result"; readonly result: BattleResolutionResult }
   | {
       readonly tag: "ready";
-      readonly effectiveAttackRoll: ReturnType<
-        typeof attackRollAfterD20TestRerolls
-      >;
+      readonly effectiveAttackRoll: ReturnType<typeof attackRollThatStands>;
       readonly ordinaryHit: boolean;
       readonly missToHitReplacement: ReturnType<
         typeof selectedAttackRollMissToHitReplacement
@@ -1212,46 +1210,43 @@ function prepareTargetedSpellAttackRoll(
       result: invalidResult(input.input.state, "invalidFill", attackRollError),
     };
   }
-  const d20TestRerolls = attackRollD20TestRerolls({
+  const targetArmorClass = armorClassAgainstAttack(
+    input.input.state,
+    input.target,
+    input.targetCover,
+  );
+  const afterRoll = attackRollAfterRollDecisions({
     state: input.input.state,
     subject: input.input.subject,
     attackerId: input.input.subject.actorId,
     attackRollHoleId: ATTACK_ROLL_HOLE_ID,
     attackRoll,
     requiredRollMode,
+    misses: (roll) => !attackRollHits(roll, targetArmorClass),
   });
-  if (d20TestRerolls.tag === "decisionsRequired") {
+  if (afterRoll.tag === "decisionsRequired") {
     return {
       tag: "result",
       result: needsHolesResult(input.input.state, input.input.subject, [
-        attackRollHoleWithD20TestRerollOptions(
+        attackRollHoleAskedAfterRoll(
           spellAttackRollHole(
             input.input.state,
             input.input.subject.actorId,
             input.invocation,
             requiredRollMode,
           ),
-          d20TestRerolls.options,
+          afterRoll.ask,
         ),
       ]),
     };
   }
-  if (d20TestRerolls.tag === "invalid") {
+  if (afterRoll.tag === "invalid") {
     return {
       tag: "result",
-      result: invalidResult(
-        input.input.state,
-        "invalidFill",
-        d20TestRerolls.issue,
-      ),
+      result: invalidResult(input.input.state, "invalidFill", afterRoll.issue),
     };
   }
-  const effectiveAttackRoll = attackRollAfterD20TestRerolls(attackRoll);
-  const targetArmorClass = armorClassAgainstAttack(
-    input.input.state,
-    input.target,
-    input.targetCover,
-  );
+  const effectiveAttackRoll = afterRoll.roll;
   const ordinaryHit = attackRollHits(effectiveAttackRoll, targetArmorClass);
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
     state: input.input.state,
@@ -1279,9 +1274,9 @@ function prepareTargetedSpellAttackRoll(
   const releaseAttackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
-        battleStateAfterHeroicInspirationReroll(
+        battleStateAfterAttackRollAfterRollUses(
           input.input.state,
-          d20TestRerolls.heroicInspirationUse,
+          afterRoll.uses,
         ),
         input.input.subject.actorId,
         input.target.combatantId,
@@ -1589,7 +1584,7 @@ function prepareTargetedSpellDamage(
 
 function targetedSpellReleaseAttackRoll(
   input: TargetedSpellDamageInput,
-): ReturnType<typeof attackRollAfterD20TestRerolls> | undefined {
+): ReturnType<typeof attackRollThatStands> | undefined {
   if (
     input.invocation.procedure !== "spellAttackDamage" &&
     input.invocation.procedure !== "spatialMeleeSpellAttackProxy"
@@ -1597,9 +1592,7 @@ function targetedSpellReleaseAttackRoll(
     return undefined;
   }
   const attackRoll = input.fillSet.attackRoll;
-  return attackRoll == null
-    ? undefined
-    : attackRollAfterD20TestRerolls(attackRoll);
+  return attackRoll == null ? undefined : attackRollThatStands(attackRoll);
 }
 
 function prepareTargetedSpellDamageWithRoll(

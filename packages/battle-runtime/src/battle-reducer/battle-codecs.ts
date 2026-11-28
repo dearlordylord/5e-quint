@@ -2985,8 +2985,8 @@ const BattleHolePayloadMembers = [
       mergeBattleHoleFieldPairs(
         AttackRollMissToHitReplacementFields,
         mergeBattleHoleFieldPairs(
-          D20TestNaturalOneRerollHoleOptionsFields,
-          HeroicInspirationRerollHoleOptionsFields,
+          D20TestRerollHoleOptionsFields,
+          BardicInspirationDieHoleOptionsFields,
         ),
       ),
     ),
@@ -3004,8 +3004,8 @@ const BattleHolePayloadMembers = [
       mergeBattleHoleFieldPairs(
         SpellAttackRerollHoleOptionsFields,
         mergeBattleHoleFieldPairs(
-          D20TestNaturalOneRerollHoleOptionsFields,
-          HeroicInspirationRerollHoleOptionsFields,
+          D20TestRerollHoleOptionsFields,
+          BardicInspirationDieHoleOptionsFields,
         ),
       ),
     ),
@@ -4310,6 +4310,10 @@ const BattleDeathSavingThrowAddedDieDecisionsSchema = Schema.NonEmptyArray(
   battleD20TestAddedDieDecisionSchema(BARDIC_INSPIRATION_DIE_EFFECT_KIND),
 );
 
+const BattleAttackRollAddedDieDecisionsSchema = Schema.NonEmptyArray(
+  battleD20TestAddedDieDecisionSchema(BARDIC_INSPIRATION_DIE_EFFECT_KIND),
+);
+
 const BattleRolledOutcomeAddedDieDecisionsSchema = Schema.NonEmptyArray(
   battleD20TestOutcomeAddedDieDecisionSchema(
     BARDIC_INSPIRATION_DIE_EFFECT_KIND,
@@ -4384,6 +4388,7 @@ const BattleAttackRollResultSchema = Schema.Struct({
       ]),
     ),
   ),
+  d20TestAddedDice: Schema.optionalKey(BattleAttackRollAddedDieDecisionsSchema),
 });
 
 const BattleRolledDiceGroupSchema = Schema.Struct({
@@ -5116,6 +5121,9 @@ type BattleFillEncoded =
           BattleAttackRollD20TestRerollDecisionEncoded,
           ...BattleAttackRollD20TestRerollDecisionEncoded[],
         ];
+        readonly d20TestAddedDice?: Schema.Codec.Encoded<
+          typeof BattleAttackRollAddedDieDecisionsSchema
+        >;
       };
       readonly relationshipFacts?: BattleAttackRollRelationshipFactsEncoded;
     }

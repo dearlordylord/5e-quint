@@ -11,7 +11,7 @@ import { savingThrowOutcomeFillThatStands } from "./d20-test-rolls-that-stand.ts
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.magic-action-save-gated-condition unit-feature.paladin-sacred-weapon unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.magic-action-save-gated-condition unit-feature.paladin-sacred-weapon unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff
 
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
@@ -27,7 +27,6 @@ import {
   applyCondition,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
-import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
@@ -93,7 +92,6 @@ import {
   spendReactionModifierResource,
 } from "./reaction-modifiers.ts";
 import {
-  attackRollHitsWithCriticalThreshold,
   openClassFeatureExtraAttackResource,
   spendAttackActionResource,
 } from "./attack-resolution.ts";
@@ -118,8 +116,6 @@ import {
   wildShapeGroundObjectPlacement,
 } from "./battle-object-lifecycle.ts";
 import type {
-  BardicInspirationFailedAttackRollResolutionInput,
-  BardicInspirationFailedAttackRollResolutionResult,
   BattleCreatureState,
   BattleDroppedObjectOutcome,
   BattleFill,
@@ -142,7 +138,6 @@ import type {
 } from "../battle-state-execution.ts";
 import type { UnitFeatureRolledDiceFill } from "./battle-runtime-protocol.ts";
 import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
-import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
 import {
   magicActionAreaSaveDamageHealingSphereFactsHole,
@@ -1572,142 +1567,6 @@ export function resolveBardicInspirationGrantUnitFeature(
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
-  };
-}
-
-export function resolveBardicInspirationFailedAttackRoll(
-  input: BardicInspirationFailedAttackRollResolutionInput,
-): BardicInspirationFailedAttackRollResolutionResult {
-  const actor = input.state.combatants.get(input.failedAttackRoll.actorId);
-  if (actor === undefined) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Bardic Inspiration is no longer available for the D20 Test actor.",
-    );
-  }
-
-  const die = actor.activeEffects.find(
-    (effect) => effect.kind === "bardicInspirationDie",
-  );
-  if (die === undefined) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Bardic Inspiration is no longer available for the D20 Test actor.",
-    );
-  }
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !Number.isInteger(input.bardicInspirationRoll) ||
-    input.bardicInspirationRoll < 1 ||
-    input.bardicInspirationRoll > die.dieSize
-  ) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      `Bardic Inspiration roll must be a 1d${die.dieSize} result.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-
-  const outcome = bardicInspirationAttackRollOutcome(input);
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (outcome.tag === "invalid") {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", outcome.message);
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (outcome.value.originalSucceeded) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Bardic Inspiration requires an already-failed D20 Test.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-
-  const nextActor: BattleCreatureState = {
-    ...actor,
-    activeEffects: actor.activeEffects.filter(
-      (effect) => effect.kind !== "bardicInspirationDie",
-    ),
-  };
-  const nextState = {
-    ...input.state,
-    combatants: new Map(input.state.combatants).set(
-      input.failedAttackRoll.actorId,
-      nextActor,
-    ),
-  };
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-    bardicInspirationAttackRoll: {
-      boostedTotal: outcome.value.boostedTotal,
-      boostedSucceeded: outcome.value.boostedSucceeded,
-    },
-  };
-}
-
-function bardicInspirationAttackRollOutcome(
-  input: BardicInspirationFailedAttackRollResolutionInput,
-):
-  | {
-      readonly tag: "ok";
-      readonly value: {
-        readonly originalSucceeded: boolean;
-        readonly boostedTotal: number;
-        readonly boostedSucceeded: boolean;
-      };
-    }
-  | { readonly tag: "invalid"; readonly message: string } {
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!attackRollResultIsValid(input.failedAttackRoll.attackRoll)) {
-    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
-    return {
-      tag: "invalid",
-      message: "Attack roll result is outside the d20 attack-roll protocol.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
-    input.failedAttackRoll.attackRoll,
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (spellAttackRerollIssue !== null) {
-    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
-    return {
-      tag: "invalid",
-      message: spellAttackRerollIssue,
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  const criticalThreshold = input.failedAttackRoll.criticalThreshold ?? 20;
-  const boostedRoll = {
-    ...input.failedAttackRoll.attackRoll,
-    total:
-      input.failedAttackRoll.attackRoll.total + input.bardicInspirationRoll,
-  };
-  return {
-    tag: "ok",
-    value: {
-      originalSucceeded: attackRollHitsWithCriticalThreshold(
-        input.failedAttackRoll.attackRoll,
-        input.failedAttackRoll.armorClass,
-        criticalThreshold,
-      ),
-      boostedTotal: boostedRoll.total,
-      boostedSucceeded: attackRollHitsWithCriticalThreshold(
-        boostedRoll,
-        input.failedAttackRoll.armorClass,
-        criticalThreshold,
-      ),
-    },
   };
 }
 
