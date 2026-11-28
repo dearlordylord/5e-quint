@@ -339,6 +339,23 @@ module unitFeaturePoolCostCoreExamples {
     }
   }
 
+  run test_adrenaline_rush_gains_temporary_hit_points_when_none_are_held = {
+    val result = resolveBonusActionDashTemporaryHitPoints(
+      initialTurnProcedureState,
+      { usesRemaining: 2, maximumUses: 2 },
+      {
+        speedFeet: 30,
+        proficiencyBonus: 3,
+        existingTemporaryHitPoints: 0,
+        chooseNewTemporaryHitPoints: false,
+      }
+    )
+    all {
+      assert(result.pool.usesRemaining == 1),
+      assert(result.temporaryHitPoints == 3),
+    }
+  }
+
   run test_adrenaline_rush_requires_available_bonus_action = {
     val turn = initialTurnProcedureState.with("bonusActionAvailable", false)
     val result = resolveBonusActionDashTemporaryHitPoints(
