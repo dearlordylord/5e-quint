@@ -5,6 +5,29 @@ module hitPointRecoveryExamples {
   import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
   import hitPointRecovery.* from "./hit-point-recovery"
 
+  run test_a_dead_creature_may_have_a_hit_point_maximum_of_zero = {
+    val drained = {
+      kind: PlayerCharacter,
+      hitPoints: 0,
+      hitPointMaximum: 0,
+      temporaryHitPoints: 0,
+      dead: true,
+      unconscious: false,
+    }
+    val living = drained.with("dead", false).with("unconscious", true)
+    val damaged = applyResolvedDamageToPositiveHitPoints(drained, 5)
+    val healed = applyHitPointHealing(drained, Dead, NoPositiveHitPointUnconsciousRecovery, 5)
+    all {
+      assert(legalVitals(drained)),
+      assert(legalHitPointRecoveryState(drained, Dead, NoPositiveHitPointUnconsciousRecovery)),
+      assert(not(legalVitals(living))),
+      assert(canApplyResolvedDamageToPositiveHitPoints(drained)),
+      assert(damaged.vitals == drained),
+      assert(healed.vitals == drained),
+      assert(healed.hitPointsRegained == 0),
+    }
+  }
+
   run test_healing_from_zero_resets_death_saving_throws_and_ends_unconscious = {
     val vitals = {
       kind: PlayerCharacter,
