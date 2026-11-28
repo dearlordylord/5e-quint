@@ -7,6 +7,7 @@
 // leaves the attacker the die to add (A70).
 import {
   HEROIC_INSPIRATION_AVAILABLE,
+  NO_HEROIC_INSPIRATION,
   type HeroicInspiration,
 } from "@dnd/shared/game-facts";
 import { DieRollResult } from "@dnd/shared/types";
@@ -71,6 +72,8 @@ import {
 import type { CombatantId } from "./identity.ts";
 import {
   settleBattleRuntimeTransaction,
+  retainBattleRuntimeContinuation,
+  restoreBattleRuntimeContinuation,
   type BattleRuntimeTransactionOperation,
   type BattleRuntimeTransactionResult,
 } from "./battle-runtime-transaction.ts";
@@ -593,6 +596,233 @@ describe("a Bardic Inspiration die after a Reaction turns the hit into a miss", 
 });
 
 describe("a Bardic Inspiration die after Cutting Words", () => {
+  test("a Cleave roll uses its accepted reduction without changing the primary attack", () => {
+    const cleave = greataxeCleave();
+    const fills = cleave.cleaveFills({ total: 15, naturalD20: 10 });
+    const roll = cleave.cleaveRollFill({ total: 12, naturalD20: 10 });
+    const control = cleave.attempt([...fills, roll]);
+    expect(requireHole(control, "rolledDice")).toBeDefined();
+    const subject = fighterAttackSubject(cleave.state, "Greataxe");
+    // Enter after the reduction was accepted; this isolates continuation
+    // projection from the availability of a later attack-hit Reaction window.
+    const state: BattleState = {
+      ...cleave.state,
+      subjectResolutionPhase: {
+        kind: "subjectContinuation",
+        subject,
+        acceptedAttackRollReductions: [{ holeId: roll.holeId, amount: 3 }],
+      },
+    };
+    const reduced = resolveBattleSubject({
+      state,
+      subject,
+      fills: [...fills, roll],
+    });
+    expect(requireHole(reduced, "attackRoll")).toMatchObject({
+      holeId: roll.holeId,
+      bardicInspirationDice: [{}],
+    });
+    expect(roll.value.total).toBe(12);
+    expect(hp(reduced.state, goblinId)).toBe(hp(control.state, goblinId));
+    const withDie = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        ...fills,
+        cleave.cleaveRollFill({
+          total: 12,
+          naturalD20: 10,
+          d20TestAddedDice: [bardicDie(1)],
+        }),
+      ],
+    });
+    expect(requireHole(withDie, "rolledDice")).toBeDefined();
+    expect(combatantHasBardicInspirationDie(withDie.state, fighterId)).toBe(
+      false,
+    );
+  });
+
+  test.each([false, true])(
+    "Cutting Words preserves an earlier spell roll through restore (Heroic reroll: %s)",
+    (withHeroicReroll) => {
+      const cuttingWords = cuttingWordsAttackOnlyUnit();
+      const ray = spellRecord("scorching_ray");
+      const battle = spellBattle({
+        preparedSpells: [ray],
+        ...(withHeroicReroll
+          ? { casterHeroicInspiration: HEROIC_INSPIRATION_AVAILABLE }
+          : {}),
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+        targetHp: 100,
+        targetMaxHp: 100,
+        targetResources: [cuttingWordsResource({ unit: cuttingWords })],
+        targetUnitRefs: [
+          {
+            unit: cuttingWords,
+            supportProfiles: ["reactionRollOrDamageReduction"],
+          },
+        ],
+        targetClassLevels: [{ className: "bard", level: 3 }],
+      });
+      const session = battleRuntimeSessionForTest({
+        ...battle,
+        state: withBardicInspirationDie(battle.state, spellCasterId),
+      });
+      const { subject } = spellAct({ session, spellId: ray.id, slotLevel: 2 });
+      const settle = (
+        previous: NeedsHolesTransactionResult | null,
+        operation: BattleRuntimeTransactionOperation,
+      ) =>
+        settleBattleRuntimeTransaction({
+          session: previous?.resolution.session ?? session,
+          transaction: previous?.transaction ?? null,
+          operation,
+        });
+      const submit = (
+        previous: NeedsHolesTransactionResult | null,
+        fills: readonly BattleFill[],
+      ) => settle(previous, { kind: "ordinarySubject", subject, fills });
+      let targeted = requireTransactionNeedsHoles(submit(null, []));
+      while (
+        targeted.resolution.envelope.frontier.kind === "holes" &&
+        targeted.resolution.envelope.frontier.holes.some(
+          (hole) => hole.kind === "targetChoice",
+        )
+      ) {
+        targeted = requireTransactionNeedsHoles(
+          submit(targeted, [
+            spellTargetFill(
+              transactionHole(targeted, "targetChoice"),
+              ray.id,
+              spellCasterId,
+              spellTargetId,
+            ),
+          ]),
+        );
+      }
+      const first = transactionHole(targeted, "attackRoll");
+      const afterFirst = requireTransactionNeedsHoles(
+        submit(targeted, [
+          attackRollFill(first, {
+            total: 9,
+            naturalD20: 7,
+            d20TestAddedDice: [declineBardic()],
+            ...(withHeroicReroll
+              ? {
+                  d20TestRerolls: [
+                    {
+                      kind: "decline" as const,
+                      effectKind: HEROIC_INSPIRATION_REROLL_EFFECT_KIND,
+                    },
+                  ] as const,
+                }
+              : {}),
+          }),
+        ]),
+      );
+      const second = transactionHole(afterFirst, "attackRoll");
+      const secondRoll: AttackRollValue = withHeroicReroll
+        ? {
+            total: 5,
+            naturalD20: 3,
+            d20TestRerolls: [heroicReroll({ total: 12, naturalD20: 10 })],
+          }
+        : { total: 12, naturalD20: 10 };
+      const awaitingReaction = requireTransactionNeedsHoles(
+        submit(afterFirst, [attackRollFill(second, secondRoll)]),
+      );
+      const decision = battleFrontierInterruptDecisionForState(
+        awaitingReaction.resolution.session.state,
+      );
+      if (decision === null || decision === undefined)
+        throw new Error("Expected Cutting Words.");
+      const choice = reactionModifierChoice(
+        decision.choices,
+        cuttingWords.id,
+        "attackRollReduction",
+      );
+      const reductionHole = choice.initialHoles[0];
+      if (reductionHole === undefined)
+        throw new Error("Expected the reduction die.");
+      const afterReduction = requireTransactionNeedsHoles(
+        settle(awaitingReaction, {
+          kind: "interruptDecision",
+          fill: interruptDecisionFill(decision.decisionHole, {
+            kind: "resolve",
+            responderId: spellTargetId,
+            choice: {
+              kind: "reactionRollOrDamageReduction",
+              procedureRef: choice.modifier.procedureRef,
+              modifierKind: "attackRollReduction",
+              fills: [
+                {
+                  kind: "rolledDice",
+                  holeId: reductionHole.holeId,
+                  value: [rolledDiceGroup([3])],
+                },
+              ],
+            },
+          }),
+        }),
+      );
+      expect(transactionHole(afterReduction, "attackRoll").holeId).toBe(
+        second.holeId,
+      );
+      const replay =
+        afterReduction.resolution.session.state.interruptStack.find(
+          (frame) => frame.kind === "replayContinuation",
+        );
+      const keptFirst = replay?.continuation.fills.find(
+        (fill) => fill.kind === "attackRoll" && fill.holeId === first.holeId,
+      );
+      expect(keptFirst).toMatchObject({
+        kind: "attackRoll",
+        value: { total: 9 },
+      });
+      const retained = retainBattleRuntimeContinuation(
+        afterReduction.resolution.session,
+        afterReduction.transaction,
+      );
+      if (Result.isFailure(retained)) throw new Error(retained.failure);
+      const restored = restoreBattleRuntimeContinuation(
+        structuredClone(retained.success),
+      );
+      if (Result.isFailure(restored)) throw new Error(restored.failure);
+      if (restored.success.transaction === null)
+        throw new Error("Expected the restored pending ray.");
+      const afterRestore: NeedsHolesTransactionResult = {
+        ...afterReduction,
+        transaction: restored.success.transaction,
+        resolution: {
+          ...afterReduction.resolution,
+          session: restored.success.session,
+        },
+      };
+      const afterDie = requireTransactionNeedsHoles(
+        submit(afterRestore, [
+          attackRollFill(second, {
+            ...secondRoll,
+            d20TestAddedDice: [bardicDie(1)],
+          }),
+        ]),
+      );
+      expect(transactionHole(afterDie, "rolledDice")).toBeDefined();
+      expect(
+        combatantHasBardicInspirationDie(
+          afterDie.resolution.session.state,
+          spellCasterId,
+        ),
+      ).toBe(false);
+      if (withHeroicReroll) {
+        const caster =
+          afterDie.resolution.session.state.combatants.get(spellCasterId);
+        if (caster?.origin.kind !== "character")
+          throw new Error("Expected the spellcaster.");
+        expect(caster.origin.heroicInspiration).toEqual(NO_HEROIC_INSPIRATION);
+      }
+    },
+  );
+
   test("after Cutting Words lowers the hit into a miss, the attacker is offered the die", () => {
     const cuttingWords = cuttingWordsAttackOnlyUnit();
     const started = startBattleSessionRight({

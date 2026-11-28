@@ -6,10 +6,14 @@ import type {
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 
-export {
+import {
   battleStateWithAllocatedEffectForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-effect-occurrence-allocation.test-support.ts";
+export {
+  battleStateWithAllocatedEffectForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
+};
 
 export const SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS = 10_000;
 
@@ -5755,13 +5759,12 @@ export function withBardicInspirationDie(
   if (die === undefined || holder === undefined) {
     throw new Error("Expected a granted die and its holder.");
   }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(holderId, {
-      ...holder,
-      activeEffects: [...holder.activeEffects, die],
-    }),
-  };
+  const { effectRef: _foreignOccurrence, ...effect } = die;
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: holderId,
+    effect,
+  });
 }
 
 export function combatantHasBardicInspirationDie(

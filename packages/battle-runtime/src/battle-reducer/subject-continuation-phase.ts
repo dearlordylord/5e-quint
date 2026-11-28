@@ -39,6 +39,10 @@ export function acceptedSubjectReplayEvidence(
 ): BattleAcceptedSubjectReplayEvidence {
   return {
     ...optionalProperty(
+      "acceptedAttackRollReductions",
+      source.acceptedAttackRollReductions,
+    ),
+    ...optionalProperty(
       "acceptedHeroicInspirationRerolls",
       source.acceptedHeroicInspirationRerolls,
     ),
@@ -93,6 +97,7 @@ export function stateForSubjectContinuation(
   continuation: BattleInterruptedProcedure,
 ): BattleState {
   const {
+    acceptedAttackRollReductions: _previousAttackRollReductions,
     acceptedHeroicInspirationRerolls: _previousHeroicInspiration,
     acceptedFailedSavingThrowRerolls: _previousFailedSavingThrowRerolls,
     acceptedBardicInspirationDice: _previousBardicInspirationDice,

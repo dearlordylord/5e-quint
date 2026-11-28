@@ -8,6 +8,8 @@
 // attack resumes (A70). Each owner of an attack roll goes through here, so the
 // two stages can't be taken out of order.
 
+import { attackRollAfterAcceptedReductions } from "./reaction-lowered-attack-roll.ts";
+
 import type {
   BattleAttackRollHole,
   BattleAttackRollResult,
@@ -69,7 +71,13 @@ export function attackRollAfterRollDecisions(
   },
 ): AttackRollAfterRoll {
   return afterRollDecisions(
-    attackRollD20TestRerolls(input),
+    attackRollD20TestRerolls({
+      ...input,
+      attackRoll: attackRollAfterAcceptedReductions({
+        ...input,
+        holeId: input.attackRollHoleId,
+      }),
+    }),
     input.attackRoll.d20TestAddedDice !== undefined,
     (attackRoll) =>
       attackRollAddedDice({

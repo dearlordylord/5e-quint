@@ -44,11 +44,7 @@ describe("reconstructReplayContinuationFills", () => {
     } satisfies BattleFill;
 
     expect(
-      reconstructReplayContinuationFills(
-        [target],
-        [{ ...target }, damageType],
-        undefined,
-      ),
+      reconstructReplayContinuationFills([target], [{ ...target }, damageType]),
     ).toEqual([target, damageType]);
   });
 
@@ -60,11 +56,7 @@ describe("reconstructReplayContinuationFills", () => {
     } satisfies BattleFill;
 
     expect(
-      reconstructReplayContinuationFills(
-        [damageType],
-        [{ ...damageType }],
-        undefined,
-      ),
+      reconstructReplayContinuationFills([damageType], [{ ...damageType }]),
     ).toEqual([damageType, { ...damageType }]);
   });
 
@@ -84,7 +76,6 @@ describe("reconstructReplayContinuationFills", () => {
       reconstructReplayContinuationFills(
         [firstTarget, secondTarget],
         [{ ...secondTarget }, { ...firstTarget }],
-        undefined,
       ),
     ).toEqual([firstTarget, secondTarget, { ...firstTarget }]);
   });
@@ -118,14 +109,13 @@ describe("a recorded roll the replay asks again", () => {
     },
   ] as const;
 
-  test("takes the later added dice, on the roll a Reaction lowered", () => {
+  test("keeps raw roll evidence when accepting later added dice", () => {
     expect(
       reconstructReplayContinuationFills(
-        [attackRoll(9, 10)],
+        [attackRoll(12, 10)],
         [attackRoll(12, 10, addedDie)],
-        3,
       ),
-    ).toEqual([attackRoll(9, 10, addedDie)]);
+    ).toEqual([attackRoll(12, 10, addedDie)]);
   });
 
   test("takes the later added dice, on a roll no Reaction lowered", () => {
@@ -133,24 +123,21 @@ describe("a recorded roll the replay asks again", () => {
       reconstructReplayContinuationFills(
         [attackRoll(13, 11)],
         [attackRoll(13, 11, addedDie)],
-        undefined,
       ),
     ).toEqual([attackRoll(13, 11, addedDie)]);
   });
 
-  test("lowers the roll asked again by the kept reduction, not by its total", () => {
+  test("refuses an altered raw total on a roll asked again", () => {
     expect(
       reconstructReplayContinuationFills(
         [attackRoll(13, 11)],
         [attackRoll(25, 11, addedDie)],
-        undefined,
       ),
     ).toEqual([attackRoll(13, 11), attackRoll(25, 11, addedDie)]);
     expect(
       reconstructReplayContinuationFills(
         [attackRoll(9, 10)],
         [attackRoll(20, 10, addedDie)],
-        3,
       ),
     ).toEqual([attackRoll(9, 10), attackRoll(20, 10, addedDie)]);
   });
@@ -160,7 +147,6 @@ describe("a recorded roll the replay asks again", () => {
       reconstructReplayContinuationFills(
         [attackRoll(9, 10)],
         [attackRoll(12, 11, addedDie)],
-        3,
       ),
     ).toEqual([attackRoll(9, 10), attackRoll(12, 11, addedDie)]);
   });

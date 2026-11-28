@@ -90,6 +90,7 @@ import {
 import type {
   AttackSpellDamageAddition,
   BattleFill,
+  BattleAcceptedSubjectReplayEvidence,
   BattleInterruptedProcedure,
 } from "./battle-state-execution.ts";
 import { REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE } from "./unit-feature-support.ts";
@@ -782,6 +783,8 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       state,
       {
         trigger: "attackHit",
+        attackRollHoleId: holeId("synthetic-non-replay-attack"),
+        attackRollDependentFillHoleIds: [],
         attackerId: goblinId,
         targetId: fighterId,
         attackRoll: {
@@ -848,6 +851,11 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       state,
       {
         trigger: "attackHit",
+        attackRollHoleId: attackRoll.holeId,
+        attackRollDependentFillHoleIds: [
+          holeId("synthetic-rolled-dice"),
+          holeId("synthetic-concentration"),
+        ],
         attackerId: goblinId,
         targetId: fighterId,
         attackRoll: {
@@ -869,7 +877,10 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       unit.id,
       "attackRollReduction",
     );
-    const resumedRoute: { fills: readonly BattleFill[] } = { fills: [] };
+    const resumedRoute: {
+      fills: readonly BattleFill[];
+      reductions: BattleAcceptedSubjectReplayEvidence["acceptedAttackRollReductions"];
+    } = { fills: [], reductions: undefined };
     const execution = InterruptLifecycleExecution.fromResolvers(
       () => {
         throw new Error(
@@ -879,6 +890,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       ({ continuation, state: resumedState }) => {
         if (continuation.kind === "replay") {
           resumedRoute.fills = continuation.fills;
+          resumedRoute.reductions = continuation.acceptedAttackRollReductions;
         }
         return {
           tag: "resolved" as const,
@@ -911,8 +923,11 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
     expect(resumedRoute.fills).toEqual([
       expect.objectContaining({
         kind: "attackRoll",
-        value: expect.objectContaining({ total: 12 }),
+        value: expect.objectContaining({ total: 15 }),
       }),
+    ]);
+    expect(resumedRoute.reductions).toEqual([
+      { holeId: attackRoll.holeId, amount: 3 },
     ]);
   });
 

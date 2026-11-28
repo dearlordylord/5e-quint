@@ -696,6 +696,33 @@ export function resolveChainedSpellAttackDamageAct(input: {
       replayState,
       {
         trigger: "attackHit",
+        attackRollHoleId: chainedSpellAttackRollHoleId(
+          input.invocation,
+          stepIndex,
+        ),
+        attackRollDependentFillHoleIds: [
+          ...(step.damageRoll === undefined ? [] : [step.damageRoll.holeId]),
+          ...fillSet.concentrationSavingThrows
+            .filter(
+              (fill) =>
+                !concentrationHoles.some((hole) => hole.holeId === fill.holeId),
+            )
+            .map((fill) => fill.holeId),
+          ...fillSet.damageDispositions
+            .filter(
+              (fill) =>
+                !damageDispositionHoles.some(
+                  (hole) => hole.holeId === fill.holeId,
+                ),
+            )
+            .map((fill) => fill.holeId),
+          ...fillSet.saveGatedConditionWithRepeatDamageRepeatSaves
+            .filter(
+              (fill) =>
+                !stagedConditionDamageRepeatSaveHoleIds.has(fill.holeId),
+            )
+            .map((fill) => fill.holeId),
+        ],
         attackerId: input.actorId,
         targetId: target.combatantId,
         attackRoll: effectiveAttackRoll,

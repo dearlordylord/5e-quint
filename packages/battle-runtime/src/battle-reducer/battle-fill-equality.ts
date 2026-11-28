@@ -202,7 +202,7 @@ const BATTLE_REROLL_DECISION_FILL_KINDS = [
   "deathSavingThrow",
 ] as const satisfies ReadonlyArray<BattleFill["kind"]>;
 
-type BattleRerollDecisionFill = Extract<
+export type BattleRerollDecisionFill = Extract<
   BattleFill,
   { readonly kind: (typeof BATTLE_REROLL_DECISION_FILL_KINDS)[number] }
 >;

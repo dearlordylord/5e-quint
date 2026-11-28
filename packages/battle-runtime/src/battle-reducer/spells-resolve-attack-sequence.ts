@@ -134,7 +134,7 @@ type ResolvedSpellAttackSequencePart = {
   readonly state: ActionSpellBattleResolutionInput["state"];
   readonly objectDamages: readonly BattleObjectDamageOutcome[];
   readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
-  readonly usedExtraFillHoleIds: readonly string[];
+  readonly usedExtraFillHoleIds: readonly BattleFill["holeId"][];
 };
 
 export function resolveSpellAttackSequenceAct(input: {
@@ -216,7 +216,7 @@ export function resolveSpellAttackSequenceAct(input: {
   let state = input.input.state;
   const objectDamages: BattleObjectDamageOutcome[] = [];
   const afterDamageEvents: BattleAfterDamageEvent[] = [];
-  const usedExtraFillHoleIds = new Set<string>();
+  const usedExtraFillHoleIds = new Set<BattleFill["holeId"]>();
   for (const [
     partIndex,
     partFill,
@@ -230,6 +230,7 @@ export function resolveSpellAttackSequenceAct(input: {
       ),
       partFill,
       partIndex,
+      completedDamageLifecycleFillHoleIds: usedExtraFillHoleIds,
     });
     if (resolved.tag !== "resolved") {
       return resolved;
@@ -308,6 +309,9 @@ function resolveSpellAttackSequencePart(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly partFill: SpellAttackSequencePartFillSet;
   readonly partIndex: number;
+  readonly completedDamageLifecycleFillHoleIds: ReadonlySet<
+    BattleFill["holeId"]
+  >;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): ResolvedSpellAttackSequencePart | BattleResolutionResult {
@@ -341,6 +345,9 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly partFill: SpellAttackSequencePartFillSet;
   readonly partIndex: number;
+  readonly completedDamageLifecycleFillHoleIds: ReadonlySet<
+    BattleFill["holeId"]
+  >;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
   readonly target: Extract<
@@ -654,6 +661,26 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       attackRolledState,
       {
         trigger: "attackHit",
+        attackRollHoleId: spellAttackSequencePartAttackRollHoleId(
+          input.invocation,
+          input.partIndex,
+        ),
+        attackRollDependentFillHoleIds: [
+          ...(input.partFill.damageRoll === undefined
+            ? []
+            : [input.partFill.damageRoll.holeId]),
+          ...[
+            ...input.fillSet.sourceDamageRollPenaltyRolls,
+            ...input.fillSet.spellDamageReductionRolls,
+            ...input.fillSet.concentrationSavingThrows,
+            ...input.fillSet.damageDispositions,
+          ]
+            .filter(
+              (fill) =>
+                !input.completedDamageLifecycleFillHoleIds.has(fill.holeId),
+            )
+            .map((fill) => fill.holeId),
+        ],
         attackerId: input.actorId,
         targetId: target.combatantId,
         attackRoll: effectiveAttackRoll,
@@ -1056,7 +1083,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
       readonly state: ActionSpellBattleResolutionInput["state"];
       readonly objectDamages: readonly BattleObjectDamageOutcome[];
       readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
-      readonly usedExtraFillHoleIds: readonly string[];
+      readonly usedExtraFillHoleIds: readonly BattleFill["holeId"][];
     }
   | Exclude<BattleResolutionResult, { readonly tag: "resolved" }> {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */

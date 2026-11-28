@@ -2550,6 +2550,8 @@ export function resolveSelectedAttackProcedure<
       }),
       {
         trigger: "attackHit",
+        attackRollHoleId: ATTACK_ROLL_HOLE_ID,
+        attackRollDependentFillHoleIds: [],
         attackerId: attackerId,
         targetId: target.combatantId,
         attackRoll: effectiveAttackRoll,
@@ -4836,6 +4838,8 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       cleaveAttackRolledState,
       {
         trigger: "attackHit",
+        attackRollHoleId: cleaveAttackRoll.fill.holeId,
+        attackRollDependentFillHoleIds: [],
         attackerId: input.subject.actorId,
         targetId: secondTargetId,
         attackRoll: effectiveCleaveAttackRoll,
@@ -5622,6 +5626,8 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       rolledState,
       {
         trigger: "attackHit",
+        attackRollHoleId: hordeBreakerAttackRoll.fill.holeId,
+        attackRollDependentFillHoleIds: [],
         attackerId: input.subject.actorId,
         targetId: secondTargetId,
         attackRoll: effectiveHordeBreakerAttackRoll,

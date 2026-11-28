@@ -83,6 +83,7 @@ import {
   attackRollHoleAskedAfterRoll,
   battleStateAfterAttackRollAfterRollUses,
 } from "./attack-roll-after-roll-decisions.ts";
+import { attackRollAfterAcceptedReductions } from "./reaction-lowered-attack-roll.ts";
 import { attackRollThatStands } from "./d20-test-rolls-that-stand.ts";
 import { revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
@@ -1592,7 +1593,16 @@ function targetedSpellReleaseAttackRoll(
     return undefined;
   }
   const attackRoll = input.fillSet.attackRoll;
-  return attackRoll == null ? undefined : attackRollThatStands(attackRoll);
+  return attackRoll == null
+    ? undefined
+    : attackRollThatStands(
+        attackRollAfterAcceptedReductions({
+          state: input.input.state,
+          subject: input.input.subject,
+          holeId: ATTACK_ROLL_HOLE_ID,
+          attackRoll,
+        }),
+      );
 }
 
 function prepareTargetedSpellDamageWithRoll(

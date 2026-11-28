@@ -538,6 +538,8 @@ function resolveBonusActionAttack(
       attackRolledState,
       {
         trigger: "attackHit",
+        attackRollHoleId: ATTACK_ROLL_HOLE_ID,
+        attackRollDependentFillHoleIds: [],
         attackerId: input.subject.actorId,
         targetId: target.combatantId,
         attackRoll: effectiveAttackRoll,

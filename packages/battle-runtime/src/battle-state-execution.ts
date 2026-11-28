@@ -924,6 +924,11 @@ export type BattleSpatialMeleeSpellAttackProxyCommitCheckpoint = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly operation: "createAndAttack" | "repositionAndAttack";
 };
+export type BattleAttackRollReduction = {
+  readonly holeId: BattleHoleId;
+  readonly amount: number;
+};
+
 export type BattleInterruptedProcedure = BattleAcceptedSubjectReplayEvidence &
   (
     | {
@@ -932,8 +937,6 @@ export type BattleInterruptedProcedure = BattleAcceptedSubjectReplayEvidence &
         readonly fills: readonly BattleFill[];
         readonly parentPosition?: never;
         readonly glyphStoredSpellReleaseReplay?: never;
-        /** What Reactions (attackRollReduction) took off the recorded attack roll: a roll the replay asks again is lowered by exactly this. */
-        readonly attackRollReduction?: number;
         readonly attackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
         readonly attackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
         readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
@@ -945,8 +948,6 @@ export type BattleInterruptedProcedure = BattleAcceptedSubjectReplayEvidence &
         readonly fills: readonly BattleFill[];
         readonly parentPosition: BattleStartTurnOccurrenceSequenceCheckpoint;
         readonly glyphStoredSpellReleaseReplay?: never;
-        /** What Reactions (attackRollReduction) took off the recorded attack roll: a roll the replay asks again is lowered by exactly this. */
-        readonly attackRollReduction?: number;
         readonly attackDamageReductions?: never;
         readonly attackDamageAdditions?: never;
         readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
@@ -961,8 +962,6 @@ export type BattleInterruptedProcedure = BattleAcceptedSubjectReplayEvidence &
         readonly fills: readonly BattleFill[];
         readonly parentPosition?: never;
         readonly glyphStoredSpellReleaseReplay: GlyphStoredSpellReleaseReplayContext;
-        /** What Reactions (attackRollReduction) took off the recorded attack roll: a roll the replay asks again is lowered by exactly this. */
-        readonly attackRollReduction?: number;
         readonly attackDamageReductions?: never;
         readonly attackDamageAdditions?: never;
         readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
@@ -1022,6 +1021,17 @@ export type BattleInterruptedProcedure = BattleAcceptedSubjectReplayEvidence &
       }
     | BattleAttackDamageInterruptionFrame
   );
+export type BattleAttackHitContinuation = Extract<
+  BattleInterruptedProcedure,
+  {
+    readonly kind:
+      | "replay"
+      | "weaponMasteryCleave"
+      | "huntersPreyHordeBreaker"
+      | "resolved";
+  }
+>;
+
 export type BattleAttackHostSubject =
   | Extract<
       BattleSubject,
@@ -1334,6 +1344,9 @@ type BattleInterruptCheckpointWithContinuationBase =
 export type BattleInterruptCheckpoint =
   | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "attackHit";
+      readonly continuation: BattleAttackHitContinuation;
+      readonly attackRollHoleId: BattleHoleId;
+      readonly attackRollDependentFillHoleIds: readonly BattleHoleId[];
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
       readonly attackRoll: AttackRollResult;
@@ -4617,6 +4630,8 @@ export type BattleTakenFailedAbilityCheckResourceBoost =
 
 /** Accepted roll and attack outcomes owned by a subject while its resolution can replay. */
 export type BattleAcceptedSubjectReplayEvidence = {
+  /** Reaction reductions owned by the subject, keyed to their triggering roll. Raw fills stay unchanged. */
+  readonly acceptedAttackRollReductions?: ReadonlyNonEmptyArray<BattleAttackRollReduction>;
   /** The rolls of this subject that spent their roller's Heroic Inspiration. */
   readonly acceptedHeroicInspirationRerolls?: ReadonlyNonEmptyArray<BattleD20TestRollKey>;
   /** The rolls of this subject that spent a use of a failed saving throw reroll. */
